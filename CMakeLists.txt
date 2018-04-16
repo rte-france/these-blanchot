@@ -30,7 +30,7 @@ INCLUDE_DIRECTORIES(
 	.
 	$ENV{XPRESSDIR}/include
 	)
-
+LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
 
 
 FILE(
@@ -41,5 +41,6 @@ FILE(
 	./*.h  
 	./*.hxx
 	)
-
+	
 ADD_EXECUTABLE(benders ${STAGE_ENZO_FILES} )
+TARGET_LINK_LIBRARIES(benders xprs)
