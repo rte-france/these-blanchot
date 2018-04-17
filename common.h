@@ -69,3 +69,20 @@ struct Predicate {
 		}
 	}
 };
+
+
+inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
+	for (auto const & kvp : rhs) {
+		if (kvp.second > 0) {
+			stream << "+";
+		}
+		stream << kvp.second;
+		stream << kvp.first;
+	}
+	return stream;
+}
+inline std::ostream & operator<<(std::ostream & stream, Cut const & rhs) {
+	stream << rhs.first;
+	stream << (*rhs.second);
+	return stream;
+}
