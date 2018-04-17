@@ -118,6 +118,7 @@ void Benders::run() {
 	std::cout << std::setw(20) << "UB";
 	std::cout << std::setw(20) << "BESTUB";
 	std::cout << std::endl;
+	Point bestx;
 	while (!stop) {
 		++it;
 		_master.solve();
@@ -137,6 +138,7 @@ void Benders::run() {
 		_ub = invest_cost + slave_cost;
 		if (_best_ub > _ub) {
 			_best_ub = _ub;
+			bestx = x0;
 		}
 		_slave.get_value(rhs);
 
@@ -158,5 +160,11 @@ void Benders::run() {
 		std::cout << std::endl;
 		if (_lb + 1e-6 >= _best_ub)
 			stop = true;
+	}
+	for (auto const & kvp : bestx) {
+		std::cout << std::setw(20) << kvp.first;
+		std::cout << " = ";
+		std::cout << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
+		std::cout << std::endl;
 	}
 }
