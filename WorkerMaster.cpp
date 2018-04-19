@@ -1,26 +1,8 @@
 #include "WorkerMaster.h"
 #include "xprs.h"
 
-WorkerMaster(std::string const & mps, std::string const & mapping) :Worker(mps, mapping) {
-	// add the variable alpha
-	std::string const alpha("alpha");
-	auto const it(_name_to_id.find(alpha));
-	if (it == _name_to_id.end()) {
-		double lb(-1e10); /*!< Lower Bound */
-		double ub(+1e20); /*!< Upper Bound*/
-		double obj(+1);
-		int zero(0);
-		std::vector<int> start(2, 0);
-		XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha);
-		XPRSaddcols(_xprs, 1, 0, &obj, start.data(), NULL, NULL, &lb, &ub);
-		XPRSaddnames(_xprs, 2, alpha.c_str(), _id_alpha, _id_alpha);
-	}
-	else {
-		std::cout << "ERROR a variable named alpha is in input" << std::endl;
-	}
-}
 
-void get(Point & x0, double & alpha) {
+void WorkerMaster::get(Point & x0, double & alpha) {
 	x0.clear();
 	std::vector<double> ptr(_name_to_id.size() + 1, 0);
 	int status = XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
@@ -30,13 +12,13 @@ void get(Point & x0, double & alpha) {
 	alpha = ptr[_id_alpha];
 }
 
-void write(int it) {
+void WorkerMaster::write(int it) {
 	std::stringstream name;
 	name << "master_" << it << ".lp";
 	XPRSwriteprob(_xprs, name.str().c_str(), "l");
 }
 
-void add_cut(Point const & s, Point const & x0, double rhs) {
+void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);

@@ -1,12 +1,12 @@
-#include "WorkerSlaves.h"
+#include "WorkerSlave.h"
 
-void write(int it) {
+void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";
 	XPRSwriteprob(_xprs, name.str().c_str(), "l");
 }
 
-void fix_to(Point const & x0) {
+void WorkerSlave::fix_to(Point const & x0) {
 	int nbnds((int)_name_to_id.size());
 	std::vector<int> indexes(nbnds);
 	std::vector<char> bndtypes(nbnds, 'B');
@@ -22,7 +22,7 @@ void fix_to(Point const & x0) {
 	int status = XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
-void get_subgradient(Point & s) {
+void WorkerSlave::get_subgradient(Point & s) {
 	s.clear();
 	int ncols;
 	XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
