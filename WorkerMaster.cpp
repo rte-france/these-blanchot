@@ -9,6 +9,15 @@ WorkerMaster::WorkerMaster() {
 WorkerMaster::~WorkerMaster() {
 
 }
+
+/*!
+*  \brief Solve the Master problem and set the optimal variables in x0
+*
+*  Method to get the optimal variables 
+*
+*  \param x0 : empty map table
+*  \param alpha : empty double
+*/
 void WorkerMaster::get(Point & x0, double & alpha) {
 	x0.clear();
 	std::vector<double> ptr(_name_to_id.size() + 1, 0);
@@ -18,6 +27,14 @@ void WorkerMaster::get(Point & x0, double & alpha) {
 	}
 	alpha = ptr[_id_alpha];
 }
+
+/*!
+*  \brief Write the master problem
+*
+*  Method to write the master problem in a lp file
+*
+*  \param it : number of the problem
+*/
 
 void WorkerMaster::write(int it) {
 	std::stringstream name;
@@ -49,6 +66,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
+
 WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping) :Worker() {
 	init(mps, mapping);
 	// add the variable alpha

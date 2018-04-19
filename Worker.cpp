@@ -71,6 +71,11 @@ Worker::Worker() {
 Worker::~Worker() {
 	XPRSdestroyprob(_xprs);
 }
+
+void Worker::get_value(double & lb) {
+	XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
+}
+
 void Worker::init(std::string const & mps,  std::string const & mapping) {
 
 	_stream.push_back(&std::cout);
@@ -101,6 +106,9 @@ void Worker::init(std::string const & mps,  std::string const & mapping) {
 	}
 }
 
+void Worker::solve() {
+	XPRSlpoptimize(_xprs, "");
+}
 
 void Worker::get_simplex_ite(int & result) {
 	XPRSgetintattrib(_xprs, XPRS_SIMPLEXITER, &result);

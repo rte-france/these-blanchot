@@ -34,9 +34,7 @@ public:
 	*
 	*  \param lb : Current Lower Bound
 	*/
-	void get_value(double & lb) {
-		XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
-	}
+	void get_value(double & lb);
 
 	void get_simplex_ite(int & result);
 
@@ -63,9 +61,7 @@ public:
 	*
 	*  Method to solve the problem stocked in the instance Worker
 	*/
-	void solve() {
-		XPRSlpoptimize(_xprs, "");
-	}
+	void solve();
 
 
 public:

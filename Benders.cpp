@@ -3,6 +3,7 @@
 Benders::~Benders() {
 
 }
+
 Benders::Benders(mps_coupling_list const & mps_coupling_list) {
 	if (!mps_coupling_list.empty()) {
 		_slaves.reserve(mps_coupling_list.size()-1);
