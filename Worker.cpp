@@ -1,8 +1,6 @@
 #include "Worker.h"
 
 
-bool Worker::IsInit = false;
-
 std::list<std::ostream *> & Worker::stream() {
 	return _stream;
 }
@@ -67,20 +65,22 @@ void Worker::errormsg(const char *sSubName, int nLineNo, int nErrCode) {
 	XPRSfree();
 	exit(nErrCode);
 }
+Worker::Worker() {
 
-Worker::Worker(std::string const & mps,  std::string const & mapping) {
+}
+Worker::~Worker() {
+	XPRSdestroyprob(_xprs);
+}
+void Worker::init(std::string const & mps,  std::string const & mapping) {
 
 	_stream.push_back(&std::cout);
 
-	if (!IsInit) {
-		XPRSinit("");
-		IsInit = true;
-	}
 	_path_to_mps = mps;
 	_path_to_mapping = mapping;
 
 	XPRScreateprob(&_xprs);
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, this);
 	XPRSreadprob(_xprs, mps.c_str(), "");
 
@@ -99,4 +99,9 @@ Worker::Worker(std::string const & mps,  std::string const & mapping) {
 		}
 
 	}
+}
+
+
+void Worker::get_simplex_ite(int & result) {
+	XPRSgetintattrib(_xprs, XPRS_SIMPLEXITER, &result);
 }

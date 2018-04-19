@@ -3,6 +3,9 @@
 #include "common.h"
 #include "xprs.h"
 
+
+class Worker;
+typedef std::shared_ptr<Worker> WorkerPtr;
 /*! \class Worker
 * \brief Mother-class Worker 
 *
@@ -12,7 +15,6 @@
 class Worker
 {
 public:
-	static bool IsInit;
 	/*!
 	*  \brief Constructor
 	*
@@ -21,10 +23,9 @@ public:
 	*  \param mps : path to the mps file (master or slave)
 	*  \param mapping : path to the relevant mapping file 
 	*/
-	Worker(std::string const & mps, std::string const & mapping); 
-	virtual ~Worker() {
-
-	}
+	Worker();
+	void init(std::string const & mps, std::string const & mapping); 
+	virtual ~Worker();
 
 	/*!
 	*  \brief Set a new Lower Bound
@@ -36,6 +37,9 @@ public:
 	void get_value(double & lb) {
 		XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
 	}
+
+	void get_simplex_ite(int & result);
+
 public:
 	std::string _path_to_mps; /*!< path to the mps file*/
 	std::string _path_to_mapping; /*!< path to the relevant mapping file*/

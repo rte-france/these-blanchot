@@ -2,14 +2,17 @@
 
 #include "WorkerMaster.h"
 
+typedef std::pair<std::string, std::string> mps_coupling;
+typedef std::list<mps_coupling> mps_coupling_list;
+typedef std::vector<WorkerSlavePtr> WorkerSlaves;
+
 class Benders {
 public:
-	Benders(std::string const & mps_master, std::string const & mapping_master, std::string const & mps_slave, std::string const & mapping_slave) :
-		_master(mps_master, mapping_master), _slave(mps_slave, mapping_slave) {
+	Benders(mps_coupling_list const & mps_coupling_list);
+	virtual ~Benders();
 
-	}
-	WorkerMaster _master;
-	WorkerSlave _slave;
+	WorkerMasterPtr _master;
+	WorkerSlaves _slaves;
 
 	std::stringstream _line_trace;
 

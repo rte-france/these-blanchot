@@ -1,5 +1,16 @@
 #include "WorkerSlave.h"
 
+WorkerSlave::WorkerSlave() {
+
+}
+
+WorkerSlave::WorkerSlave(std::string const & mps, std::string const & mapping) {
+	init(mps, mapping);
+
+}
+WorkerSlave::~WorkerSlave() {
+
+}
 void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";

@@ -3,14 +3,15 @@
 #include "Worker.h"
 #include "xprs.h"
 
+class WorkerSlave;
+typedef std::shared_ptr<WorkerSlave> WorkerSlavePtr;
+
+
 class WorkerSlave : public Worker {
 public:
-	WorkerSlave(std::string const & mps, std::string const & mapping) :Worker(mps, mapping) {
-
-	}
-	virtual ~WorkerSlave() {
-
-	}
+	WorkerSlave();
+	WorkerSlave(std::string const & mps, std::string const & mapping);
+	virtual ~WorkerSlave();
 
 public:
 
