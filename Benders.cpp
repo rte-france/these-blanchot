@@ -6,11 +6,12 @@ Benders::~Benders() {
 
 Benders::Benders(mps_coupling_list const & mps_coupling_list) {
 	if (!mps_coupling_list.empty()) {
-		_slaves.reserve(mps_coupling_list.size()-1);
+		int nslaves = static_cast<int>(mps_coupling_list.size()) - 1;
+		_slaves.reserve(nslaves);
 
 		auto it(mps_coupling_list.begin());
 		auto end(mps_coupling_list.end());
-		_master.reset(new WorkerMaster(it->first, it->second));
+		_master.reset(new WorkerMaster(it->first, it->second, nslaves));
 		while(++it != end) {
 			_slaves.push_back(WorkerSlavePtr(new WorkerSlave(it->first, it->second)));
 		}
@@ -19,7 +20,6 @@ Benders::Benders(mps_coupling_list const & mps_coupling_list) {
 
 void Benders::run() {
 	WorkerMaster & master(*_master);
-	WorkerSlave & slave(*_slaves.front());
 	_lb = -1e20;
 	_ub = +1e20;
 	_best_ub = +1e20;
@@ -40,6 +40,9 @@ void Benders::run() {
 	std::cout << std::endl;
 	Point bestx;
 	int simplexiter;
+	int nslaves = (int)_slaves.size();
+	double dnslaves = (double)_slaves.size();
+
 	while (!stop) {
 		++it;
 		master.solve();
@@ -50,22 +53,27 @@ void Benders::run() {
 		master.get(x0, alpha); /*Get the optimal variables of the Master Problem*/
 		master.get_value(_lb); /*Get the optimal value of the Master Problem*/
 		invest_cost = _lb - alpha;
-		slave.fix_to(x0); 
-		//_slave.write(it);
+		_ub = invest_cost;
+		for (int i_slave(0); i_slave < nslaves; ++i_slave) {
+			WorkerSlave & slave(*_slaves[i_slave]);
+			slave.fix_to(x0);
+			//slave.write(it);
 
-		slave.solve();
-		slave.get_subgradient(s); /*Get the optimal variables of the Slave Problem*/
-		slave.get_value(slave_cost); /*Get the optimal value of the Slave Problem*/
-		slave.get_simplex_ite(simplexiter);
-		_ub = invest_cost + slave_cost;
+			slave.solve();
+			slave.get_subgradient(s); /*Get the optimal variables of the Slave Problem*/
+			slave.get_value(slave_cost); /*Get the optimal value of the Slave Problem*/
+			slave.get_simplex_ite(simplexiter);
+			slave.get_value(rhs);
+			_ub += slave_cost;
+			master.add_cut_slave(i_slave, s, x0, rhs);
+		}
+
 		if (_best_ub > _ub) {
 			_best_ub = _ub;
 			bestx = x0;
 		}
-		slave.get_value(rhs);
 
-		master.add_cut(s, x0, rhs);
-		//_master.write(it);
+		master.write(it);
 		std::cout << std::setw(10) << it;
 		if (_lb == -1e20)
 			std::cout << std::setw(20) << "-INF";

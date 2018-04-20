@@ -20,7 +20,7 @@ typedef std::shared_ptr<WorkerMaster> WorkerMasterPtr;
 class WorkerMaster : public Worker {
 public:
 	int _id_alpha;
-
+	std::vector<int> _id_alpha_i;
 	/*!
 	*  \brief Constructor
 	*
@@ -30,7 +30,7 @@ public:
 	*  \param mapping : path to the relevant mapping file
 	*/
 	WorkerMaster();
-	WorkerMaster(std::string const & mps, std::string const & mapping);
+	WorkerMaster(std::string const & mps, std::string const & mapping, int nslaves=1);
 	virtual ~WorkerMaster();
 
 	void get(Point & x0, double & alpha);
@@ -38,5 +38,6 @@ public:
 	void write(int it);
 
 	void add_cut(Point const & s, Point const & x0, double rhs);
+	void add_cut_slave(int i, Point const & s, Point const & x0, double rhs);
 
 };

@@ -20,7 +20,7 @@ WorkerMaster::~WorkerMaster() {
 */
 void WorkerMaster::get(Point & x0, double & alpha) {
 	x0.clear();
-	std::vector<double> ptr(_name_to_id.size() + 1, 0);
+	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
 	int status = XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
 	for (auto const & kvp : _id_to_name) {
 		x0[kvp.second] = ptr[kvp.first];
@@ -75,6 +75,40 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
+
+/*!
+*  \brief Add cut to the Master Problem
+*
+*
+*  \param s : optimal slave variables
+*  \param x0 : optimal Master variables
+*  \param rhs : optimal slave value
+*/
+void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double rhs) {
+	int ncols((int)_name_to_id.size());
+	// cut is -rhs >= alpha  + s^(x-x0)
+	int nrows(1);
+	int ncoeffs(1 + (int)_name_to_id.size());
+	std::vector<char> rowtype(1, 'L');
+	std::vector<double> rowrhs(1, 0);
+	std::vector<double> matval(ncoeffs, 1);
+	std::vector<int> mstart(nrows + 1, 0);
+	std::vector<int> mclind(ncoeffs);
+
+	rowrhs.front() -= rhs;
+
+	for (auto const & kvp : _name_to_id) {
+		rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
+		mclind[kvp.second] = kvp.second;
+		matval[kvp.second] = s.find(kvp.first)->second;
+	}
+	mclind.back() = _id_alpha_i[i];
+	matval.back() = -1;
+	mstart.back() = (int)matval.size();
+
+	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
+}
+
 /*!
 *  \brief Constructor of Master Problem
 *
@@ -83,7 +117,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 *  \param mps : path to the mps file
 *  \param mapping : path to the mapping
 */
-WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping) :Worker() {
+WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping, int nslaves) :Worker() {
 	init(mps, mapping);
 	// add the variable alpha
 	std::string const alpha("alpha");
@@ -92,11 +126,35 @@ WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping)
 		double lb(-1e10); /*!< Lower Bound */
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
-		int zero(0);
+		double zero(0);
 		std::vector<int> start(2, 0);
 		XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha); /* Set the number of columns in _id_alpha */
 		XPRSaddcols(_xprs, 1, 0, &obj, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
 		XPRSaddnames(_xprs, 2, alpha.c_str(), _id_alpha, _id_alpha);
+		_id_alpha_i.resize(nslaves, -1);
+		for (int i(0); i < nslaves; ++i) {
+			XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha_i[i]); /* Set the number of columns in _id_alpha */
+			XPRSaddcols(_xprs, 1, 0, &zero, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
+			std::stringstream buffer;
+			buffer << "alpha_" << i;
+			XPRSaddnames(_xprs, 2, buffer.str().c_str(), _id_alpha_i[i], _id_alpha_i[i]);
+		}
+		{
+
+			std::vector<char> rowtype(1, 'E');
+			std::vector<double> rowrhs(1, 0);
+			std::vector<double> matval(nslaves+1, 0);
+			std::vector<int> mclind(nslaves + 1);
+			std::vector<int> mstart(1 + 1, 0);
+			mclind[0] = _id_alpha;
+			matval[0] = 1;
+
+			for (int i(0); i < nslaves; ++i) {
+				mclind[i + 1] = _id_alpha_i[i];
+				matval[i + 1] = -1;
+			}
+			XPRSaddrows(_xprs, 1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
+		}
 	}
 	else {
 		std::cout << "ERROR a variable named alpha is in input" << std::endl;
