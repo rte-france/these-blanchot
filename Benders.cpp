@@ -73,7 +73,7 @@ void Benders::run() {
 			bestx = x0;
 		}
 
-		master.write(it);
+		//master.write(it);
 		std::cout << std::setw(10) << it;
 		if (_lb == -1e20)
 			std::cout << std::setw(20) << "-INF";
