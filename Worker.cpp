@@ -72,6 +72,11 @@ Worker::~Worker() {
 	XPRSdestroyprob(_xprs);
 }
 
+/*!
+*  \brief Solve the Master problem and set the optimal value as Lower Bound
+*
+*  \param lb : reference to the current lb to modify
+*/
 void Worker::get_value(double & lb) {
 	XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
 }

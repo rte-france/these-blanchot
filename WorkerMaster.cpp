@@ -13,9 +13,9 @@ WorkerMaster::~WorkerMaster() {
 /*!
 *  \brief Solve the Master problem and set the optimal variables in x0
 *
-*  Method to get the optimal variables 
+*  Method to get the optimal variables x0 and alpha
 *
-*  \param x0 : empty map table
+*  \param x0 : empty map list
 *  \param alpha : empty double
 */
 void WorkerMaster::get(Point & x0, double & alpha) {
@@ -42,6 +42,14 @@ void WorkerMaster::write(int it) {
 	XPRSwriteprob(_xprs, name.str().c_str(), "l");
 }
 
+/*!
+*  \brief Add cut to the Master Problem
+*
+*
+*  \param s : optimal slave variables
+*  \param x0 : optimal Master variables
+*  \param rhs : optimal slave value
+*/
 void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
@@ -67,6 +75,14 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
+/*!
+*  \brief Constructor of Master Problem
+*
+*  Construct the Master Problem by loading the mps and mapping files and adding the variable alpha
+*
+*  \param mps : path to the mps file
+*  \param mapping : path to the mapping
+*/
 WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping) :Worker() {
 	init(mps, mapping);
 	// add the variable alpha
@@ -78,8 +94,8 @@ WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping)
 		double obj(+1);
 		int zero(0);
 		std::vector<int> start(2, 0);
-		XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha);
-		XPRSaddcols(_xprs, 1, 0, &obj, start.data(), NULL, NULL, &lb, &ub);
+		XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha); /* Set the number of columns in _id_alpha */
+		XPRSaddcols(_xprs, 1, 0, &obj, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
 		XPRSaddnames(_xprs, 2, alpha.c_str(), _id_alpha, _id_alpha);
 	}
 	else {

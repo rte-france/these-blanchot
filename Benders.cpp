@@ -47,15 +47,15 @@ void Benders::run() {
 		Point x0;
 		Point s;
 		double rhs;
-		master.get(x0, alpha);
-		master.get_value(_lb);
+		master.get(x0, alpha); /*Get the optimal variables of the Master Problem*/
+		master.get_value(_lb); /*Get the optimal value of the Master Problem*/
 		invest_cost = _lb - alpha;
-		slave.fix_to(x0);
+		slave.fix_to(x0); 
 		//_slave.write(it);
 
 		slave.solve();
-		slave.get_subgradient(s);
-		slave.get_value(slave_cost);
+		slave.get_subgradient(s); /*Get the optimal variables of the Slave Problem*/
+		slave.get_value(slave_cost); /*Get the optimal value of the Slave Problem*/
 		slave.get_simplex_ite(simplexiter);
 		_ub = invest_cost + slave_cost;
 		if (_best_ub > _ub) {

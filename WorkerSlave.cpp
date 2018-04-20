@@ -17,6 +17,13 @@ void WorkerSlave::write(int it) {
 	XPRSwriteprob(_xprs, name.str().c_str(), "l");
 }
 
+/*!
+*  \brief Fix the trial values in the slave
+*
+*  Method to set trial values in the slave problem by fixing their bounds
+*
+*  \param x0 : Trial values
+*/
 void WorkerSlave::fix_to(Point const & x0) {
 	int nbnds((int)_name_to_id.size());
 	std::vector<int> indexes(nbnds);
@@ -33,6 +40,11 @@ void WorkerSlave::fix_to(Point const & x0) {
 	int status = XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
+/*!
+*  \brief Solve slave problem and get LP solution values
+*
+*  \param s : Empty point which receives the solution
+*/
 void WorkerSlave::get_subgradient(Point & s) {
 	s.clear();
 	int ncols;
