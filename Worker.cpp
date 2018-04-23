@@ -73,14 +73,21 @@ Worker::~Worker() {
 }
 
 /*!
-*  \brief Solve the Master problem and set the optimal value as Lower Bound
+*  \brief Return the optimal value of a problem
 *
-*  \param lb : reference to the current lb to modify
+*  \param lb : double which receives the optimal value
 */
 void Worker::get_value(double & lb) {
 	XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
 }
 
+/*!
+*  \brief Initialization of a problem 
+*
+*
+*  \param mps : path to mps file
+*  \param mapping : path to the relevant mapping file
+*/
 void Worker::init(std::string const & mps,  std::string const & mapping) {
 
 	_stream.push_back(&std::cout);
@@ -115,6 +122,11 @@ void Worker::solve() {
 	XPRSlpoptimize(_xprs, "");
 }
 
+/*!
+*  \brief Get the number of needed iteration to solve a problem
+*
+*  \param result : result
+*/
 void Worker::get_simplex_ite(int & result) {
 	XPRSgetintattrib(_xprs, XPRS_SIMPLEXITER, &result);
 }

@@ -29,6 +29,7 @@ ENDIF( WIN32 )
 INCLUDE_DIRECTORIES(	
 	.
 	$ENV{XPRESSDIR}/include
+	D:/software/boost_1_67_0/stage/include
 	)
 LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
 
