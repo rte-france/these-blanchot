@@ -88,20 +88,20 @@ void Worker::get_value(double & lb) {
 *  \param mps : path to mps file
 *  \param mapping : path to the relevant mapping file
 */
-void Worker::init(std::string const & mps,  std::string const & mapping) {
+void Worker::init(std::string const & problem_name) {
 
 	_stream.push_back(&std::cout);
 
-	_path_to_mps = mps;
-	_path_to_mapping = mapping;
+	_path_to_mps = get_mps(problem_name);
+	_path_to_mapping = get_mapping(problem_name);
 
 	XPRScreateprob(&_xprs);
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, this);
-	XPRSreadprob(_xprs, mps.c_str(), "");
+	XPRSreadprob(_xprs, _path_to_mps.c_str(), "");
 
-	std::ifstream file(mapping.c_str());
+	std::ifstream file(_path_to_mapping.c_str());
 	std::string line;
 	while (std::getline(file, line)) {
 		if (!line.empty() && line.front() != '#') {

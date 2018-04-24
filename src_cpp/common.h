@@ -27,6 +27,11 @@ typedef std::shared_ptr<Cuts> CutsPtr;
 
 double const EPSILON_PREDICATE = 1e-8;
 
+typedef std::set<std::string> problem_names;
+
+//typedef std::pair<std::string, std::string> mps_coupling;
+//typedef std::list<mps_coupling> mps_coupling_list;
+
 struct Predicate {
 	bool operator()(Cut const & lhs, Cut const & rhs)const {
 		if (std::fabs(lhs.first - rhs.first) > EPSILON_PREDICATE) {
@@ -85,4 +90,12 @@ inline std::ostream & operator<<(std::ostream & stream, Cut const & rhs) {
 	stream << rhs.first;
 	stream << (*rhs.second);
 	return stream;
+}
+
+
+inline std::string get_mps(std::string const & problem_name) {
+	return(problem_name + ".mps");
+}
+inline std::string get_mapping(std::string const & problem_name) {
+	return(problem_name + "_coupling_variables.txt");
 }

@@ -2,19 +2,18 @@
 
 
 Benders::~Benders() {
-
 }
 
-Benders::Benders(mps_coupling_list const & mps_coupling_list) {
-	if (!mps_coupling_list.empty()) {
-		int nslaves = static_cast<int>(mps_coupling_list.size()) - 1;
+Benders::Benders(problem_names const & problem_list) {
+	if (!problem_list.empty()) {
+		int nslaves = static_cast<int>(problem_list.size()) - 1;
 		_slaves.reserve(nslaves);
 
-		auto it(mps_coupling_list.begin());
-		auto end(mps_coupling_list.end());
-		_master.reset(new WorkerMaster(it->first, it->second, nslaves));
+		auto it(problem_list.begin());
+		auto end(problem_list.end());
+		_master.reset(new WorkerMaster(*it, nslaves));
 		while(++it != end) {
-			_slaves.push_back(WorkerSlavePtr(new WorkerSlave(it->first, it->second)));
+			_slaves.push_back(WorkerSlavePtr(new WorkerSlave(*it)));
 		}
 	}
 }

@@ -115,8 +115,8 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param mapping : path to mapping
 *  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping, int nslaves) :Worker() {
-	init(mps, mapping);
+WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worker() {
+	init(problem_name);
 	// add the variable alpha
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));

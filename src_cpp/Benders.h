@@ -2,13 +2,10 @@
 
 #include "WorkerMaster.h"
 
-typedef std::pair<std::string, std::string> mps_coupling;
-typedef std::list<mps_coupling> mps_coupling_list;
-typedef std::vector<WorkerSlavePtr> WorkerSlaves;
 
 class Benders {
 public:
-	Benders(mps_coupling_list const & mps_coupling_list);
+	Benders(problem_names const & problem_list);
 	virtual ~Benders();
 
 	WorkerMasterPtr _master;

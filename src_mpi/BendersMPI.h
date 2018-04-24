@@ -2,38 +2,21 @@
 
 #include <boost/mpi.hpp>
 #include "Worker.h"
+#include "WorkerSlave.h"
+#include "WorkerMaster.h"
 
 namespace mpi = boost::mpi;
 
+typedef std::map<std::string, WorkerSlavePtr> Slaves_Ptr_map;
+
 class BendersMpi {
-	mpi::environment env;
-	mpi::communicator world;
+public:
+	BendersMpi::BendersMpi(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world);
+	
+	Slaves_Ptr_map _map_slaves;
+	WorkerSlaves _slaves;
+	WorkerMasterPtr _master;
 
-	//BendersMpi::BendersMpi(mps_coupling_list const & mps_coupling_list) {
-		//if (!mps_coupling_list.empty()) {
-		//	int rank(0);
-		//	while (++it != end) {
-		//			++rank;
-		//			std::string msg;
-		//			if (world.rank() == 0) {
-		//				world.send(1, 0, msg);
-		//			}
-
-		//		}
-		//	}
-		//	int nslaves = static_cast<int>(mps_coupling_list.size()) - 1;
-		//	_slaves.reserve(nslaves);
-		//	auto it(mps_coupling_list.begin());
-		//	auto end(mps_coupling_list.end());
-		//	_master.reset(new WorkerMaster(it->first, it->second, nslaves));
-
-
-		//	if (world.rank() != 0)
-		//	while (++it != end) {
-		//		_slaves.push_back(WorkerSlavePtr(new WorkerSlave(it->first, it->second)));
-		//	}
-		//}
-	//}
 
 	//void send_value_master(mpi::environment env, mpi::communicator world) {
 	//		master.get(x0, alpha);

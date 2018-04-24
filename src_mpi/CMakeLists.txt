@@ -30,6 +30,7 @@ ENDIF( WIN32 )
 
 INCLUDE_DIRECTORIES(	
 	.
+	../src_cpp
 	$ENV{XPRESSDIR}/include
 	D:/software/boost_1_67_0
 	$ENV{MSMPI_INC}
@@ -49,7 +50,11 @@ FILE(
 	./*.cpp
 	./*.h  
 	./*.hxx
+	../src_cpp/*.cc
+	../src_cpp/*.cpp
+	../src_cpp/*.h  
+	../src_cpp/*.hxx
 	)
 	
 ADD_EXECUTABLE(benders ${STAGE_ENZO_FILES} )
-TARGET_LINK_LIBRARIES(benders xprs msmpi)
+TARGET_LINK_LIBRARIES(benders xprs msmpi libboost_serialization-vc141-mt-x64-1_67)

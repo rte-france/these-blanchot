@@ -5,12 +5,12 @@
 
 class WorkerSlave;
 typedef std::shared_ptr<WorkerSlave> WorkerSlavePtr;
-
+typedef std::vector<WorkerSlavePtr> WorkerSlaves;
 
 class WorkerSlave : public Worker {
 public:
 	WorkerSlave();
-	WorkerSlave(std::string const & mps, std::string const & mapping);
+	WorkerSlave(std::string const & problem_name);
 	virtual ~WorkerSlave();
 
 public:

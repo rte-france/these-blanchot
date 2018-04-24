@@ -4,8 +4,8 @@ WorkerSlave::WorkerSlave() {
 
 }
 
-WorkerSlave::WorkerSlave(std::string const & mps, std::string const & mapping) {
-	init(mps, mapping);
+WorkerSlave::WorkerSlave(std::string const & problem_name) {
+	init(problem_name);
 
 }
 WorkerSlave::~WorkerSlave() {
