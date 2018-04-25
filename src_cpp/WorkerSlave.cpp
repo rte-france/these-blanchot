@@ -6,11 +6,12 @@ WorkerSlave::WorkerSlave() {
 
 WorkerSlave::WorkerSlave(std::string const & problem_name) {
 	init(problem_name);
-
+	
 }
 WorkerSlave::~WorkerSlave() {
 
 }
+
 void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";

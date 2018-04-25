@@ -2,12 +2,10 @@
 #include "xprs.h"
 
 WorkerMaster::WorkerMaster() {
-
 }
 
 
 WorkerMaster::~WorkerMaster() {
-
 }
 
 /*!
@@ -117,6 +115,8 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 */
 WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worker() {
 	init(problem_name);
+
+	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	// add the variable alpha
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));

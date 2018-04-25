@@ -40,7 +40,9 @@ int main(int argc, char** argv)
 
 	mpi::environment env;
 	mpi::communicator world;
-	BendersMpi bendersMpi(input, env, world);
+	BendersMpi bendersMpi;
+	bendersMpi.load(input, env, world);
+	//bendersMpi.run(env, world);
 
 	return 0;
 }
