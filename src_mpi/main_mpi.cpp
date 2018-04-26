@@ -28,11 +28,9 @@ int main(int argc, char** argv)
 
 	problem_names input;
 	std::string problem_line;
-	//mps_coupling_list input;
 
 	while (std::getline(summary, problem_line))
 	{
-		//input.push_back({ root + "\\" + problem_line + ".mps", root + "\\" + problem_line + "_coupling_variables.txt" });
 		input.insert(root + "\\" + problem_line);
 	}
 
@@ -42,7 +40,7 @@ int main(int argc, char** argv)
 	mpi::communicator world;
 	BendersMpi bendersMpi;
 	bendersMpi.load(input, env, world);
-	//bendersMpi.run(env, world);
+	bendersMpi.run(env, world);
 
 	return 0;
 }

@@ -1,5 +1,5 @@
 #pragma once
-
+#include <tuple>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -27,6 +27,10 @@ typedef std::shared_ptr<Cuts> CutsPtr;
 double const EPSILON_PREDICATE = 1e-8;
 
 typedef std::set<std::string> problem_names;
+
+typedef std::vector<int> IntVector;
+typedef std::vector<double> DblVector;
+typedef std::vector<std::string> StrVector;
 
 //typedef std::pair<std::string, std::string> mps_coupling;
 //typedef std::list<mps_coupling> mps_coupling_list;
