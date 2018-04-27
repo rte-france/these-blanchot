@@ -22,4 +22,6 @@ public:
 	double _best_ub;
 
 	void run();
+
+	void free();
 };

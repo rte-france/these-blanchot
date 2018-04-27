@@ -35,6 +35,7 @@ public:
 	std::map< std::string, int> _problem_to_id;
 
 	void run(mpi::environment & env, mpi::communicator & world);
+	void free(mpi::environment & env, mpi::communicator & world);
 
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);

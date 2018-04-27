@@ -69,6 +69,10 @@ Worker::Worker() {
 
 }
 Worker::~Worker() {
+	
+}
+
+void Worker::free() {
 	XPRSdestroyprob(_xprs);
 }
 

@@ -8,6 +8,12 @@ MESSAGE("CMAKE_SOURCE_DIR : ${CMAKE_SOURCE_DIR}")
 SET(EXECUTABLE_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 SET(   LIBRARY_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 
+SET(USE_MPI TRUE)
+
+IF( USE_MPI )
+	SET(CMAKE_CXX_COMPILER mpicxx)
+ENDIF( USE_MPI )
+MESSAGE("USE_MPI is ${USE_MPI}")
 IF( WIN32 )
 #	SET( CMAKE_CONFIGURATION_TYPES "Debug;Release;" CACHE STRING "limited configs" FORCE)
 #	SET( CMAKE_CXX_FLAGS_DEBUG          "/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1" )
@@ -26,27 +32,42 @@ ELSE()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-unused-parameter")
 ENDIF( WIN32 )
 
-INCLUDE_DIRECTORIES(	
-	.
+INCLUDE_DIRECTORIES(
+	./src_cpp
 	$ENV{XPRESSDIR}/include
-	D:/software/boost_1_67_0
 	)
-LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
+IF( USE_MPI )
+	INCLUDE_DIRECTORIES(D:/software/boost_1_67_0 ./src_mpi $ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64)
+	LINK_DIRECTORIES($ENV{XPRESSDIR}/lib D:/software/boost_1_67_0/stage/lib $ENV{MSMPI_LIB64})
+ENDIF( USE_MPI )
 
+LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
 
 FILE(
 	GLOB
-	STAGE_ENZO_FILES
-	./*.cc
-	./*.cpp
-	./*.h  
-	./*.hxx
-
+	SEQUENTIAL_FILES
 	./src_cpp/*.cc
 	./src_cpp/*.cpp
 	./src_cpp/*.h  
 	./src_cpp/*.hxx
+)
+ADD_LIBRARY(sequentialcore STATIC ${SEQUENTIAL_FILES} )
+IF( USE_MPI )
+	FILE(
+		GLOB
+		MPI_FILES
+		./src_mpi/*.cc
+		./src_mpi/*.cpp
+		./src_mpi/*.h  
+		./src_mpi/*.hxx
 	)
-	
-ADD_EXECUTABLE(benders ${STAGE_ENZO_FILES} )
-TARGET_LINK_LIBRARIES(benders xprs)
+	ADD_LIBRARY(mpicore STATIC ${MPI_FILES} )
+ENDIF( USE_MPI )
+
+IF( USE_MPI )
+	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
+	TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67)
+ELSE( USE_MPI )
+	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
+	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs )
+ENDIF( USE_MPI )

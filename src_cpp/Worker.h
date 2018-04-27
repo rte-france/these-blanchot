@@ -31,6 +31,7 @@ public:
 
 	void get_simplex_ite(int & result);
 
+	void free();
 public:
 	std::string _path_to_mps; /*!< path to the mps file*/
 	std::string _path_to_mapping; /*!< path to the relevant mapping file*/

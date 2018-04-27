@@ -179,7 +179,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			_bestx = _x0;
 		}
 
-		_master->write(_iter);
+		//_master->write(_iter);
 		std::cout << std::setw(10) << _iter;
 		if (_lb == -1e20)
 			std::cout << std::setw(20) << "-INF";
@@ -204,7 +204,15 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 	world.barrier();
 }
 
-
+void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
+	if(world.rank() == 0)
+		_master->free();
+	else {
+		for (auto & ptr : _map_slaves)
+			ptr.second->free();
+	}
+	world.barrier();
+}
 void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 
 	WorkerMaster & master(*_master);

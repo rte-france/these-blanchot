@@ -32,8 +32,8 @@ typedef std::vector<int> IntVector;
 typedef std::vector<double> DblVector;
 typedef std::vector<std::string> StrVector;
 
-//typedef std::pair<std::string, std::string> mps_coupling;
-//typedef std::list<mps_coupling> mps_coupling_list;
+typedef std::pair<std::string, std::string> mps_coupling;
+typedef std::list<mps_coupling> mps_coupling_list;
 
 struct Predicate {
 	bool operator()(Cut const & lhs, Cut const & rhs)const {

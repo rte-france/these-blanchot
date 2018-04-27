@@ -18,6 +18,11 @@ Benders::Benders(problem_names const & problem_list) {
 	}
 }
 
+void Benders::free() {
+	_master->free();
+	for (auto & ptr : _slaves)
+		ptr->free();
+}
 void Benders::run() {
 	WorkerMaster & master(*_master);
 	_lb = -1e20;
@@ -28,7 +33,7 @@ void Benders::run() {
 	int it(0);
 
 
-	master.write(it);
+	//master.write(it);
 	double alpha(0);
 	double slave_cost(0);
 	double invest_cost(0);
