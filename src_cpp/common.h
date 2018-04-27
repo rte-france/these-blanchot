@@ -1,6 +1,5 @@
 #pragma once
-
-
+#include <tuple>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -26,6 +25,15 @@ typedef std::set<Cut, Predicate> Cuts;
 typedef std::shared_ptr<Cuts> CutsPtr;
 
 double const EPSILON_PREDICATE = 1e-8;
+
+typedef std::set<std::string> problem_names;
+
+typedef std::vector<int> IntVector;
+typedef std::vector<double> DblVector;
+typedef std::vector<std::string> StrVector;
+
+//typedef std::pair<std::string, std::string> mps_coupling;
+//typedef std::list<mps_coupling> mps_coupling_list;
 
 struct Predicate {
 	bool operator()(Cut const & lhs, Cut const & rhs)const {
@@ -85,4 +93,12 @@ inline std::ostream & operator<<(std::ostream & stream, Cut const & rhs) {
 	stream << rhs.first;
 	stream << (*rhs.second);
 	return stream;
+}
+
+
+inline std::string get_mps(std::string const & problem_name) {
+	return(problem_name + ".mps");
+}
+inline std::string get_mapping(std::string const & problem_name) {
+	return(problem_name + "_coupling_variables.txt");
 }

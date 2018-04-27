@@ -20,20 +20,13 @@ public:
 	*
 	*  Constructor of class Worker
 	*
-	*  \param mps : path to the mps file (master or slave)
+	*  \param mps : path to mps file
 	*  \param mapping : path to the relevant mapping file 
 	*/
 	Worker();
-	void init(std::string const & mps, std::string const & mapping); 
+	void init(std::string const & problem_name); 
 	virtual ~Worker();
 
-	/*!
-	*  \brief Set a new Lower Bound
-	*
-	*  Method to update the Lower Bound
-	*
-	*  \param lb : Current Lower Bound
-	*/
 	void get_value(double & lb);
 
 	void get_simplex_ite(int & result);
@@ -56,16 +49,11 @@ public:
 	void errormsg(const char *sSubName, int nLineNo, int nErrCode); 
 	std::list<std::ostream *> & stream();
 
-	/*!
-	*  \brief Solve the problem
-	*
-	*  Method to solve the problem stocked in the instance Worker
-	*/
 	void solve();
 
 
 public:
 	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
-	std::list<std::ostream * >_stream; /*!< */
+	std::list<std::ostream * >_stream;
 };
 

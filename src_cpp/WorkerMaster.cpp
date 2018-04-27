@@ -2,21 +2,19 @@
 #include "xprs.h"
 
 WorkerMaster::WorkerMaster() {
-
 }
 
 
 WorkerMaster::~WorkerMaster() {
-
 }
 
 /*!
-*  \brief Solve the Master problem and set the optimal variables in x0
+*  \brief Return optimal variables of a problem
 *
-*  Method to get the optimal variables x0 and alpha
+*  Set optimal variables of a problem which has the form (min(x,alpha) : f(x) + alpha)
 *
-*  \param x0 : empty map list
-*  \param alpha : empty double
+*  \param x0 : reference to an empty map list
+*  \param alpha : reference to an empty double
 */
 void WorkerMaster::get(Point & x0, double & alpha) {
 	x0.clear();
@@ -29,9 +27,7 @@ void WorkerMaster::get(Point & x0, double & alpha) {
 }
 
 /*!
-*  \brief Write the master problem
-*
-*  Method to write the master problem in a lp file
+*  \brief Write a problem in a lp file
 *
 *  \param it : number of the problem
 */
@@ -43,8 +39,7 @@ void WorkerMaster::write(int it) {
 }
 
 /*!
-*  \brief Add cut to the Master Problem
-*
+*  \brief Add benders cut to a problem
 *
 *  \param s : optimal slave variables
 *  \param x0 : optimal Master variables
@@ -77,9 +72,9 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 
 
 /*!
-*  \brief Add cut to the Master Problem
+*  \brief Add several benders cut to a problem
 *
-*
+*  \param i : identifier of a slave problem
 *  \param s : optimal slave variables
 *  \param x0 : optimal Master variables
 *  \param rhs : optimal slave value
@@ -110,15 +105,18 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 }
 
 /*!
-*  \brief Constructor of Master Problem
+*  \brief Constructor of a Master Problem
 *
-*  Construct the Master Problem by loading the mps and mapping files and adding the variable alpha
+*  Construct a Master Problem by loading mps and mapping files and adding the variable alpha
 *
-*  \param mps : path to the mps file
-*  \param mapping : path to the mapping
+*  \param mps : path to mps file
+*  \param mapping : path to mapping
+*  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping, int nslaves) :Worker() {
-	init(mps, mapping);
+WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worker() {
+	init(problem_name);
+
+	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	// add the variable alpha
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));
@@ -133,8 +131,8 @@ WorkerMaster::WorkerMaster(std::string const & mps, std::string const & mapping,
 		XPRSaddnames(_xprs, 2, alpha.c_str(), _id_alpha, _id_alpha);
 		_id_alpha_i.resize(nslaves, -1);
 		for (int i(0); i < nslaves; ++i) {
-			XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha_i[i]); /* Set the number of columns in _id_alpha */
-			XPRSaddcols(_xprs, 1, 0, &zero, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
+			XPRSgetintattrib(_xprs, XPRS_COLS, &_id_alpha_i[i]);
+			XPRSaddcols(_xprs, 1, 0, &zero, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha_i and its parameters */
 			std::stringstream buffer;
 			buffer << "alpha_" << i;
 			XPRSaddnames(_xprs, 2, buffer.str().c_str(), _id_alpha_i[i], _id_alpha_i[i]);

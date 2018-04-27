@@ -4,13 +4,14 @@ WorkerSlave::WorkerSlave() {
 
 }
 
-WorkerSlave::WorkerSlave(std::string const & mps, std::string const & mapping) {
-	init(mps, mapping);
-
+WorkerSlave::WorkerSlave(std::string const & problem_name) {
+	init(problem_name);
+	
 }
 WorkerSlave::~WorkerSlave() {
 
 }
+
 void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";
@@ -18,11 +19,11 @@ void WorkerSlave::write(int it) {
 }
 
 /*!
-*  \brief Fix the trial values in the slave
+*  \brief Fix a set of variables to constant in a problem
 *
-*  Method to set trial values in the slave problem by fixing their bounds
+*  Method to set variables in a problem by fixing their bounds
 *
-*  \param x0 : Trial values
+*  \param x0 : Set of variables to fix
 */
 void WorkerSlave::fix_to(Point const & x0) {
 	int nbnds((int)_name_to_id.size());
@@ -41,7 +42,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 }
 
 /*!
-*  \brief Solve slave problem and get LP solution values
+*  \brief Get LP solution value of a problem
 *
 *  \param s : Empty point which receives the solution
 */
