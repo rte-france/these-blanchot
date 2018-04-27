@@ -107,7 +107,6 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 		_ub = invest_cost;
 
 		/*std::cout << "Upper bound : " << _ub << ", Lower bound : " << _lb << ", alpha : " << alpha << ", invest cost : " << invest_cost << std::endl;*/
-		std::cout << _map_slaves.size() << std::endl;
 
 	}
 
@@ -180,6 +179,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			_bestx = _x0;
 		}
 
+		_master->write(_iter);
 		std::cout << std::setw(10) << _iter;
 		if (_lb == -1e20)
 			std::cout << std::setw(20) << "-INF";
@@ -195,11 +195,12 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _best_ub;
 		std::cout << std::setw(10) << _simplexiter;
 		std::cout << std::endl;
-
 		if (_lb + 1e-6 >= _best_ub) {
 			_stop = true;
 		}
 	}
+
+	broadcast(world, _stop, 0);
 	world.barrier();
 }
 
@@ -228,13 +229,16 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 	while (!_stop) {
 		++_iter;
 
+		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
 
+		/*Fix trial values in each slaves and send back data for Master to build cuts*/
 		step_2(env, world);
 
+		/*Receive datas from each slaves and add cuts to Master Problem*/
 		step_3(env, world);
+		std::cout << " process : " << world.rank() << " in the loop with stop criteria = " << _stop << std::endl;
 	}
-
 
 	if (world.rank() == 0) {
 		for (auto const & kvp : _bestx) {

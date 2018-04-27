@@ -10,7 +10,6 @@ typedef std::pair<SlaveCutData1, DblVector> SlaveCutData2;
 typedef std::pair<SlaveCutData2, StrVector> SlaveCutData3;
 typedef SlaveCutData3 SlaveCutData;
 
-
 void build_SlaveCutData(SlaveCutData &);
 
 enum SlaveCutInt {
