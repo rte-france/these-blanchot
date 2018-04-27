@@ -42,5 +42,5 @@ int main(int argc, char** argv)
 	bendersMpi.load(input, env, world);
 	bendersMpi.run(env, world);
 
-	return 0;
+	return(0);
 }

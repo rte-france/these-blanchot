@@ -23,11 +23,16 @@ public:
 	double _lb;
 	double _ub;
 	double _best_ub;
+	bool _stop;
+	Point _bestx;
 	Point _x0;
 	int _nslaves;
+	int _iter;
+	int _simplexiter;
 
 	Slaves_Ptr_map _map_slaves;
 	WorkerMasterPtr _master;
+	std::map< std::string, int> _problem_to_id;
 
 	void run(mpi::environment & env, mpi::communicator & world);
 

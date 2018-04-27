@@ -56,5 +56,5 @@ FILE(
 	../src_cpp/*.hxx
 	)
 	
-ADD_EXECUTABLE(benders ${STAGE_ENZO_FILES} )
-TARGET_LINK_LIBRARIES(benders xprs msmpi libboost_serialization-vc141-mt-x64-1_67)
+ADD_EXECUTABLE(benders_mpi ${STAGE_ENZO_FILES} )
+TARGET_LINK_LIBRARIES(benders_mpi xprs msmpi libboost_serialization-vc141-mt-x64-1_67)

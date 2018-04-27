@@ -41,6 +41,11 @@ FILE(
 	./*.cpp
 	./*.h  
 	./*.hxx
+
+	./src_cpp/*.cc
+	./src_cpp/*.cpp
+	./src_cpp/*.h  
+	./src_cpp/*.hxx
 	)
 	
 ADD_EXECUTABLE(benders ${STAGE_ENZO_FILES} )

@@ -30,20 +30,23 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 
 		int rank(1);
 		if (world.rank() == 0) {
+
 			send_orders.reserve(problem_list.size() - 1);
 			std::cout << "building master " << *it << std::endl;
 
 			_master.reset(new WorkerMaster(*it, _nslaves));
 
 			++it;
-
+			int i(0);
 			while (it != end) {
 				if (rank >= world.size()) {
 					rank = 1;
 				}
 				send_orders.push_back({ rank, *it });
+				_problem_to_id[*it] = i;
 				++rank;
 				++it;
+				i++;
 			}
 		}
 
@@ -103,7 +106,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 		invest_cost = _lb - alpha;
 		_ub = invest_cost;
 
-		std::cout << "Upper bound : " << _ub << ", Lower bound : " << _lb << ", alpha : " << alpha << ", invest cost : " << invest_cost << std::endl;
+		/*std::cout << "Upper bound : " << _ub << ", Lower bound : " << _lb << ", alpha : " << alpha << ", invest cost : " << invest_cost << std::endl;*/
 		std::cout << _map_slaves.size() << std::endl;
 
 	}
@@ -143,9 +146,10 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 			ptr->get_simplex_ite(handler.get_int(SIMPLEXITER));
 
 			slave_cut_package[kvp.first] = slave_cut_data;
-			gather(world, slave_cut_package, 0);
-			std::cout << "thread " << world.rank() << " solved " << kvp.first << " in " << handler.get_int(SIMPLEXITER) << " simplex iterations" << std::endl;
+			/*std::cout << "thread " << world.rank() << " solved " << kvp.first << " in " << handler.get_dbl(SLAVE_COST) << " simplex iterations" << std::endl;*/
+			/*std::cout << "thread " << world.rank() << " stocked " << slave_cut_package.size() << " package " << std::endl;*/
 		}
+		gather(world, slave_cut_package, 0);
 	}
 	world.barrier();
 }
@@ -159,10 +163,46 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 		SlaveCutPackage slave_cut_package;
 		std::vector<SlaveCutPackage> all_package;
 		gather(world, slave_cut_package, all_package, 0);
-	}
 
+		for (int i(1); i < world.size(); i++) {
+			/*std::cout << "thread " << i << " sent " << all_package[i].size() << " package " << std::endl; */
+			for (auto & itmap : all_package[i]) {
+				SlaveCutDataHandler handler((all_package[i])[itmap.first]);
+				_ub += handler.get_dbl(SLAVE_COST);
+				_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
+				/*std::cout << "thread " << world.rank() << " received and add " << handler.get_dbl(SLAVE_COST) << " from " << itmap.first << std::endl;*/
+				_simplexiter = handler.get_int(SIMPLEXITER);
+			}	
+		}
+
+		if (_best_ub > _ub) {
+			_best_ub = _ub;
+			_bestx = _x0;
+		}
+
+		std::cout << std::setw(10) << _iter;
+		if (_lb == -1e20)
+			std::cout << std::setw(20) << "-INF";
+		else
+			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _lb;
+		if (_ub == +1e20)
+			std::cout << std::setw(20) << "+INF";
+		else
+			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _ub;
+		if (_best_ub == +1e20)
+			std::cout << std::setw(20) << "+INF";
+		else
+			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _best_ub;
+		std::cout << std::setw(10) << _simplexiter;
+		std::cout << std::endl;
+
+		if (_lb + 1e-6 >= _best_ub) {
+			_stop = true;
+		}
+	}
 	world.barrier();
 }
+
 
 void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 
@@ -171,31 +211,38 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 	_ub = +1e20;
 	_x0.clear();
 	_best_ub = +1e20;
+	_stop = false;
+	_iter = 0;
 
-	bool stop = false;
-	int it(0);
+	if (world.rank() == 0) {
+		std::cout << std::setw(10) << "ITE";
+		std::cout << std::setw(20) << "LB";
+		std::cout << std::setw(20) << "UB";
+		std::cout << std::setw(20) << "BESTUB";
+		std::cout << std::setw(10) << "SIMPLEXIT";
+		std::cout << std::endl;
+	}
 
-	step_1(env, world);
+	world.barrier();
 
-	step_2(env, world);
+	while (!_stop) {
+		++_iter;
+
+		step_1(env, world);
+
+		step_2(env, world);
+
+		step_3(env, world);
+	}
 
 
-	//while (!stop) {
-	//	++it;
+	if (world.rank() == 0) {
+		for (auto const & kvp : _bestx) {
+			std::cout << std::setw(50) << std::left << kvp.first;
+			std::cout << " = ";
+			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
+			std::cout << std::endl;
+		}
+	}
 
-	//	Point bestx;
-	//	Point s;
-
-	//	step_1(env, world);
-
-	//	//step_2(env, world);
-
-	//	std::exit(0);
-	//	//send_x0_master(master, x0, _lb, _ub, env, world);
-
-	//	//solve_slaves(env, world);
-
-	//	//get_cut_master(env, world);
-
-	//}
 }
