@@ -1,6 +1,7 @@
 // projet_benders.cpp : définit le point d'entrée pour l'application console.
 //
 #include "Worker.h"
+#include "Timer.h"
 #include "Benders.h"
 #include "BendersMPI.h"
 #include "launcher.h"
@@ -23,6 +24,7 @@ int main(int argc, char** argv)
 		sequential_launch(root, summary_name);
 	}
 	else {
+		Timer timer;
 		XPRSinit("");
 		problem_names input;
 		build_input(root, summary_name, input);
@@ -31,6 +33,10 @@ int main(int argc, char** argv)
 		bendersMpi.run(env, world);
 		bendersMpi.free(env, world);
 		XPRSfree();
+		world.barrier();
+		if (world.rank() == 0) {
+			std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
+		}
 	}
 	return(0);
 }

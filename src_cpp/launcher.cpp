@@ -1,6 +1,7 @@
 #include "launcher.h"
 #include "xprs.h"
 #include "Benders.h"
+#include "Timer.h"
 
 int build_input(std::string const & root, std::string const & summary_name, problem_names & input) {
 	input.clear();
@@ -19,6 +20,7 @@ int build_input(std::string const & root, std::string const & summary_name, prob
 	return 0;
 }
 void sequential_launch(std::string const & root, std::string const & structure) {
+	Timer timer;
 	XPRSinit("");
 	problem_names input;
 	build_input(root, structure, input);
@@ -26,4 +28,5 @@ void sequential_launch(std::string const & root, std::string const & structure) 
 	benders.run();
 	benders.free();
 	XPRSfree();
+	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 }
