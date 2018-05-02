@@ -13,8 +13,6 @@ public:
 
 	std::stringstream _line_trace;
 
-	CutsPtr _cuts;
-
 	WorkerMasterTrace _trace;
 
 	double _lb;

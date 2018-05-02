@@ -32,7 +32,6 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 		if (world.rank() == 0) {
 
 			send_orders.reserve(problem_list.size() - 1);
-			std::cout << "building master " << *it << std::endl;
 
 			_master.reset(new WorkerMaster(*it, _nslaves));
 
@@ -63,7 +62,6 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 				else {
 					mps = it_order->second;
 					rank = it_order->first;
-					std::cout << "master proc " << world.rank() << " send : " << mps << " | " << rank << std::endl;
 					++it_order;
 				}
 			}
@@ -76,7 +74,6 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 
 				if (world.rank() != 0) {
 					if (world.rank() == rank) {
-						std::cout << "slave proc " << world.rank() << " received : " << mps << std::endl;
 						_map_slaves[mps] = WorkerSlavePtr(new WorkerSlave(mps));
 					}
 				}
@@ -106,7 +103,6 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 		invest_cost = _lb - alpha;
 		_ub = invest_cost;
 
-		/*std::cout << "Upper bound : " << _ub << ", Lower bound : " << _lb << ", alpha : " << alpha << ", invest cost : " << invest_cost << std::endl;*/
 
 	}
 
@@ -145,8 +141,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 			ptr->get_simplex_ite(handler.get_int(SIMPLEXITER));
 
 			slave_cut_package[kvp.first] = slave_cut_data;
-			/*std::cout << "thread " << world.rank() << " solved " << kvp.first << " in " << handler.get_dbl(SLAVE_COST) << " simplex iterations" << std::endl;*/
-			/*std::cout << "thread " << world.rank() << " stocked " << slave_cut_package.size() << " package " << std::endl;*/
+			
 		}
 		gather(world, slave_cut_package, 0);
 	}
@@ -159,18 +154,33 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 */
 void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0) {
+
+		_maxsimplexiter = 0;
+		_minsimplexiter = 1000;
+
 		SlaveCutPackage slave_cut_package;
 		std::vector<SlaveCutPackage> all_package;
+
 		gather(world, slave_cut_package, all_package, 0);
 
 		for (int i(1); i < world.size(); i++) {
-			/*std::cout << "thread " << i << " sent " << all_package[i].size() << " package " << std::endl; */
 			for (auto & itmap : all_package[i]) {
+				
 				SlaveCutDataHandler handler((all_package[i])[itmap.first]);
+				SlaveCutTrimmer cut(handler, _x0);
+
 				_ub += handler.get_dbl(SLAVE_COST);
 				_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
-				/*std::cout << "thread " << world.rank() << " received and add " << handler.get_dbl(SLAVE_COST) << " from " << itmap.first << std::endl;*/
-				_simplexiter = handler.get_int(SIMPLEXITER);
+				if (!already_exist_cut(cut, itmap.first)) {
+					_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
+					_all_cuts_storage[_iter][itmap.first] = (all_package[i])[itmap.first];
+				}
+				if (_maxsimplexiter < handler.get_int(SIMPLEXITER)) {
+					_maxsimplexiter = handler.get_int(SIMPLEXITER);
+				}
+				else if (_minsimplexiter > handler.get_int(SIMPLEXITER)) {
+					_minsimplexiter = handler.get_int(SIMPLEXITER);
+				}
 			}	
 		}
 
@@ -179,7 +189,6 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			_bestx = _x0;
 		}
 
-		//_master->write(_iter);
 		std::cout << std::setw(10) << _iter;
 		if (_lb == -1e20)
 			std::cout << std::setw(20) << "-INF";
@@ -193,7 +202,8 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			std::cout << std::setw(20) << "+INF";
 		else
 			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _best_ub;
-		std::cout << std::setw(10) << _simplexiter;
+		std::cout << std::setw(15) << _minsimplexiter;
+		std::cout << std::setw(15) << _maxsimplexiter;
 		std::cout << std::endl;
 		if (_lb + 1e-6 >= _best_ub) {
 			_stop = true;
@@ -202,6 +212,23 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 
 	broadcast(world, _stop, 0);
 	world.barrier();
+}
+
+bool BendersMpi::already_exist_cut(SlaveCutTrimmer & Cut, std::string problem_name)
+{
+	int i(0);
+	bool stop(false);
+	while ((!stop) && (i < _iter) ){
+		SlaveCutDataHandler cut_data_handler((_all_cuts_storage[i])[problem_name]);
+		SlaveCutTrimmer current_cut(cut_data_handler, _x0);
+		if (current_cut < Cut) {
+			stop = true;
+		}
+		else {
+			i++;
+		}
+	}
+	return stop;
 }
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
@@ -228,7 +255,8 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 		std::cout << std::setw(20) << "LB";
 		std::cout << std::setw(20) << "UB";
 		std::cout << std::setw(20) << "BESTUB";
-		std::cout << std::setw(10) << "SIMPLEXIT";
+		std::cout << std::setw(15) << "MINSIMPLEXIT";
+		std::cout << std::setw(15) << "MAXSIMPLEXIT";
 		std::cout << std::endl;
 	}
 
@@ -245,7 +273,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
 		step_3(env, world);
-		std::cout << " process : " << world.rank() << " in the loop with stop criteria = " << _stop << std::endl;
 	}
 
 	if (world.rank() == 0) {

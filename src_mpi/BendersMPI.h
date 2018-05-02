@@ -9,7 +9,7 @@
 
 
 typedef std::map<std::string, WorkerSlavePtr> Slaves_Ptr_map;
-typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
+
 
 class BendersMpi {
 
@@ -28,7 +28,10 @@ public:
 	Point _x0;
 	int _nslaves;
 	int _iter;
-	int _simplexiter;
+	int _maxsimplexiter;
+	int _minsimplexiter;
+
+	AllCutStorage _all_cuts_storage;
 
 	Slaves_Ptr_map _map_slaves;
 	WorkerMasterPtr _master;
@@ -40,4 +43,6 @@ public:
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
 	void step_3(mpi::environment & env, mpi::communicator & world);
+
+	bool already_exist_cut(SlaveCutTrimmer & Cut, std::string key);
 };

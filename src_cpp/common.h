@@ -23,12 +23,6 @@ typedef std::map<std::string, double> Point;
 
 typedef std::shared_ptr<Point> PointPtr;
 
-typedef std::pair<double, PointPtr> Cut;
-
-typedef std::set<Cut, Predicate> Cuts;
-
-typedef std::shared_ptr<Cuts> CutsPtr;
-
 double const EPSILON_PREDICATE = 1e-8;
 
 typedef std::set<std::string> problem_names;
@@ -41,14 +35,6 @@ typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
 
 struct Predicate {
-	bool operator()(Cut const & lhs, Cut const & rhs)const {
-		if (std::fabs(lhs.first - rhs.first) > EPSILON_PREDICATE) {
-			return lhs.first > rhs.first;
-		}
-		else {
-			return lhs.second < rhs.second;
-		}
-	}
 	bool operator()(PointPtr const & lhs, PointPtr const & rhs)const {
 		return *lhs < *rhs;
 	}
@@ -92,11 +78,6 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 		stream << kvp.second;
 		stream << kvp.first;
 	}
-	return stream;
-}
-inline std::ostream & operator<<(std::ostream & stream, Cut const & rhs) {
-	stream << rhs.first;
-	stream << (*rhs.second);
 	return stream;
 }
 

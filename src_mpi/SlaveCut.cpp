@@ -2,18 +2,7 @@
 #include "SlaveCut.h"
 
 
-//SlaveCut::SlaveCut(){
-//
-//
-//}
-//
-//SlaveCut::~SlaveCut() {
-//
-//}
 
-//void build_SlaveCutData(SlaveCutData & rhs) {
-//
-//}
 SlaveCutDataHandler::SlaveCutDataHandler(SlaveCutData & data):_data(data){
 
 }
@@ -49,3 +38,31 @@ double & SlaveCutDataHandler::get_dbl(SlaveCutDbl  key) {
 std::string & SlaveCutDataHandler::get_str(SlaveCutStr key) {
 	return get_str()[key];
 }
+
+
+bool SlaveCutTrimmer::operator==(SlaveCutTrimmer & other) {
+	if (get_const_cut() == other._data_cut.get_dbl(SLAVE_COST)) {
+		if (_data_cut.get_point() == other._data_cut.get_point()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+SlaveCutTrimmer::SlaveCutTrimmer( SlaveCutDataHandler const & data, Point const & x0) : _data_cut(data), _x0(x0){
+}
+
+double SlaveCutTrimmer::get_const_cut(){
+	double result(_data_cut.get_dbl(SLAVE_COST));
+	for (auto const & kvp : _x0) {
+		result -= _data_cut.get_point().find(kvp.first)->second * _x0.find(kvp.first)->second;
+	}
+
+	return result;
+}
+
