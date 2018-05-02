@@ -9,6 +9,7 @@ typedef std::vector<WorkerSlavePtr> WorkerSlaves;
 
 class WorkerSlave : public Worker {
 public:
+
 	WorkerSlave();
 	WorkerSlave(std::string const & problem_name);
 	virtual ~WorkerSlave();

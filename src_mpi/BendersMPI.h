@@ -28,6 +28,7 @@ public:
 	Point _x0;
 	int _nslaves;
 	int _iter;
+	int _deleted_cut;
 	int _maxsimplexiter;
 	int _minsimplexiter;
 
@@ -44,5 +45,5 @@ public:
 	void step_2(mpi::environment & env, mpi::communicator & world);
 	void step_3(mpi::environment & env, mpi::communicator & world);
 
-	bool already_exist_cut(SlaveCutTrimmer & Cut, std::string key);
+	bool already_exist_cut(SlaveCutTrimmer & Cut, std::string const & problem_name);
 };

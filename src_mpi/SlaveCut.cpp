@@ -41,7 +41,7 @@ std::string & SlaveCutDataHandler::get_str(SlaveCutStr key) {
 
 
 bool SlaveCutTrimmer::operator==(SlaveCutTrimmer & other) {
-	if (get_const_cut() == other._data_cut.get_dbl(SLAVE_COST)) {
+	if (get_const_cut() == other.get_const_cut()) {
 		if (_data_cut.get_point() == other._data_cut.get_point()) {
 			return true;
 		}

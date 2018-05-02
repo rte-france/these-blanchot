@@ -170,11 +170,16 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 				SlaveCutTrimmer cut(handler, _x0);
 
 				_ub += handler.get_dbl(SLAVE_COST);
-				_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
+
 				if (!already_exist_cut(cut, itmap.first)) {
 					_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
 					_all_cuts_storage[_iter][itmap.first] = (all_package[i])[itmap.first];
 				}
+				else {
+					_deleted_cut++;
+					std::cout << "Cut from problem " << itmap.first << " has been deleted " << std::endl;
+				}
+
 				if (_maxsimplexiter < handler.get_int(SIMPLEXITER)) {
 					_maxsimplexiter = handler.get_int(SIMPLEXITER);
 				}
@@ -204,6 +209,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _best_ub;
 		std::cout << std::setw(15) << _minsimplexiter;
 		std::cout << std::setw(15) << _maxsimplexiter;
+		std::cout << std::setw(15) << _deleted_cut;
 		std::cout << std::endl;
 		if (_lb + 1e-6 >= _best_ub) {
 			_stop = true;
@@ -214,21 +220,22 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 	world.barrier();
 }
 
-bool BendersMpi::already_exist_cut(SlaveCutTrimmer & Cut, std::string problem_name)
+bool BendersMpi::already_exist_cut(SlaveCutTrimmer & Cut, std::string const & problem_name)
 {
 	int i(0);
-	bool stop(false);
-	while ((!stop) && (i < _iter) ){
-		SlaveCutDataHandler cut_data_handler((_all_cuts_storage[i])[problem_name]);
-		SlaveCutTrimmer current_cut(cut_data_handler, _x0);
-		if (current_cut < Cut) {
-			stop = true;
+	bool exist(false);
+
+	while ((!exist) && (i < _iter) ){
+		if (_all_cuts_storage[i].find(problem_name) != _all_cuts_storage[i].end()) {
+			SlaveCutDataHandler current_cut_handler((_all_cuts_storage[i])[problem_name]);
+			SlaveCutTrimmer current_cut(current_cut_handler, _x0);
+			if (current_cut == Cut) {
+				exist = true;
+			}
 		}
-		else {
-			i++;
-		}
+		i++;
 	}
-	return stop;
+	return exist;
 }
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
@@ -257,6 +264,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 		std::cout << std::setw(20) << "BESTUB";
 		std::cout << std::setw(15) << "MINSIMPLEXIT";
 		std::cout << std::setw(15) << "MAXSIMPLEXIT";
+		std::cout << std::setw(15) << "DELETEDCUT";
 		std::cout << std::endl;
 	}
 
@@ -264,6 +272,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 
 	while (!_stop) {
 		++_iter;
+		_deleted_cut = 0;
 
 		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
