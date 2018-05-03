@@ -3,6 +3,7 @@
 
 #include "Worker.h"
 #include "xprs.h"
+#include "SlaveCut.h"
 
 class WorkerSlave;
 typedef std::shared_ptr<WorkerSlave> WorkerSlavePtr;
@@ -14,6 +15,7 @@ public:
 	WorkerSlave();
 	WorkerSlave(std::string const & problem_name);
 	virtual ~WorkerSlave();
+	SlaveCutStorage _slave_storage;
 
 public:
 

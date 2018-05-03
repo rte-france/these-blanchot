@@ -2,8 +2,6 @@
 
 #include "common_mpi.h"
 #include "Worker.h"
-#include "WorkerSlave.h"
-#include "WorkerMaster.h"
 
 typedef std::pair<Point, IntVector> SlaveCutData1;
 typedef std::pair<SlaveCutData1, DblVector> SlaveCutData2;
@@ -11,9 +9,10 @@ typedef std::pair<SlaveCutData2, StrVector> SlaveCutData3;
 typedef SlaveCutData3 SlaveCutData;
 
 typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
-typedef std::map<int, SlaveCutPackage> AllCutStorage;
-//
-//typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
+
+class SlaveCutTrimmer;
+typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
+typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
 
 
 void build_SlaveCutData(SlaveCutData &);
@@ -46,12 +45,19 @@ public:
 	DblVector & get_dbl();
 	StrVector & get_str();
 
-	int & get_int(SlaveCutInt );
+	int & get_int(SlaveCutInt);
 	double & get_dbl(SlaveCutDbl);
 	std::string & get_str(SlaveCutStr);
 
 public :
+	Point const & get_point()const;
+	IntVector const & get_int()const;
+	DblVector const & get_dbl()const;
+	StrVector const & get_str()const;
 
+	int get_int(SlaveCutInt)const;
+	double get_dbl(SlaveCutDbl)const;
+	std::string const & get_str(SlaveCutStr)const;
 	SlaveCutDataHandler(SlaveCutData & data);
 	virtual ~SlaveCutDataHandler();
 
@@ -60,12 +66,11 @@ public :
 
 class SlaveCutTrimmer {
 public:
-	SlaveCutData _data_cut;
-	Point _x0;
+	SlaveCutDataHandler const & _data_cut;
+	Point const &_x0;
 
-	SlaveCutTrimmer();
-	SlaveCutTrimmer(SlaveCutData const & data, Point const & x0);
-	double get_const_cut();
-	bool operator<(SlaveCutTrimmer & other);
+	SlaveCutTrimmer(SlaveCutDataHandler const & data, Point const & x0);
+	double get_const_cut()const;
+	bool operator<(SlaveCutTrimmer const &  other)const;
 
 };

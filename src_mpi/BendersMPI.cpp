@@ -121,6 +121,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() != 0)
 	{
+		int deleted_slaves_cut(0);
 		SlaveCutPackage slave_cut_package;
 
 		for (auto & kvp : _map_slaves) {
@@ -139,11 +140,19 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 			ptr->get_value(handler.get_dbl(SLAVE_COST));
 			ptr->get_subgradient(handler.get_point());
 			ptr->get_simplex_ite(handler.get_int(SIMPLEXITER));
+		/*	SlaveCutTrimmer trimmer(handler, _x0);
+			if (ptr->_slave_storage.find(trimmer) == ptr->_slave_storage.end()) {
+				slave_cut_package[kvp.first] = slave_cut_data;
+				ptr->_slave_storage.insert(trimmer);
+			}
+			else {
+				++deleted_slaves_cut;
+			}*/
 
 			slave_cut_package[kvp.first] = slave_cut_data;
-			
 		}
 		gather(world, slave_cut_package, 0);
+	/*	gather(world, deleted_slaves_cut, 0);*/
 	}
 	world.barrier();
 }
@@ -167,17 +176,18 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			for (auto & itmap : all_package[i]) {
 				
 				SlaveCutDataHandler handler((all_package[i])[itmap.first]);
-				SlaveCutTrimmer cut((all_package[i])[itmap.first], _x0);
+				SlaveCutTrimmer cut(handler, _x0);
 
 				_ub += handler.get_dbl(SLAVE_COST);
+				//_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
 
 				if (!already_exist_cut(cut, itmap.first)) {
 					_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
-					_all_cuts_storage[_iter][itmap.first] = (all_package[i])[itmap.first];
+					_all_cuts_storage[itmap.first].insert(cut);
 				}
 				else {
 					_deleted_cut++;
-					std::cout << "Cut from problem " << itmap.first << " has been deleted " << std::endl;
+					/*std::cout << "Cut from problem " << itmap.first << " has been deleted " << std::endl;*/
 				}
 
 				if (_maxsimplexiter < handler.get_int(SIMPLEXITER)) {
@@ -188,6 +198,15 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 				}
 			}	
 		}
+
+		/*int deleted_slaves_cut(0);
+		std::vector<int> deleted_cut;
+		gather(world, deleted_slaves_cut, deleted_cut, 0);
+
+		for (auto i : deleted_cut) {
+			_deleted_cut += deleted_cut[i];
+			i++;
+		}*/
 
 		if (_best_ub > _ub) {
 			_best_ub = _ub;
@@ -224,17 +243,9 @@ bool BendersMpi::already_exist_cut(SlaveCutTrimmer & Cut, std::string const & pr
 {
 	int i(0);
 	bool exist(false);
-
-	//while ((!exist) && (i < _iter) ){
-	//	if (_all_cuts_storage[i].find(problem_name) != _all_cuts_storage[i].end()) {
-	//		SlaveCutDataHandler current_cut_handler((_all_cuts_storage[i])[problem_name]);
-	//		SlaveCutTrimmer current_cut(current_cut_handler, _x0);
-	//		if (current_cut == Cut) {
-	//			exist = true;
-	//		}
-	//	}
-	//	i++;
-	//}
+	if (!(_all_cuts_storage[problem_name].find(Cut) == _all_cuts_storage[problem_name].end())) {
+		exist = true;
+	}
 	return exist;
 }
 
