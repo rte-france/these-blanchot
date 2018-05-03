@@ -167,7 +167,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			for (auto & itmap : all_package[i]) {
 				
 				SlaveCutDataHandler handler((all_package[i])[itmap.first]);
-				SlaveCutTrimmer cut(handler, _x0);
+				SlaveCutTrimmer cut((all_package[i])[itmap.first], _x0);
 
 				_ub += handler.get_dbl(SLAVE_COST);
 
@@ -225,16 +225,16 @@ bool BendersMpi::already_exist_cut(SlaveCutTrimmer & Cut, std::string const & pr
 	int i(0);
 	bool exist(false);
 
-	while ((!exist) && (i < _iter) ){
-		if (_all_cuts_storage[i].find(problem_name) != _all_cuts_storage[i].end()) {
-			SlaveCutDataHandler current_cut_handler((_all_cuts_storage[i])[problem_name]);
-			SlaveCutTrimmer current_cut(current_cut_handler, _x0);
-			if (current_cut == Cut) {
-				exist = true;
-			}
-		}
-		i++;
-	}
+	//while ((!exist) && (i < _iter) ){
+	//	if (_all_cuts_storage[i].find(problem_name) != _all_cuts_storage[i].end()) {
+	//		SlaveCutDataHandler current_cut_handler((_all_cuts_storage[i])[problem_name]);
+	//		SlaveCutTrimmer current_cut(current_cut_handler, _x0);
+	//		if (current_cut == Cut) {
+	//			exist = true;
+	//		}
+	//	}
+	//	i++;
+	//}
 	return exist;
 }
 

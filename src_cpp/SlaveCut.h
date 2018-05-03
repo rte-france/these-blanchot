@@ -9,9 +9,12 @@ typedef std::pair<Point, IntVector> SlaveCutData1;
 typedef std::pair<SlaveCutData1, DblVector> SlaveCutData2;
 typedef std::pair<SlaveCutData2, StrVector> SlaveCutData3;
 typedef SlaveCutData3 SlaveCutData;
-typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
 
+typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
 typedef std::map<int, SlaveCutPackage> AllCutStorage;
+//
+//typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
+
 
 void build_SlaveCutData(SlaveCutData &);
 
@@ -48,6 +51,7 @@ public:
 	std::string & get_str(SlaveCutStr);
 
 public :
+
 	SlaveCutDataHandler(SlaveCutData & data);
 	virtual ~SlaveCutDataHandler();
 
@@ -56,11 +60,12 @@ public :
 
 class SlaveCutTrimmer {
 public:
-	SlaveCutDataHandler _data_cut;
+	SlaveCutData _data_cut;
 	Point _x0;
 
-	SlaveCutTrimmer(SlaveCutDataHandler const & data, Point const & x0);
+	SlaveCutTrimmer();
+	SlaveCutTrimmer(SlaveCutData const & data, Point const & x0);
 	double get_const_cut();
-	bool operator==(SlaveCutTrimmer & other);
+	bool operator<(SlaveCutTrimmer & other);
 
 };

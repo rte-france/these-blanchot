@@ -40,9 +40,11 @@ std::string & SlaveCutDataHandler::get_str(SlaveCutStr key) {
 }
 
 
-bool SlaveCutTrimmer::operator==(SlaveCutTrimmer & other) {
-	if (get_const_cut() == other.get_const_cut()) {
-		if (_data_cut.get_point() == other._data_cut.get_point()) {
+bool SlaveCutTrimmer::operator<(SlaveCutTrimmer & other) {
+	SlaveCutDataHandler data1(_data_cut);
+	SlaveCutDataHandler data2(other._data_cut);
+	if (get_const_cut() < other.get_const_cut()) {
+		if (data1.get_point() < data2.get_point()) {
 			return true;
 		}
 		else {
@@ -54,15 +56,19 @@ bool SlaveCutTrimmer::operator==(SlaveCutTrimmer & other) {
 	}
 }
 
-SlaveCutTrimmer::SlaveCutTrimmer( SlaveCutDataHandler const & data, Point const & x0) : _data_cut(data), _x0(x0){
+SlaveCutTrimmer::SlaveCutTrimmer() : _data_cut(), _x0(){
 }
 
-double SlaveCutTrimmer::get_const_cut(){
-	double result(_data_cut.get_dbl(SLAVE_COST));
-	for (auto const & kvp : _x0) {
-		result -= _data_cut.get_point().find(kvp.first)->second * _x0.find(kvp.first)->second;
-	}
+SlaveCutTrimmer::SlaveCutTrimmer( SlaveCutData const & data, Point const & x0) : _data_cut(data), _x0(x0){
+}
 
+
+double SlaveCutTrimmer::get_const_cut(){
+	SlaveCutDataHandler data(_data_cut);
+	double result(data.get_dbl(SLAVE_COST));
+	for (auto const & kvp : _x0) {
+		result -= data.get_point().find(kvp.first)->second * _x0.find(kvp.first)->second;
+	}
 	return result;
 }
 
