@@ -102,9 +102,8 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 		invest_cost = _lb - alpha;
 		_ub = invest_cost;
-
-
 	}
+
 
 	broadcast(world, _x0, 0);
 
@@ -177,17 +176,21 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 				
 				SlaveCutDataHandler handler((all_package[i])[itmap.first]);
 				SlaveCutTrimmer cut(handler, _x0);
-
+				
 				_ub += handler.get_dbl(SLAVE_COST);
-				//_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
 
-				if (!already_exist_cut(cut, itmap.first)) {
-					_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
-					_all_cuts_storage[itmap.first].insert(cut);
+				_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
+
+				/*(_all_cuts_storage[itmap.first]).insert(cut);*/
+				//std::cout << "There are " << (_all_cuts_storage[itmap.first]).size() << " cut(s) stored in problem " << itmap.first << std::endl;
+
+				if (already_exist_cut(cut, itmap.first)) {
+					_deleted_cut++;
+					std::cout << "Cut from problem " << itmap.first << " has been deleted " << std::endl;
 				}
 				else {
-					_deleted_cut++;
-					/*std::cout << "Cut from problem " << itmap.first << " has been deleted " << std::endl;*/
+					//_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
+					_all_cuts_storage[itmap.first].insert(cut);
 				}
 
 				if (_maxsimplexiter < handler.get_int(SIMPLEXITER)) {
@@ -198,6 +201,34 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 				}
 			}	
 		}
+
+		//Point x1;
+		//Point s1;
+		//Point x2;
+		//Point s2;
+		//x1["a"] = 4;
+		//x1["b"] = 0;
+		//s1["a"] = 0;
+		//s1["b"] = 0;
+		//x2["a"] = 3;
+		//x2["b"] = 1;
+		//s2["a"] = 0;
+		//s2["b"] = 0;
+		//SlaveCutData slave_cut_datat1;
+		//SlaveCutDataHandler handlert1(slave_cut_datat1);
+		//handlert1.init();
+		//handlert1.get_dbl(SLAVE_COST) = 4.0;
+		//handlert1.get_point() = s1;
+		//SlaveCutTrimmer trimmert1(handlert1, x1);
+
+		//SlaveCutData slave_cut_datat2;
+		//SlaveCutDataHandler handlert2(slave_cut_datat2);
+		//handlert2.init();
+		//handlert2.get_dbl(SLAVE_COST) = 4.0;
+		//handlert2.get_point() = s2;
+		//SlaveCutTrimmer trimmert2(handlert2, x2);
+
+		//std::cout << " x1 <= x2 : " << (x1 == x2) << " x2 <= x1 : " << (x1 < x2) << std::endl;
 
 		/*int deleted_slaves_cut(0);
 		std::vector<int> deleted_cut;
@@ -241,12 +272,12 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 
 bool BendersMpi::already_exist_cut(SlaveCutTrimmer & Cut, std::string const & problem_name)
 {
-	int i(0);
-	bool exist(false);
-	if (!(_all_cuts_storage[problem_name].find(Cut) == _all_cuts_storage[problem_name].end())) {
-		exist = true;
+	if (!((_all_cuts_storage[problem_name]).find(Cut) == (_all_cuts_storage[problem_name]).end())) {
+		return true;
 	}
-	return exist;
+	else {
+		return false;
+	}
 }
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {

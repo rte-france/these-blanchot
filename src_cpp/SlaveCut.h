@@ -14,7 +14,6 @@ class SlaveCutTrimmer;
 typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
 typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
 
-
 void build_SlaveCutData(SlaveCutData &);
 
 enum SlaveCutInt {
@@ -49,15 +48,17 @@ public:
 	double & get_dbl(SlaveCutDbl);
 	std::string & get_str(SlaveCutStr);
 
-public :
+	int get_int(SlaveCutInt)const;
+	double get_dbl(SlaveCutDbl)const;
+	std::string const & get_str(SlaveCutStr)const;
+
 	Point const & get_point()const;
 	IntVector const & get_int()const;
 	DblVector const & get_dbl()const;
 	StrVector const & get_str()const;
 
-	int get_int(SlaveCutInt)const;
-	double get_dbl(SlaveCutDbl)const;
-	std::string const & get_str(SlaveCutStr)const;
+public :
+	
 	SlaveCutDataHandler(SlaveCutData & data);
 	virtual ~SlaveCutDataHandler();
 
