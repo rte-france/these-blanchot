@@ -202,33 +202,6 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			}	
 		}
 
-		//Point x1;
-		//Point s1;
-		//Point x2;
-		//Point s2;
-		//x1["a"] = 4;
-		//x1["b"] = 0;
-		//s1["a"] = 0;
-		//s1["b"] = 0;
-		//x2["a"] = 3;
-		//x2["b"] = 1;
-		//s2["a"] = 0;
-		//s2["b"] = 0;
-		//SlaveCutData slave_cut_datat1;
-		//SlaveCutDataHandler handlert1(slave_cut_datat1);
-		//handlert1.init();
-		//handlert1.get_dbl(SLAVE_COST) = 4.0;
-		//handlert1.get_point() = s1;
-		//SlaveCutTrimmer trimmert1(handlert1, x1);
-
-		//SlaveCutData slave_cut_datat2;
-		//SlaveCutDataHandler handlert2(slave_cut_datat2);
-		//handlert2.init();
-		//handlert2.get_dbl(SLAVE_COST) = 4.0;
-		//handlert2.get_point() = s2;
-		//SlaveCutTrimmer trimmert2(handlert2, x2);
-
-		//std::cout << " x1 <= x2 : " << (x1 == x2) << " x2 <= x1 : " << (x1 < x2) << std::endl;
 
 		/*int deleted_slaves_cut(0);
 		std::vector<int> deleted_cut;

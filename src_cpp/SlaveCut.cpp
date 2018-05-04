@@ -66,7 +66,6 @@ std::string const & SlaveCutDataHandler::get_str(SlaveCutStr key) const {
 
 
 bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
-	/*return((get_const_cut() < other.get_const_cut()) || ((get_const_cut() == other.get_const_cut()) && (_x0 < other._x0)));*/
 	if (get_const_cut() < other.get_const_cut()) {
 		return true;
 	}
