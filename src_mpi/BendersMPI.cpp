@@ -181,17 +181,20 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 
 				_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
 
-				/*(_all_cuts_storage[itmap.first]).insert(cut);*/
-				//std::cout << "There are " << (_all_cuts_storage[itmap.first]).size() << " cut(s) stored in problem " << itmap.first << std::endl;
+				_all_cuts_storage[itmap.first].insert(cut);
 
-				if (already_exist_cut(cut, itmap.first)) {
+				std::cout << "There are " << (_all_cuts_storage[itmap.first]).size() << " cut(s) stored in problem " << itmap.first << std::endl;
+
+				/*if (already_exist_cut(cut, itmap.first)) {
 					_deleted_cut++;
 					std::cout << "Cut from problem " << itmap.first << " has been deleted " << std::endl;
 				}
 				else {
-					//_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
+					_master->add_cut_slave(_problem_to_id[itmap.first], handler.get_point(), _x0, handler.get_dbl(SLAVE_COST));
 					_all_cuts_storage[itmap.first].insert(cut);
-				}
+					std::cout << "There are " << (_all_cuts_storage[itmap.first]).size() << " cut(s) stored in problem " << itmap.first << std::endl;
+
+				}*/
 
 				if (_maxsimplexiter < handler.get_int(SIMPLEXITER)) {
 					_maxsimplexiter = handler.get_int(SIMPLEXITER);

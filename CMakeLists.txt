@@ -64,6 +64,10 @@ IF( USE_MPI )
 	ADD_LIBRARY(mpicore STATIC ${MPI_FILES} )
 ENDIF( USE_MPI )
 
+ADD_EXECUTABLE(test_sur_les_set ./src_enzo_test/test_sur_les_set.cpp)
+TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
+
+
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
 	TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67)

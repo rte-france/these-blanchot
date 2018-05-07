@@ -3,7 +3,7 @@
 
 
 
-SlaveCutDataHandler::SlaveCutDataHandler(SlaveCutData & data):_data(data){
+SlaveCutDataHandler::SlaveCutDataHandler(SlaveCutData & data) :_data(data) {
 
 }
 SlaveCutDataHandler::~SlaveCutDataHandler() {
@@ -66,33 +66,36 @@ std::string const & SlaveCutDataHandler::get_str(SlaveCutStr key) const {
 
 
 bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
-	if (get_const_cut() < other.get_const_cut()) {
-		return true;
+	Predicate point_comp;
+	//return((get_const_cut() < other.get_const_cut()) || ((std::fabs(get_const_cut() == other.get_const_cut()) < EPSILON_PREDICATE)) && (point_comp(_x0, other._x0)));
+	if (std::fabs(get_const_cut() - other.get_const_cut()) < EPSILON_PREDICATE) {
+		std::cout << " Point comparison " << std::endl;
+		return point_comp(_data_cut.get_point(), other._data_cut.get_point());
 	}
-	else if(get_const_cut() > other.get_const_cut()){
-		return false;
-	}
-	else if (get_const_cut() == other.get_const_cut()) {
-		for (auto const & kvp : _x0) {
-			if (_x0.find(kvp.first)->second < other._x0.find(kvp.first)->second) {
-				return true;
-			}
-			else if (_x0 > other._x0) {
-				return false;
-			}
-		}
+	else {
+		std::cout << " Const comparison " << std::endl;
+
+		return (get_const_cut() < other.get_const_cut());
 	}
 }
 
 
-SlaveCutTrimmer::SlaveCutTrimmer(SlaveCutDataHandler const & data, Point const & x0) : _data_cut(data), _x0(x0){
+SlaveCutTrimmer::SlaveCutTrimmer(SlaveCutDataHandler const & data, Point const & x0) : _data_cut(data), _x0(x0) {
 }
 
 
-double SlaveCutTrimmer::get_const_cut()const{
+double SlaveCutTrimmer::get_const_cut()const {
 	double result(_data_cut.get_dbl(SLAVE_COST));
 	for (auto const & kvp : _x0) {
 		result -= _data_cut.get_point().find(kvp.first)->second * _x0.find(kvp.first)->second;
 	}
 	return result;
+}
+
+std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs) {
+	rhs.print(stream);
+	return stream;
+}
+void SlaveCutTrimmer::print(std::ostream & stream)const {
+	stream << " |  Constant " << get_const_cut() << " Coeff " << _data_cut.get_point() << " | ";
 }
