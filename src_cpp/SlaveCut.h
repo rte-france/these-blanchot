@@ -8,6 +8,8 @@ typedef std::pair<SlaveCutData1, DblVector> SlaveCutData2;
 typedef std::pair<SlaveCutData2, StrVector> SlaveCutData3;
 typedef SlaveCutData3 SlaveCutData;
 
+
+
 typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
 
 class SlaveCutTrimmer;
@@ -28,7 +30,7 @@ enum SlaveCutDbl {
 };
 
 enum SlaveCutStr {
-	MAXSTR=0
+	MAXSTR = 0
 };
 
 // alpha_i >= rhs+s(x-x0) = (rhs-s.x0)+s.x
@@ -57,8 +59,8 @@ public:
 	DblVector const & get_dbl()const;
 	StrVector const & get_str()const;
 
-public :
-	
+public:
+
 	SlaveCutDataHandler(SlaveCutData & data);
 	virtual ~SlaveCutDataHandler();
 
@@ -79,3 +81,5 @@ public:
 };
 
 std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs);
+
+std::ostream & operator<<(std::ostream & stream, SlaveCutData const & rhs);

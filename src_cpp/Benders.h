@@ -14,6 +14,8 @@ public:
 	std::stringstream _line_trace;
 
 	WorkerMasterTrace _trace;
+	AllCutStorage _all_cuts_storage;
+	std::map< int, std::string> _id_to_problem;
 
 	double _lb;
 	double _ub;

@@ -6,10 +6,7 @@
 #include "WorkerSlave.h"
 #include "WorkerMaster.h"
 
-
-
 typedef std::map<std::string, WorkerSlavePtr> Slaves_Ptr_map;
-
 
 class BendersMpi {
 

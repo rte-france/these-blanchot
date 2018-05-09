@@ -73,10 +73,20 @@ struct Predicate {
 inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 	for (auto const & kvp : rhs) {
 		if (kvp.second > 0) {
-			stream << "+";
+			if (kvp.second == 1) {
+				stream << "+";
+				stream << kvp.first;
+			}
+			else {
+				stream << "+";
+				stream << kvp.second;
+				stream << kvp.first;
+			}
 		}
-		stream << kvp.second;
-		stream << kvp.first;
+		else if (kvp.second < 0) {
+			stream << kvp.second;
+			stream << kvp.first;
+		}
 	}
 	return stream;
 }
