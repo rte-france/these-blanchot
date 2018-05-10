@@ -4,6 +4,9 @@
 #include "Timer.h"
 #include "Benders.h"
 #include "SlaveCut.h"
+
+typedef std::set<SlaveCutData> TestStorage;
+
 int main(int argc, char** argv)
 {
 	Point x1;
@@ -44,34 +47,18 @@ int main(int argc, char** argv)
 	std::cout << "Cut5 is : " << trimmer5 << std::endl;
 	std::cout << "Cut6 is : " << trimmer6 << std::endl;
 	std::cout << " t1 < t2 : " << (trimmer1 < trimmer2) << " and t2 < t1 : " << (trimmer2 < trimmer1) << std::endl;
-
-
 	SlaveCutStorage Set;
-	std::pair<std::set<SlaveCutTrimmer>::iterator, bool> result;
-	result = Set.insert(trimmer1);
+
+
+	auto result = Set.insert(trimmer1);
 	std::cout << "Cut1 : " << trimmer1 << " inserted : " << result.second << std::endl;
-	result = Set.insert(trimmer2);
-	std::cout << "Cut2 : " << trimmer2 << " inserted : " << result.second << std::endl;
-	result = Set.insert(trimmer3);
-	std::cout << "Cut3 : " << trimmer3 << " inserted : " << result.second << std::endl;
-	result = Set.insert(trimmer4);
-	std::cout << "Cut4 : " << trimmer4 << " inserted : " << result.second << std::endl;
-	result = Set.insert(trimmer5);
-	std::cout << "Cut5 : " << trimmer5 << " inserted : " << result.second << std::endl;
-	result = Set.insert(trimmer6);
-	std::cout << "Cut6 : " << trimmer6 << " inserted : " << result.second << std::endl;
-	std::cout << "Set contains " << Set.size() << " elements " << std::endl;
 
-	AllCutStorage map_set;
-	map_set["a"].insert(trimmer1);
-	map_set["a"].insert(trimmer2);
-	map_set["a"].insert(trimmer3);
-	map_set["b"].insert(trimmer4);
-	map_set["b"].insert(trimmer5);
-	map_set["b"].insert(trimmer6);
-
-	std::cout << "Set 'a' contains " << map_set["a"].size() << " elements " << std::endl;
-	std::cout << "Set 'b' contains " << map_set["a"].size() << " elements " << std::endl;
+	auto itset = Set.begin();
+	std::cout << *itset << std::endl;
+	handler1.init();
+	handler1.get_dbl(SLAVE_COST) = 5.0;
+	handler1.get_point() = x2;
+	std::cout << *itset << std::endl;
 
 	return(0);
 }

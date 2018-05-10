@@ -69,12 +69,9 @@ bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
 	Predicate point_comp;
 	//return((get_const_cut() < other.get_const_cut()) || ((std::fabs(get_const_cut() == other.get_const_cut()) < EPSILON_PREDICATE)) && (point_comp(_x0, other._x0)));
 	if (std::fabs(get_const_cut() - other.get_const_cut()) < EPSILON_PREDICATE) {
-		std::cout << " Point comparison " << std::endl;
 		return point_comp(_data_cut.get_point(), other._data_cut.get_point());
 	}
 	else {
-		std::cout << " Const comparison " << std::endl;
-
 		return (get_const_cut() < other.get_const_cut());
 	}
 }
@@ -98,4 +95,16 @@ std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs) {
 }
 void SlaveCutTrimmer::print(std::ostream & stream)const {
 	stream << " |  Constant " << get_const_cut() << " Coeff " << _data_cut.get_point() << " | ";
+}
+
+std::ostream & operator<<(std::ostream & stream, SlaveCutData const & rhs) {
+	stream << " | Subgradient " << rhs.first.first.first;
+	if (&rhs.first.first.second[SIMPLEXITER] != NULL) {
+		stream << " Simplexiter " << rhs.first.first.second[SIMPLEXITER];
+	}
+	if (&rhs.first.first.second[SIMPLEXITER] != NULL) {
+		stream << " Slave cost " << rhs.first.second[SLAVE_COST];
+	}
+	stream << " | ";
+	return stream;
 }

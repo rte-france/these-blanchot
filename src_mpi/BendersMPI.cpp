@@ -174,7 +174,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 		for (int i(1); i < world.size(); i++) {
 			for (auto & itmap : all_package[i]) {
 				
-				SlaveCutDataHandler handler((all_package[i])[itmap.first]);
+				SlaveCutDataHandler handler(itmap.second);
 				SlaveCutTrimmer cut(handler, _x0);
 				
 				_ub += handler.get_dbl(SLAVE_COST);
