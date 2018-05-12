@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common_mpi.h"
+#include "common.h"
 #include "Worker.h"
 
 typedef std::pair<Point, IntVector> SlaveCutData1;

@@ -46,12 +46,13 @@ int main(int argc, char** argv)
 	std::cout << "Cut4 is : " << trimmer4 << std::endl;
 	std::cout << "Cut5 is : " << trimmer5 << std::endl;
 	std::cout << "Cut6 is : " << trimmer6 << std::endl;
-	std::cout << " t1 < t2 : " << (trimmer1 < trimmer2) << " and t2 < t1 : " << (trimmer2 < trimmer1) << std::endl;
 	SlaveCutStorage Set;
-
-
-	auto result = Set.insert(trimmer1);
-	std::cout << "Cut1 : " << trimmer1 << " inserted : " << result.second << std::endl;
+	std::cout << std::setw(30) << trimmer1 << " inserted : " << Set.insert(trimmer1).second << std::endl;
+	std::cout << std::setw(30) << trimmer2 << " inserted : " << Set.insert(trimmer2).second << std::endl;
+	std::cout << std::setw(30) << trimmer3 << " inserted : " << Set.insert(trimmer3).second << std::endl;
+	std::cout << std::setw(30) << trimmer4 << " inserted : " << Set.insert(trimmer4).second << std::endl;
+	std::cout << std::setw(30) << trimmer5 << " inserted : " << Set.insert(trimmer5).second << std::endl;
+	std::cout << std::setw(30) << trimmer6 << " inserted : " << Set.insert(trimmer6).second << std::endl;
 
 	auto itset = Set.begin();
 	std::cout << *itset << std::endl;

@@ -1,4 +1,3 @@
-#include "common_mpi.h"
 #include "SlaveCut.h"
 
 
@@ -94,7 +93,9 @@ std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs) {
 	return stream;
 }
 void SlaveCutTrimmer::print(std::ostream & stream)const {
-	stream << " |  Constant " << get_const_cut() << " Coeff " << _data_cut.get_point() << " | ";
+	std::stringstream buffer;
+	buffer << get_const_cut() << _data_cut.get_point();
+	stream << buffer.str();
 }
 
 std::ostream & operator<<(std::ostream & stream, SlaveCutData const & rhs) {
