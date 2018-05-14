@@ -31,17 +31,24 @@ ELSE()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-conversion -Wno-sign-compare")
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-unused-parameter")
 ENDIF( WIN32 )
-
+MESSAGE("XPRESSDIR is $ENV{XPRESSDIR}")
+MESSAGE("BOOSTDIR  is $ENV{BOOSTDIR}")
 INCLUDE_DIRECTORIES(
 	./src_cpp
 	$ENV{XPRESSDIR}/include
 	)
 IF( USE_MPI )
-	INCLUDE_DIRECTORIES(D:/software/boost_1_67_0 ./src_mpi $ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64)
-	LINK_DIRECTORIES($ENV{XPRESSDIR}/lib D:/software/boost_1_67_0/stage/lib $ENV{MSMPI_LIB64})
+	IF(WIN32)
+		INCLUDE_DIRECTORIES($ENV{BOOSTDIR} ./src_mpi $ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64)
+		LINK_DIRECTORIES($ENV{XPRESSDIR}/lib $ENV{BOOSTDIR}stage/lib $ENV{MSMPI_LIB64})
+	ELSE(WIN32)
+		INCLUDE_DIRECTORIES($ENV{BOOSTDIR} ./src_mpi $ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64)
+		LINK_DIRECTORIES($ENV{XPRESSDIR}/lib $ENV{BOOSTDIR}stage/lib $ENV{MSMPI_LIB64})
+	ENDIF(WIN32)
 ENDIF( USE_MPI )
 
 LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
+
 
 FILE(
 	GLOB
@@ -70,7 +77,12 @@ TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
 
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
-	TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67)
+	IF(WIN32)
+		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67)
+	ELSE(WIN32)
+		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs mpi libboost_serialization-vc141-mt-x64-1_67)
+	ENDIF(WIN32)
+	
 ELSE( USE_MPI )
 	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
 	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs )
