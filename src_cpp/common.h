@@ -98,8 +98,8 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 
 
 inline std::string get_mps(std::string const & problem_name) {
-	return(problem_name + ".mps");
+	return problem_name + ".mps";
 }
 inline std::string get_mapping(std::string const & problem_name) {
-	return(problem_name + "_coupling_variables.txt");
+	return problem_name + "_coupling_variables.txt";
 }
