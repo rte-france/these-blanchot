@@ -6,8 +6,8 @@ std::list<std::ostream *> & Worker::stream() {
 }
 
 /************************************************************************************\
-* Name:         optimizermsg                                                              *
-* Purpose:      Display Optimizer error messages and warnings.                            *
+* Name:         optimizermsg                                                         *
+* Purpose:      Display Optimizer error messages and warnings.                       *
 * Arguments:    const char *sMsg    Message string                                   *
 *               int nLen            Message length                                   *
 *               int nMsgLvl         Message type                                     *

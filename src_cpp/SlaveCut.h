@@ -8,13 +8,18 @@ typedef std::pair<SlaveCutData1, DblVector> SlaveCutData2;
 typedef std::pair<SlaveCutData2, StrVector> SlaveCutData3;
 typedef SlaveCutData3 SlaveCutData;
 
-
+typedef std::shared_ptr<SlaveCutData> SlaveCutDataPtr;
 
 typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
 
 class SlaveCutTrimmer;
 typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
+
+class SlaveCutDataHandler;
 typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
+typedef std::shared_ptr<SlaveCutDataHandler> SlaveCutDataHandlerPtr;
+
+typedef std::set<SlaveCutDataHandlerPtr, Predicate> SlaveCutDataHandlerPtrSet;
 
 void build_SlaveCutData(SlaveCutData &);
 
@@ -38,10 +43,7 @@ enum SlaveCutStr {
 class SlaveCutDataHandler {
 public:
 
-	void init();
-
-
-	Point & get_point();
+	Point & get_subgradient();
 	IntVector & get_int();
 	DblVector & get_dbl();
 	StrVector & get_str();
@@ -54,29 +56,35 @@ public:
 	double get_dbl(SlaveCutDbl)const;
 	std::string const & get_str(SlaveCutStr)const;
 
-	Point const & get_point()const;
+	Point const & get_subgradient()const;
 	IntVector const & get_int()const;
 	DblVector const & get_dbl()const;
 	StrVector const & get_str()const;
+	void print(std::ostream & stream)const;
 
 public:
 
-	SlaveCutDataHandler(SlaveCutData & data);
+	SlaveCutDataHandler(SlaveCutDataPtr const &data);
+	SlaveCutDataHandler(SlaveCutDataPtr & data);
 	virtual ~SlaveCutDataHandler();
 
-	SlaveCutData & _data;
+	SlaveCutDataPtr _data;
 };
 
 class SlaveCutTrimmer {
 public:
-	SlaveCutDataHandler const & _data_cut;
-	Point const &_x0;
+	SlaveCutDataHandlerPtr _data_cut;
+	PointPtr _x0;
 
-	SlaveCutTrimmer(SlaveCutDataHandler const & data, Point const & x0);
+	SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, PointPtr & x0);
 	double get_const_cut()const;
+	Point const & get_subgradient()const;
+
 	bool operator<(SlaveCutTrimmer const &  other)const;
 
 	void print(std::ostream & stream)const;
+
+
 
 };
 

@@ -26,6 +26,53 @@ void Benders::free() {
 	for (auto & ptr : _slaves)
 		ptr->free();
 }
+
+void Benders::init_log(std::ostream&stream )const {
+	stream << std::setw(10) << "ITE";
+	stream << std::setw(20) << "LB";
+	stream << std::setw(20) << "UB";
+	stream << std::setw(20) << "BESTUB";
+
+	if (_options.LOG_LEVEL > 1) {
+		stream << std::setw(15) << "MINSIMPLEXIT";
+		stream << std::setw(15) << "MAXSIMPLEXIT";
+	}
+
+	if (_options.LOG_LEVEL > 2) {
+		stream << std::setw(15) << "DELETEDCUT";
+		stream << std::endl;
+	}
+}
+
+void Benders::print_log(std::ostream&stream, int it, int maxsimplexiter, int minsimplexiter, int deleted_cut)const {
+	if (_lb == -1e20)
+		stream << std::setw(20) << "-INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << _lb;
+	if (_ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << _ub;
+	if (_best_ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << _best_ub;
+
+	if (_options.LOG_LEVEL > 1) {
+		stream << std::setw(15) << minsimplexiter;
+		stream << std::setw(15) << maxsimplexiter;
+	}
+
+	if (_options.LOG_LEVEL > 2) {
+		stream << std::setw(15) << deleted_cut;
+		stream << std::endl;
+	}
+}
+
+bool Benders::stopping_criterion(int it) {
+		return((it > _options.MAX_ITERATIONS)||((_lb + _options.GAP >= _best_ub)));
+}
+
 void Benders::run() {
 	WorkerMaster & master(*_master);
 	_lb = -1e20;
@@ -34,103 +81,87 @@ void Benders::run() {
 
 	bool stop = false;
 	int it(0);
-
-
+	init_log(std::cout);
 	//master.write(it);
 	double alpha(0);
 	double slave_cost(0);
 	double invest_cost(0);
-	std::cout << std::setw(10) << "ITE";
-	std::cout << std::setw(20) << "LB";
-	std::cout << std::setw(20) << "UB";
-	std::cout << std::setw(20) << "BESTUB";
-	std::cout << std::setw(15) << "MINSIMPLEXIT";
-	std::cout << std::setw(15) << "MAXSIMPLEXIT";
-	std::cout << std::endl;
 	Point bestx;
-	int simplexiter;
 	int nslaves = (int)_slaves.size();
 	double dnslaves = (double)_slaves.size();
 
+	for (auto const & kvp : _id_to_problem) {
+		_all_cuts_storage[kvp.second] = SlaveCutStorage();
+	}
+
 	while (!stop) {
+
 		++it;
 		master.solve();
 
-		Point x0;
+		PointPtr x0(new Point);
 		Point s;
+		int deleted_cut(0);
 		int maxsimplexiter(0);
 		int minsimplexiter(1000);
-		double rhs;
-		master.get(x0, alpha); /*Get the optimal variables of the Master Problem*/
+		master.get(*x0, alpha); /*Get the optimal variables of the Master Problem*/
 		master.get_value(_lb); /*Get the optimal value of the Master Problem*/
 		invest_cost = _lb - alpha;
 		_ub = invest_cost;
 
-		for (int i_slave(0); i_slave < nslaves; ++i_slave) {
+		for (auto const & kvp : _id_to_problem) {
+
+			int i_slave(kvp.first);
+			std::string const & name_slave(kvp.second);
+
 			WorkerSlave & slave(*_slaves[i_slave]);
-			slave.fix_to(x0);
+			slave.fix_to(*x0);
 			//slave.write(it);
 
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
-			SlaveCutData slave_cut_data;
-			SlaveCutDataHandler handler(slave_cut_data);
-			handler.init();
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
 			slave.solve();
-			slave.get_value(handler.get_dbl(SLAVE_COST));
-			slave.get_subgradient(handler.get_point());
-			slave.get_simplex_ite(handler.get_int(SIMPLEXITER));
-			_ub += handler.get_dbl(SLAVE_COST);
-
-			//slave.solve();
-			//slave.get_subgradient(s); /*Get the optimal variables of the Slave Problem*/
-			//slave.get_value(slave_cost); /*Get the optimal value of the Slave Problem*/
-			//slave.get_simplex_ite(simplexiter);
-			//slave.get_value(rhs);
-			//_ub += slave_cost;
+			slave.get_value(handler->get_dbl(SLAVE_COST));
+			slave.get_subgradient(handler->get_subgradient());
+			slave.get_simplex_ite(handler->get_int(SIMPLEXITER));
+			_ub += handler->get_dbl(SLAVE_COST);
 
 			SlaveCutTrimmer trimmercut(handler, x0);
-			_all_cuts_storage[_id_to_problem[i_slave]].insert(trimmercut);
-			
-			//std::cout << "There are " << _all_cuts_storage[_id_to_problem[i_slave]].size() << " stored cuts " << std::endl;
-			//auto itset = _all_cuts_storage[_id_to_problem[i_slave]].begin();	
-			//std::cout << *itset << std::endl;
-			master.add_cut_slave(i_slave, handler.get_point(), x0, handler.get_dbl(SLAVE_COST));
+			if (true) {
 
-			if (maxsimplexiter < handler.get_int(SIMPLEXITER)) {
-				maxsimplexiter = handler.get_int(SIMPLEXITER);
 			}
-			else if (minsimplexiter > handler.get_int(SIMPLEXITER)) {
-				minsimplexiter = handler.get_int(SIMPLEXITER);
+
+			if (_all_cuts_storage[name_slave].find(trimmercut) != _all_cuts_storage[name_slave].end())
+			{
+				deleted_cut++;
+			}
+			else {
+				master.add_cut_slave(i_slave, handler->get_subgradient(), *x0, handler->get_dbl(SLAVE_COST));
+				_all_cuts_storage.find(name_slave)->second.insert(trimmercut);
+			}
+
+			if (maxsimplexiter < handler->get_int(SIMPLEXITER)) {
+				maxsimplexiter = handler->get_int(SIMPLEXITER);
+			}
+			else if (minsimplexiter > handler->get_int(SIMPLEXITER)) {
+				minsimplexiter = handler->get_int(SIMPLEXITER);
 			}
 
 		}
 
 		if (_best_ub > _ub) {
 			_best_ub = _ub;
-			bestx = x0;
+			bestx = *x0;
 		}
 
 		//master.write(it);
-		std::cout << std::setw(10) << it;
-		if (_lb == -1e20)
-			std::cout << std::setw(20) << "-INF";
-		else
-			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _lb;
-		if (_ub == +1e20)
-			std::cout << std::setw(20) << "+INF";
-		else
-			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _ub;
-		if (_best_ub == +1e20)
-			std::cout << std::setw(20) << "+INF";
-		else
-			std::cout << std::setw(20) << std::scientific << std::setprecision(10) << _best_ub;
-		std::cout << std::setw(15) << minsimplexiter;
-		std::cout << std::setw(15) << maxsimplexiter;
-		std::cout << std::endl;
-		if (_lb + 1e-6 >= _best_ub)
-			stop = true;
+
+		print_log(std::cout, it, maxsimplexiter, minsimplexiter, deleted_cut);
+
+		stop = stopping_criterion(it);
 	}
 	std::cout << "Investment solution" << std::endl;
 	for (auto const & kvp : bestx) {

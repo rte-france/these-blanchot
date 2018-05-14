@@ -3,6 +3,8 @@
 #include "Benders.h"
 #include "Timer.h"
 
+#include "BendersOptions.h"
+
 int build_input(std::string const & root, std::string const & summary_name, problem_names & input) {
 	input.clear();
 	std::ifstream summary(summary_name, std::ios::in);
@@ -19,7 +21,7 @@ int build_input(std::string const & root, std::string const & summary_name, prob
 	summary.close();
 	return 0;
 }
-void sequential_launch(std::string const & root, std::string const & structure) {
+void sequential_launch(std::string const & root, std::string const & structure, BendersOptions const & options) {
 	Timer timer;
 	XPRSinit("");
 	problem_names input;

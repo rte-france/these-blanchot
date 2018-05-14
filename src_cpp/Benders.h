@@ -2,6 +2,7 @@
 
 #include "WorkerMaster.h"
 
+#include "BendersOptions.h"
 
 class Benders {
 public:
@@ -17,6 +18,8 @@ public:
 	AllCutStorage _all_cuts_storage;
 	std::map< int, std::string> _id_to_problem;
 
+	BendersOptions _options;
+
 	double _lb;
 	double _ub;
 	double _best_ub;
@@ -24,4 +27,9 @@ public:
 	void run();
 
 	void free();
+
+	void init_log(std::ostream&)const;
+	void print_log(std::ostream&, int it,int maxsimplexiter, int minsimplexiter, int deleted_cut)const;
+	bool stopping_criterion(int it);
+
 };
