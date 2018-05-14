@@ -1,6 +1,5 @@
 // projet_benders.cpp : définit le point d'entrée pour l'application console.
 //
-
 #include "launcher.h"
 
 int main(int argc, char** argv)
