@@ -99,6 +99,10 @@ void Worker::init(std::string const & problem_name) {
 	_path_to_mps = get_mps(problem_name);
 	_path_to_mapping = get_mapping(problem_name);
 
+	std::cout << "problem_name : " << problem_name << std::endl;
+	std::cout << "_path_to_mps : " << _path_to_mps << std::endl;
+	std::cout << "_path_to_mapping : " << _path_to_mapping << std::endl;
+
 	XPRScreateprob(&_xprs);
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
