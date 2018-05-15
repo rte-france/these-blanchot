@@ -74,13 +74,13 @@ bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
 }
 
 
-SlaveCutTrimmer::SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, PointPtr & x0) : _data_cut(data), _x0(x0) {
+SlaveCutTrimmer::SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, Point & x0) : _data_cut(data), _x0(x0) {
 }
 
 
 double SlaveCutTrimmer::get_const_cut()const {
 	double result(_data_cut->get_dbl(SLAVE_COST));
-	for (auto const & kvp : *_x0) {
+	for (auto const & kvp : _x0) {
 		result -= get_subgradient().find(kvp.first)->second * kvp.second;
 	}
 	return result;

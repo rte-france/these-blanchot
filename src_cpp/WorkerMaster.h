@@ -5,6 +5,7 @@
 
 class WorkerMasterTrace {
 public:
+	
 	std::vector<PointPtr> _x0;
 	std::vector<WorkerSlaveTracePtr> _slave_trace;
 };

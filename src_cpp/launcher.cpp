@@ -26,8 +26,8 @@ void sequential_launch(std::string const & root, std::string const & structure, 
 	XPRSinit("");
 	problem_names input;
 	build_input(root, structure, input);
-	Benders benders(input);
-	benders.run();
+	Benders benders(input, options);
+	benders.run(std::cout);
 	benders.free();
 	XPRSfree();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

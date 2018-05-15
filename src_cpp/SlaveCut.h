@@ -74,9 +74,9 @@ public:
 class SlaveCutTrimmer {
 public:
 	SlaveCutDataHandlerPtr _data_cut;
-	PointPtr _x0;
+	Point _x0;
 
-	SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, PointPtr & x0);
+	SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, Point & x0);
 	double get_const_cut()const;
 	Point const & get_subgradient()const;
 
