@@ -115,10 +115,16 @@ void Benders::step_1() {
 	_master->get_value(_lb); /*Get the optimal value of the Master Problem*/
 	_invest_cost = _lb - _alpha;
 	_ub = _invest_cost;
+
 }
 
 void Benders::step_2() {
-	WorkerSlaveTracePtr slave_trace_ptr(new WorkerSlaveTrace);
+	WorkerMasterDataPtr master_trace_ptr(new WorkerMasterData);
+
+	master_trace_ptr->_x0 = PointPtr(new Point(_x0));
+	master_trace_ptr->_lb = std::shared_ptr<double>(new double(_lb));
+	master_trace_ptr->_ub = std::shared_ptr<double>(new double(_ub));
+	master_trace_ptr->_ub = std::shared_ptr<double>(new double(_best_ub));
 
 	for (auto const & kvp : _id_to_problem) {
 
@@ -151,17 +157,26 @@ void Benders::step_2() {
 			_all_cuts_storage.find(name_slave)->second.insert(trimmercut);
 		}
 
-		slave_trace_ptr->_cut_trace.push_back(slave_cut_data);
+		master_trace_ptr->_cut_trace[name_slave] = slave_cut_data;
 		bound_simplex_iter(handler->get_int(SIMPLEXITER));
 
 	}
 	
-	_trace._x0.push_back(PointPtr(new Point(_x0)));
-	_trace._slave_trace.push_back(slave_trace_ptr);
+
+
+	master_trace_ptr->_deleted_cut = _deletedcut;
+	_trace._master_trace.push_back(master_trace_ptr);
 }
 
 void Benders::step_2_aggregate() {
 	Point s;
+	WorkerMasterDataPtr master_trace_ptr(new WorkerMasterData);
+
+	master_trace_ptr->_x0 = PointPtr(new Point(_x0));
+	master_trace_ptr->_lb = std::shared_ptr<double>(new double(_lb));
+	master_trace_ptr->_ub = std::shared_ptr<double>(new double(_ub));
+	master_trace_ptr->_ub = std::shared_ptr<double>(new double(_best_ub));
+
 	for (auto & var : _x0) {
 		s[var.first] = 0;
 	}
@@ -200,9 +215,13 @@ void Benders::step_2_aggregate() {
 		_master->add_cut(s, _x0, rhs);
 		_all_cuts_storage.find(name_slave)->second.insert(trimmercut);
 
+		master_trace_ptr->_cut_trace[name_slave] = slave_cut_data;
 		bound_simplex_iter(handler->get_int(SIMPLEXITER));
 
 	}
+
+	master_trace_ptr->_deleted_cut = _deletedcut;
+	_trace._master_trace.push_back(master_trace_ptr);
 }
 
 void Benders::step_3() {
@@ -245,7 +264,8 @@ void Benders::run(std::ostream & stream) {
 	}
 	
 	print_solution(stream);
-	std::cout << "There are " << _trace._slave_trace.size() << " cuts stored" << std::endl;
+	print_csv();
+
 }
 
 void Benders::print_solution(std::ostream&stream)const {
@@ -255,5 +275,25 @@ void Benders::print_solution(std::ostream&stream)const {
 		stream << " = ";
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
 		stream << std::endl;
+	}
+}
+
+void Benders::print_csv() {
+	std::ofstream file("benders_output.csv", std::ios::out | std::ios::trunc);
+
+	if (file)
+	{
+		file << "Ite;Worker;Problem;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
+		for (int i(0); i < _trace.get_ite(); i++) {
+			file << i + 1 << ";" << "Master" << ";" << "master.mps" << ";" << _trace._master_trace[i]->get_ub() << ";" << _trace._master_trace[i]->get_lb() << ";" << _trace._master_trace[i]->get_ub() << ";" << ";" << _trace._master_trace[i]->get_deletedcut() << std::endl;
+			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
+				SlaveCutDataHandler handler(kvp.second);
+				file << i + 1 << ";" << "Slave" << ";" << kvp.first << ";" << handler.get_dbl(SLAVE_COST) << ";" << ";" << ";" << handler.get_int(SIMPLEXITER) << ";"  << std::endl;
+			}
+		}
+		file.close();
+	}
+	else {
+		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
 	}
 }

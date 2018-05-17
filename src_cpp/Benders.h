@@ -1,7 +1,7 @@
 #pragma once
 
 #include "WorkerMaster.h"
-
+#include "WorkerTrace.h"
 #include "BendersOptions.h"
 
 class Benders {
@@ -52,4 +52,5 @@ public:
 	void step_2_aggregate();
 	void step_3();
 	void run(std::ostream & stream);
+	void print_csv();
 };

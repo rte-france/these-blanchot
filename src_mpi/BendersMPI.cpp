@@ -102,14 +102,16 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 		invest_cost = _lb - alpha;
 		_ub = invest_cost;
+
+		for (auto const & kvp : _problem_to_id) {
+			_all_cuts_storage[kvp.second] = SlaveCutStorage();
+		}
 	}
 
 
 	broadcast(world, _x0, 0);
 
 	world.barrier();
-
-
 
 }
 
@@ -127,31 +129,30 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
-			SlaveCutData slave_cut_data;
-			SlaveCutDataHandler handler(slave_cut_data);
-			handler.init();
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			WorkerSlavePtr & ptr(kvp.second);
 
-			
 			ptr->fix_to(_x0);
 			ptr->solve();
 
-			ptr->get_value(handler.get_dbl(SLAVE_COST));
-			ptr->get_subgradient(handler.get_point());
-			ptr->get_simplex_ite(handler.get_int(SIMPLEXITER));
-		/*	SlaveCutTrimmer trimmer(handler, _x0);
-			if (ptr->_slave_storage.find(trimmer) == ptr->_slave_storage.end()) {
-				slave_cut_package[kvp.first] = slave_cut_data;
-				ptr->_slave_storage.insert(trimmer);
+			ptr->get_value(handler->get_dbl(SLAVE_COST));
+			ptr->get_subgradient(handler->get_subgradient());
+			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+
+			SlaveCutTrimmer trimmercut(handler, _x0);
+
+			if (ptr->_slave_storage.find(trimmercut) == ptr->_slave_storage.end()) {
+				slave_cut_package[kvp.first] = *slave_cut_data;
+				ptr->_slave_storage.insert(trimmercut);
 			}
 			else {
 				++deleted_slaves_cut;
-			}*/
+			}
 
-			slave_cut_package[kvp.first] = slave_cut_data;
 		}
 		gather(world, slave_cut_package, 0);
-	/*	gather(world, deleted_slaves_cut, 0);*/
+		gather(world, deleted_slaves_cut, 0);
 	}
 	world.barrier();
 }
@@ -174,7 +175,8 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 		for (int i(1); i < world.size(); i++) {
 			for (auto & itmap : all_package[i]) {
 				
-				SlaveCutDataHandler handler(itmap.second);
+				SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 				SlaveCutTrimmer cut(handler, _x0);
 				
 				_ub += handler.get_dbl(SLAVE_COST);
