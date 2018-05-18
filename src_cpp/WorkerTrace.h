@@ -4,13 +4,14 @@
 #include "Worker.h"
 #include "SlaveCut.h"
 
+typedef std::tuple<int, std::string, std::string, int> KeyTrace;
 
 class WorkerMasterData {
 public:
 
-	std::shared_ptr<double> _lb;
-	std::shared_ptr<double> _ub;
-	std::shared_ptr<double> _bestub;
+	double _lb;
+	double _ub;
+	double _bestub;
 	int _deleted_cut;
 	PointPtr _x0;
 	std::map<std::string,SlaveCutDataPtr> _cut_trace;

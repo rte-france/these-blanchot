@@ -6,15 +6,15 @@ int WorkerMasterTrace::get_ite() {
 
 
 double WorkerMasterData::get_ub() {
-	return *_ub;
+	return _ub;
 }
 
 double WorkerMasterData::get_lb() {
-	return *_lb;
+	return _lb;
 }
 
 double WorkerMasterData::get_bestub() {
-	return *_bestub;
+	return _bestub;
 }
 
 int WorkerMasterData::get_simplexiter(std::string & slave_name) {

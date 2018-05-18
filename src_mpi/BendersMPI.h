@@ -28,6 +28,7 @@ public:
 	int _deleted_cut;
 	int _maxsimplexiter;
 	int _minsimplexiter;
+	BendersOptions _options;
 
 	AllCutStorage _all_cuts_storage;
 
@@ -41,6 +42,6 @@ public:
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
 	void step_3(mpi::environment & env, mpi::communicator & world);
+	void step_3_aggregated(mpi::environment & env, mpi::communicator & world);
 
-	bool already_exist_cut(SlaveCutTrimmer & Cut, std::string const & problem_name);
 };

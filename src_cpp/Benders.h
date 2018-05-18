@@ -17,6 +17,7 @@ public:
 	WorkerMasterTrace _trace;
 	AllCutStorage _all_cuts_storage;
 	std::map< int, std::string> _id_to_problem;
+	std::map< std::string, int > _problem_to_id;
 
 	BendersOptions _options;
 

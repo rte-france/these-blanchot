@@ -21,7 +21,9 @@ int main(int argc, char** argv)
 	std::string const root(argv[1]);
 	std::string const summary_name(root + "\\" + argv[2]);
 	if (world.size() == 1) {
-		sequential_launch(root, summary_name);
+		BendersOptions options;
+		options.read("options.txt");
+		sequential_launch(root, summary_name, options);
 	}
 	else {
 		Timer timer;
