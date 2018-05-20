@@ -25,13 +25,3 @@ public:
 
 	void get_subgradient(Point & s);
 };
-
-
-class WorkerSlaveTrace {
-public:
-	// cut build alpha >= rhs+s*(x-x0)
-	std::vector<PointPtr> _s;
-	std::vector<double> _rhs;
-};
-
-typedef std::shared_ptr<WorkerSlaveTrace> WorkerSlaveTracePtr;

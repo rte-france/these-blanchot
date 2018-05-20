@@ -158,3 +158,4 @@ WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worke
 		std::cout << "ERROR a variable named alpha is in input" << std::endl;
 	}
 }
+

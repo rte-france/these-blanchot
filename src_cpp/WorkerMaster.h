@@ -3,12 +3,6 @@
 #include "Worker.h"
 #include "WorkerSlave.h"
 
-class WorkerMasterTrace {
-public:
-	std::vector<PointPtr> _x0;
-	std::vector<WorkerSlaveTracePtr> _slave_trace;
-};
-
 /*! \class WorkerMaster
 * \brief Sub-class WorkerMaster
 *
