@@ -81,7 +81,7 @@ void Benders::run() {
 			slave.get_value(handler.get_dbl(SLAVE_COST));
 			slave.get_subgradient(handler.get_point());
 			slave.get_simplex_ite(handler.get_int(SIMPLEXITER));
-			_ub += handler.get_dbl(SLAVE_COST);
+			_ub += handler.get_dbl(SLAVE_COST)/((double)3);
 
 			//slave.solve();
 			//slave.get_subgradient(s); /*Get the optimal variables of the Slave Problem*/

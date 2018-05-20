@@ -149,7 +149,7 @@ WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worke
 
 			for (int i(0); i < nslaves; ++i) {
 				mclind[i + 1] = _id_alpha_i[i];
-				matval[i + 1] = -1;
+				matval[i + 1] = -1/( (double) 3);
 			}
 			XPRSaddrows(_xprs, 1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 		}
