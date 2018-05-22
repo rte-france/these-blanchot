@@ -3,6 +3,11 @@
 #ifdef _MSC_VER
 #pragma warning( disable : 4267 ) // implicit conversion, possible loss of data
 #endif
+#if defined(WIN32) || defined(_WIN32) 
+#define PATH_SEPARATOR "\\" 
+#else 
+#define PATH_SEPARATOR "/" 
+#endif 
 
 #include <tuple>
 #include <sstream>
@@ -92,9 +97,5 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 }
 
 
-inline std::string get_mps(std::string const & problem_name) {
-	return(problem_name + ".mps");
-}
-inline std::string get_mapping(std::string const & problem_name) {
-	return(problem_name + "_coupling_variables.txt");
-}
+std::string get_mps(std::string const & problem_name);
+std::string get_mapping(std::string const & problem_name);

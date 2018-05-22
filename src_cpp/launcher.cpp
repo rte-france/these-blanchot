@@ -15,7 +15,7 @@ int build_input(std::string const & root, std::string const & summary_name, prob
 	std::string problem_name;
 	while (std::getline(summary, problem_name))
 	{
-		input.insert(root + "\\" + problem_name);
+		input.insert(root + PATH_SEPARATOR + problem_name);
 	}
 
 	summary.close();
