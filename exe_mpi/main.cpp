@@ -31,7 +31,9 @@ int main(int argc, char** argv)
 		problem_names input;
 		build_input(root, summary_name, input);
 		BendersMpi bendersMpi;
-		bendersMpi.load(input, env, world);
+		BendersOptions options;
+		options.read("options.txt");
+		bendersMpi.load(input, env, world, options);
 		bendersMpi.run(env, world);
 		bendersMpi.free(env, world);
 		XPRSfree();

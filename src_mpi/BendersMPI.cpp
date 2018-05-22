@@ -18,7 +18,7 @@ BendersMpi::BendersMpi() {
 *  \param problem_list : list of string containing problems' names
 */
 
-void BendersMpi::load(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world) {
+void BendersMpi::load(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options) {
 
 	if (!problem_list.empty()) {
 
@@ -27,6 +27,7 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 		_nslaves = static_cast<int>(problem_list.size()) - 1;
 		problem_names::const_iterator it(problem_list.begin());
 		problem_names::const_iterator end(problem_list.end());
+		_options = options;
 
 		int rank(1);
 		if (world.rank() == 0) {
@@ -166,7 +167,6 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 				
 				SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-				handler->get_subgradient() = itmap.second.first.first.first;
 				_ub += handler->get_dbl(SLAVE_COST);
 
 				SlaveCutTrimmer cut(handler, _x0);
@@ -243,7 +243,6 @@ void BendersMpi::step_3_aggregated(mpi::environment & env, mpi::communicator & w
 
 				SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-				handler->get_subgradient() = itmap.second.first.first.first;
 				_ub += handler->get_dbl(SLAVE_COST);
 				rhs += handler->get_dbl(SLAVE_COST);
 
@@ -257,6 +256,7 @@ void BendersMpi::step_3_aggregated(mpi::environment & env, mpi::communicator & w
 					_deleted_cut++;
 				}
 				_master->add_cut(s, _x0, rhs);
+				_all_cuts_storage.find(itmap.first)->second.insert(cut);
 
 				if (_maxsimplexiter < handler->get_int(SIMPLEXITER)) {
 					_maxsimplexiter = handler->get_int(SIMPLEXITER);
@@ -346,7 +346,12 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world) {
 		step_2(env, world);
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
-		step_3(env, world);
+		if (_options.AGGREGATION == true) {
+			step_3_aggregated(env, world);
+		}
+		else {
+			step_3(env, world);
+		}
 	}
 
 	if (world.rank() == 0) {

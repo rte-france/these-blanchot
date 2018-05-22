@@ -2,7 +2,6 @@
 
 
 SlaveCutDataHandler::SlaveCutDataHandler(SlaveCutDataPtr & data) :_data(data) {
-	get_subgradient().clear();
 	get_int().resize(SlaveCutInt::MAXINT);
 	get_dbl().resize(SlaveCutDbl::MAXDBL);
 	get_str().resize(SlaveCutStr::MAXSTR);

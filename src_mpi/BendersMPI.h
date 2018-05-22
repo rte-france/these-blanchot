@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BendersOptions.h"
 #include "common_mpi.h"
 #include "SlaveCut.h"
 #include "Worker.h"
@@ -15,7 +16,7 @@ public:
 	virtual ~BendersMpi();
 	BendersMpi();
 
-	void load(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world);
+	void load(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options);
 	
 	double _lb;
 	double _ub;
