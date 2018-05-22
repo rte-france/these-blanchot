@@ -24,14 +24,14 @@ public:
 	*  \param mapping : path to the relevant mapping file
 	*/
 	WorkerMaster();
-	WorkerMaster(std::string const & problem_name, int nslaves=1);
+	WorkerMaster(std::string const & problem_name, int nslaves=1, int slave_weight=1);
 	virtual ~WorkerMaster();
 
 	void get(Point & x0, double & alpha);
 	
 	void write(int it);
 
-	void add_cut(Point const & s, Point const & x0, double rhs);
+	void add_cut(Point const & s, Point const & x0, double rhs, int slave_weight=1);
 	void add_cut_slave(int i, Point const & s, Point const & x0, double rhs);
 
 };

@@ -206,7 +206,7 @@ void Benders::step_2_aggregate() {
 		{
 			_deletedcut++;
 		}
-		_master->add_cut(s, _x0, rhs);
+		_master->add_cut(s, _x0, rhs, _options.SLAVE_WEIGHT);
 		_all_cuts_storage.find(name_slave)->second.insert(trimmercut);
 
 		bound_simplex_iter(handler->get_int(SIMPLEXITER));
@@ -234,6 +234,7 @@ void Benders::step_3() {
 void Benders::run(std::ostream & stream) {
 
 	WorkerMaster & master(*_master);
+	master.write(_it);
 	
 	init_log(stream);
 
@@ -268,13 +269,20 @@ void Benders::run(std::ostream & stream) {
 }
 
 void Benders::print_solution(std::ostream&stream)const {
-	stream << "Investment solution" << std::endl;
+	stream << std::endl;
+	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+	stream << "*                                                         *" << std::endl;
+	stream << "*                   Investment solution                   *" << std::endl;
+	stream << "*                                                         *" << std::endl;
+	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+	stream << std::endl;
 	for (auto const & kvp : _bestx) {
-		stream << std::setw(50) << std::left << kvp.first;
+		stream << std::setw(40) << std::left << kvp.first;
 		stream << " = ";
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
 		stream << std::endl;
 	}
+	stream << std::endl;
 }
 
 void Benders::print_csv() {

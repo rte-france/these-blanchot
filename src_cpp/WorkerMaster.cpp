@@ -45,7 +45,7 @@ void WorkerMaster::write(int it) {
 *  \param x0 : optimal Master variables
 *  \param rhs : optimal slave value
 */
-void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
+void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs, int slave_weight) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
@@ -57,12 +57,24 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 	std::vector<int> mclind(ncoeffs);
 
 	rowrhs.front() -= rhs;
-
-	for (auto const & kvp : _name_to_id) {
-		rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
-		mclind[kvp.second] = kvp.second;
-		matval[kvp.second] = s.find(kvp.first)->second;
+	if (slave_weight == 1) {
+		for (auto const & kvp : _name_to_id) {
+			rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
+			mclind[kvp.second] = kvp.second;
+			matval[kvp.second] = s.find(kvp.first)->second;
+		}
 	}
+
+	else if (slave_weight == 2) {
+		int nslaves;
+		nslaves = _id_alpha_i.size();
+		for (auto const & kvp : _name_to_id) {
+			rowrhs.front() += (s.find(kvp.first)->second * x0.find(kvp.first)->second)/nslaves;
+			mclind[kvp.second] = kvp.second;
+			matval[kvp.second] = (s.find(kvp.first)->second)/nslaves;
+		}
+	}
+
 	mclind.back() = _id_alpha;
 	matval.back() = -1;
 	mstart.back() = (int)matval.size();
@@ -113,7 +125,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param mapping : path to mapping
 *  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worker() {
+WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves, int slave_weight) :Worker() {
 	init(problem_name);
 
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
@@ -149,7 +161,12 @@ WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worke
 
 			for (int i(0); i < nslaves; ++i) {
 				mclind[i + 1] = _id_alpha_i[i];
-				matval[i + 1] = -1;
+				if (slave_weight == 1) {
+					matval[i + 1] = -1;
+				}
+				else if(slave_weight == 2){
+					matval[i + 1] = -1 / nslaves;
+				}
 			}
 			XPRSaddrows(_xprs, 1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 		}

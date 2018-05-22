@@ -21,6 +21,10 @@ void BendersOptions::read(std::string const & file_name) {
 #undef BENDERS_OPTIONS_MACRO
 		}
 	}
+	else {
+		std::ofstream file("Options_default.txt");
+		print(file);
+	}
 }
 
 void BendersOptions::print(std::ostream & stream)const {

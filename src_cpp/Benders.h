@@ -18,6 +18,7 @@ public:
 	AllCutStorage _all_cuts_storage;
 	std::map< int, std::string> _id_to_problem;
 	std::map< std::string, int > _problem_to_id;
+	std::map< std::string, double> _slave_weight_coeff;
 
 	BendersOptions _options;
 
@@ -36,7 +37,6 @@ public:
 	Point _x0;
 	int _nslaves;
 	double _dnslaves;
-
 
 
 	void free();
