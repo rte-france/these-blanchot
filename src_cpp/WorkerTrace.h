@@ -4,8 +4,6 @@
 #include "Worker.h"
 #include "SlaveCut.h"
 
-typedef std::tuple<int, std::string, std::string, int> KeyTrace;
-
 class WorkerMasterData {
 public:
 

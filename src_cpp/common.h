@@ -99,3 +99,24 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 
 std::string get_mps(std::string const & problem_name);
 std::string get_mapping(std::string const & problem_name);
+double norm_point(Point & x0, Point & x1);
+
+
+struct BendersData {
+	double lb;
+	double ub;
+	double best_ub;
+	int maxsimplexiter;
+	int minsimplexiter;
+	int deletedcut;
+	int it;
+	bool stop;
+	double alpha;
+	std::vector<double> alpha_i;
+	double slave_cost;
+	double invest_cost;
+	Point bestx;
+	Point x0;
+	int nslaves;
+	double dnslaves;
+};

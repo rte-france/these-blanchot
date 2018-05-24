@@ -5,7 +5,7 @@
 WorkerStabilizedMaster::WorkerStabilizedMaster():WorkerMaster() {
 
 }
-WorkerStabilizedMaster::WorkerStabilizedMaster(std::string const & problem_name, int nslaves ) : WorkerMaster(problem_name, nslaves) {
+WorkerStabilizedMaster::WorkerStabilizedMaster(std::string const & problem_name, DblVector const & slave_weight, int nslaves ) : WorkerMaster(problem_name, slave_weight, nslaves) {
 
 }
 WorkerStabilizedMaster::~WorkerStabilizedMaster() {
