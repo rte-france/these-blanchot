@@ -30,7 +30,13 @@ void sequential_launch(std::string const & root, std::string const & structure, 
 	problem_names input;
 	build_input(root, structure, input);
 	Benders benders(input, options);
-	benders.run(std::cout);
+	std::ostream & output(std::cout);
+	//if (!(options.LOG_OUTPUT == "COMMAND")){
+	//	std::ofstream file(options.LOG_OUTPUT);
+	//	std::ostream & out(file);
+	//	output = out 
+	//}
+	benders.run(output);
 	benders.free();
 	XPRSfree();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

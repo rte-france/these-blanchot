@@ -144,10 +144,10 @@ void Benders::sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::strin
 void Benders::get_slave_cut(int i_slave, std::string const & name_slave, SlaveCutDataHandlerPtr & handler) {
 	WorkerSlave & slave(*_slaves[i_slave]);
 	slave.fix_to(_data.x0);
-	
 	slave.solve();
 	slave.get_value(handler->get_dbl(SLAVE_COST));
 	slave.get_subgradient(handler->get_subgradient());
+
 	slave.get_simplex_ite(handler->get_int(SIMPLEXITER));
 	_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
 

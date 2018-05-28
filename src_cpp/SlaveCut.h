@@ -91,3 +91,4 @@ public:
 std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs);
 
 std::ostream & operator<<(std::ostream & stream, SlaveCutData const & rhs);
+

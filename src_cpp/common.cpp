@@ -16,3 +16,4 @@ double norm_point(Point & x0, Point & x1) {
 	result = std::sqrt(result);
 	return result;
 }
+

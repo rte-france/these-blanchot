@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	std::string const summary_name(root + "\\" + argv[2]);
 	if (world.size() == 1) {
 		BendersOptions options;
-		options.read("options.txt");
+		options.read(argv[3]);
 		sequential_launch(root, summary_name, options);
 	}
 	else {
@@ -32,9 +32,9 @@ int main(int argc, char** argv)
 		build_input(root, summary_name, input);
 		BendersMpi bendersMpi;
 		BendersOptions options;
-		options.read("options.txt");
+		options.read(argv[3]);
 		bendersMpi.load(input, env, world, options);
-		bendersMpi.run(env, world);
+		bendersMpi.run(env, world, std::cout);
 		bendersMpi.free(env, world);
 		XPRSfree();
 		world.barrier();

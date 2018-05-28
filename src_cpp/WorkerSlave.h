@@ -24,4 +24,6 @@ public:
 	void fix_to(Point const & x0);
 
 	void get_subgradient(Point & s);
+
+	void get_basis(DblVector & basis);
 };

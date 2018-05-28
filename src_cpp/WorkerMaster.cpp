@@ -26,7 +26,6 @@ void WorkerMaster::get(Point & x0, double & alpha, std::vector<double> & alpha_i
 	alpha = ptr[_id_alpha];
 	for (int i(0); i < _id_alpha_i.size(); ++i) {
 		alpha_i[i] = ptr[_id_alpha_i[i]];
-		std::cout << alpha_i[i] << std::endl;
 	}
 }
 
