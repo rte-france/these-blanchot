@@ -5,6 +5,7 @@
 #include "Worker.h"
 #include "WorkerSlave.h"
 #include "WorkerMaster.h"
+#include "BendersOptions.h"
 
 typedef std::map<std::string, WorkerSlavePtr> Slaves_Ptr_map;
 
