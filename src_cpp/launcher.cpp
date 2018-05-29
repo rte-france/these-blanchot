@@ -12,9 +12,12 @@ int build_input(std::string const & root, std::string const & summary_name, prob
 		std::cout << "Cannot open file " << summary_name << std::endl;
 		return 0;
 	}
-	std::string problem_name;
-	while (std::getline(summary, problem_name))
+	std::string line;
+	while (std::getline(summary, line))
 	{
+		std::stringstream buffer(line);
+		std::string problem_name;
+		buffer >> problem_name;
 		input.insert(root + PATH_SEPARATOR + problem_name);
 	}
 
@@ -27,7 +30,13 @@ void sequential_launch(std::string const & root, std::string const & structure, 
 	problem_names input;
 	build_input(root, structure, input);
 	Benders benders(input, options);
-	benders.run(std::cout);
+	std::ostream & output(std::cout);
+	//if (!(options.LOG_OUTPUT == "COMMAND")){
+	//	std::ofstream file(options.LOG_OUTPUT);
+	//	std::ostream & out(file);
+	//	output = out 
+	//}
+	benders.run(output);
 	benders.free();
 	XPRSfree();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

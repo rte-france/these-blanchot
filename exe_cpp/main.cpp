@@ -20,7 +20,15 @@ int main(int argc, char** argv)
 	}
 	std::string const root(argv[1]);
 	std::string const summary_name(root + PATH_SEPARATOR + argv[2]);
+	
+	BendersOptions options;
+	options.read(argv[3]);
 
 	sequential_launch(root, summary_name, options);
+
+	//std::ostream & out(std::cout);
+	//std::ofstream file("toto.log");
+	//std::ostream & out2(file);
+
 	return 0;
 }

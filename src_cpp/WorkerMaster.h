@@ -24,10 +24,10 @@ public:
 	*  \param mapping : path to the relevant mapping file
 	*/
 	WorkerMaster();
-	WorkerMaster(std::string const & problem_name, int nslaves=1);
+	WorkerMaster(std::string const & problem_name, DblVector const & slave_weight, int nslaves=1);
 	virtual ~WorkerMaster();
 
-	void get(Point & x0, double & alpha);
+	void get(Point & x0, double & alpha, std::vector<double> & alpha_i);
 	
 	void write(int it);
 

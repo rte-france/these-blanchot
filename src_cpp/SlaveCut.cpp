@@ -5,7 +5,7 @@ SlaveCutDataHandler::SlaveCutDataHandler(SlaveCutDataPtr & data) :_data(data) {
 	get_subgradient().clear();
 	get_int().resize(SlaveCutInt::MAXINT);
 	get_dbl().resize(SlaveCutDbl::MAXDBL);
-	get_str().resize(SlaveCutStr::MAXSTR);
+	get_str().resize(SlaveCutDbl::MAXDBL);
 }
 
 SlaveCutDataHandler::~SlaveCutDataHandler() {
@@ -20,11 +20,9 @@ IntVector & SlaveCutDataHandler::get_int() {
 }
 DblVector & SlaveCutDataHandler::get_dbl() {
 	return _data->first.second;
-
 }
 StrVector & SlaveCutDataHandler::get_str() {
 	return _data->second;
-
 }
 int & SlaveCutDataHandler::get_int(SlaveCutInt key) {
 	return get_int()[key];
@@ -49,7 +47,6 @@ DblVector const & SlaveCutDataHandler::get_dbl() const {
 }
 StrVector const & SlaveCutDataHandler::get_str() const {
 	return _data->second;
-
 }
 int SlaveCutDataHandler::get_int(SlaveCutInt key)const {
 	return get_int()[key];

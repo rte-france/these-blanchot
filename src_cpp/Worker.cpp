@@ -94,6 +94,9 @@ void Worker::get_value(double & lb) {
 */
 void Worker::init(std::string const & problem_name) {
 
+	std::size_t found = problem_name.find_last_of(PATH_SEPARATOR);
+	std::string root;
+	root = problem_name.substr(0, found);
 	_stream.push_back(&std::cout);
 
 	_path_to_mps = get_mps(problem_name);
@@ -110,17 +113,28 @@ void Worker::init(std::string const & problem_name) {
 	XPRSsetcbmessage(_xprs, optimizermsg, this);
 	XPRSreadprob(_xprs, _path_to_mps.c_str(), "");
 
-	std::ifstream file(_path_to_mapping.c_str());
+	//std::ifstream file(_path_to_mapping.c_str());
+	std::string coupling_file("coupling_variables.txt");
+	coupling_file = root + PATH_SEPARATOR + coupling_file;
+	std::ifstream file(coupling_file);
 	std::string line;
-	while (std::getline(file, line)) {
-		if (!line.empty() && line.front() != '#') {
+	if (!file) {
+		std::cout << "No coupling_variables.txt file available in the directory" << std::endl;
+	}
+	else {
+		while (std::getline(file, line)) {
 			std::stringstream buffer(line);
-			std::string var_name;
-			int var_id;
-			buffer >> var_name;
-			buffer >> var_id;
-			_name_to_id[var_name] = var_id;
-			_id_to_name[var_id] = var_name;
+			std::string problem_item;
+			buffer >> problem_item;
+			problem_item = root + PATH_SEPARATOR + problem_item;
+			if (problem_item == problem_name) {
+				std::string var_name;
+				int var_id;
+				buffer >> var_name;
+				buffer >> var_id;
+				_name_to_id[var_name] = var_id;
+				_id_to_name[var_id] = var_name;
+			}
 		}
 	}
 }

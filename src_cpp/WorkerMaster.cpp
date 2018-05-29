@@ -16,7 +16,7 @@ WorkerMaster::~WorkerMaster() {
 *  \param x0 : reference to an empty map list
 *  \param alpha : reference to an empty double
 */
-void WorkerMaster::get(Point & x0, double & alpha) {
+void WorkerMaster::get(Point & x0, double & alpha, std::vector<double> & alpha_i) {
 	x0.clear();
 	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
 	int status = XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
@@ -24,6 +24,9 @@ void WorkerMaster::get(Point & x0, double & alpha) {
 		x0[kvp.second] = ptr[kvp.first];
 	}
 	alpha = ptr[_id_alpha];
+	for (int i(0); i < _id_alpha_i.size(); ++i) {
+		alpha_i[i] = ptr[_id_alpha_i[i]];
+	}
 }
 
 /*!
@@ -57,12 +60,12 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 	std::vector<int> mclind(ncoeffs);
 
 	rowrhs.front() -= rhs;
-
 	for (auto const & kvp : _name_to_id) {
-		rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
+		rowrhs.front() += (s.find(kvp.first)->second * x0.find(kvp.first)->second);
 		mclind[kvp.second] = kvp.second;
 		matval[kvp.second] = s.find(kvp.first)->second;
 	}
+
 	mclind.back() = _id_alpha;
 	matval.back() = -1;
 	mstart.back() = (int)matval.size();
@@ -113,7 +116,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param mapping : path to mapping
 *  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worker() {
+WorkerMaster::WorkerMaster(std::string const & problem_name, DblVector const & slave_weight, int nslaves) :Worker() {
 	init(problem_name);
 
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
@@ -138,7 +141,6 @@ WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worke
 			XPRSaddnames(_xprs, 2, buffer.str().c_str(), _id_alpha_i[i], _id_alpha_i[i]);
 		}
 		{
-
 			std::vector<char> rowtype(1, 'E');
 			std::vector<double> rowrhs(1, 0);
 			std::vector<double> matval(nslaves+1, 0);
@@ -149,7 +151,7 @@ WorkerMaster::WorkerMaster(std::string const & problem_name, int nslaves) :Worke
 
 			for (int i(0); i < nslaves; ++i) {
 				mclind[i + 1] = _id_alpha_i[i];
-				matval[i + 1] = -1/( (double) 3);
+				matval[i + 1] = -slave_weight[i];
 			}
 			XPRSaddrows(_xprs, 1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 		}

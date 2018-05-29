@@ -30,8 +30,8 @@ enum SlaveCutInt {
 
 enum SlaveCutDbl {
 	SLAVE_COST = 0,
-
-	MAXDBL
+	ALPHA_I,
+	MAXDBL 
 };
 
 enum SlaveCutStr {
@@ -91,3 +91,4 @@ public:
 std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs);
 
 std::ostream & operator<<(std::ostream & stream, SlaveCutData const & rhs);
+

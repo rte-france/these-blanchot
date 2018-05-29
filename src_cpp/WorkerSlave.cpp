@@ -56,3 +56,11 @@ void WorkerSlave::get_subgradient(Point & s) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
 }
+
+void WorkerSlave::get_basis(DblVector & basis) {
+	//int ncols;
+	//XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
+	//cstatus.resize(ncols);
+	//rstatus.resize(nrow);
+	//int status = XPRSgetbasis(_xprs, basis.data() 
+}
