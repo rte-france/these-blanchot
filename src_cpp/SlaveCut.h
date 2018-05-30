@@ -83,9 +83,6 @@ public:
 	bool operator<(SlaveCutTrimmer const &  other)const;
 
 	void print(std::ostream & stream)const;
-
-
-
 };
 
 std::ostream & operator<<(std::ostream & stream, SlaveCutTrimmer const & rhs);

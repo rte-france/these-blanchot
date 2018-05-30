@@ -19,12 +19,8 @@ int main(int argc, char** argv)
 	
 	BendersOptions options;
 	options.read(argv[3]);
-
+	options.MASTER_NAME = root + PATH_SEPARATOR + options.MASTER_NAME;
 	sequential_launch(root, summary_name, options);
-
-	//std::ostream & out(std::cout);
-	//std::ofstream file("toto.log");
-	//std::ostream & out2(file);
 
 	return 0;
 }

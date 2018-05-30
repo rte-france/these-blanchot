@@ -6,7 +6,7 @@
 
 class Benders {
 public:
-	Benders(problem_names const & problem_list, BendersOptions const & options);
+	Benders(CouplingMap const & problem_list, BendersOptions const & options);
 	virtual ~Benders();
 
 	WorkerMasterPtr _master;

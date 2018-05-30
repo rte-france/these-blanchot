@@ -26,7 +26,7 @@ class WorkerStabilizedMaster : public WorkerMaster {
 public:
 public:
 	WorkerStabilizedMaster();
-	WorkerStabilizedMaster(std::string const & problem_name, DblVector const & slave_weight, int nslaves=1);
+	WorkerStabilizedMaster(std::map<std::string, int> const & variable_name, std::string const & problem_name, DblVector const & slave_weight, int nslaves=1);
 	virtual ~WorkerStabilizedMaster();
 
 	//void get(Point & x0, double & alpha);

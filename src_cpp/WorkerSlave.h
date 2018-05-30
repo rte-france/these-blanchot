@@ -4,6 +4,7 @@
 #include "Worker.h"
 #include "xprs.h"
 #include "SlaveCut.h"
+#include "SimplexBasis.h"
 
 class WorkerSlave;
 typedef std::shared_ptr<WorkerSlave> WorkerSlavePtr;
@@ -13,9 +14,13 @@ class WorkerSlave : public Worker {
 public:
 
 	WorkerSlave();
-	WorkerSlave(std::string const & problem_name);
+	WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & problem_name);
 	virtual ~WorkerSlave();
 	SlaveCutStorage _slave_storage;
+	std::vector<SimplexBasis> _basis;
+	std::vector<IntVector> _gap_row_basis;
+	std::vector<IntVector> _gap_col_basis;
+
 
 public:
 
@@ -25,5 +30,8 @@ public:
 
 	void get_subgradient(Point & s);
 
-	void get_basis(DblVector & basis);
+	void get_basis();
+
 };
+
+
