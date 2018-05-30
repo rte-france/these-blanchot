@@ -147,7 +147,7 @@ public:
 
 void merge_mps(std::string const & root, std::string const & structure, BendersOptions const &options) {
 	XPRSinit("");
-	problem_names input;
+	CouplingMap input;
 	build_input(root, structure, input);
 	XPRSprob full;
 	XPRScreateprob(&full);
