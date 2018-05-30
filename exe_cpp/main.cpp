@@ -6,9 +6,6 @@
 
 int main(int argc, char** argv)
 {
-
-	BendersOptions options;
-	options.read("options.txt");
 	//options.print(std::cout);
 
 	if (argc < 2) {

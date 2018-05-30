@@ -100,7 +100,7 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 
 std::string get_mps(std::string const & problem_name);
 std::string get_mapping(std::string const & problem_name);
-double norm_point(Point & x0, Point & x1);
+double norm_point(Point const & x0, Point const & x1);
 
 
 struct BendersData {
