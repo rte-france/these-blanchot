@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	else {
 		Timer timer;
 		XPRSinit("");
-		problem_names input;
+		CouplingMap input;
 		build_input(root, summary_name, input);
 		BendersMpi bendersMpi;
 		BendersOptions options;

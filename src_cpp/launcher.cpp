@@ -157,7 +157,8 @@ void merge_mps(std::string const & root, std::string const & structure, BendersO
 
 void usage(int argc) {
 	if (argc < 2) {
-		std::cout << "first argument is the directory where files are, second is the txt file containing problems' names" << std::endl;
+		std::cout << "usage is : <exe> <root_dir> <structure_file> <option_file> " << std::endl;
+		std::exit(0);
 	}
 	else {
 		std::cout << "argc = " << argc << std::endl;
