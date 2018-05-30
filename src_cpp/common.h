@@ -33,6 +33,7 @@ double const EPSILON_PREDICATE = 1e-8;
 typedef std::set<std::string> problem_names;
 
 typedef std::vector<int> IntVector;
+typedef std::vector<char> CharVector;
 typedef std::vector<double> DblVector;
 typedef std::vector<std::string> StrVector;
 typedef std::map < std::string, std::map<std::string, int>> CouplingMap;
@@ -100,7 +101,7 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 
 std::string get_mps(std::string const & problem_name);
 std::string get_mapping(std::string const & problem_name);
-double norm_point(Point & x0, Point & x1);
+double norm_point(Point const & x0, Point const & x1);
 int norm_int(IntVector & x0, IntVector & x1);
 
 struct BendersData {

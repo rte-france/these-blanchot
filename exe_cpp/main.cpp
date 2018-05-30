@@ -6,6 +6,7 @@
 
 int main(int argc, char** argv)
 {
+	//options.print(std::cout);
 
 	if (argc < 2) {
 		std::cout << "first argument is the directory where files are, second is the txt file containing problems' names" << std::endl;
