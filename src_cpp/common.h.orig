@@ -1,0 +1,131 @@
+#pragma once
+
+#ifdef _MSC_VER
+#pragma warning( disable : 4267 ) // implicit conversion, possible loss of data
+#endif
+#if defined(WIN32) || defined(_WIN32) 
+#define PATH_SEPARATOR "\\" 
+#else 
+#define PATH_SEPARATOR "/" 
+#endif 
+
+#include <tuple>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <limits>
+#include <vector>
+#include <list>
+#include <map>
+#include <set>
+#include <memory>
+#include <algorithm>
+
+struct Predicate;
+typedef std::map<std::string, double> Point;
+
+typedef std::shared_ptr<Point> PointPtr;
+
+double const EPSILON_PREDICATE = 1e-8;
+
+typedef std::set<std::string> problem_names;
+
+typedef std::vector<int> IntVector;
+typedef std::vector<char> CharVector;
+typedef std::vector<double> DblVector;
+typedef std::vector<std::string> StrVector;
+typedef std::map < std::string, std::map<std::string, int>> CouplingMap;
+
+typedef std::pair<std::string, std::string> mps_coupling;
+typedef std::list<mps_coupling> mps_coupling_list;
+
+struct Predicate {
+	bool operator()(PointPtr const & lhs, PointPtr const & rhs)const {
+		return *lhs < *rhs;
+	}
+	bool operator()(Point const & lhs, Point const & rhs)const {
+		Point::const_iterator it1(lhs.begin());
+		Point::const_iterator it2(rhs.begin());
+
+		Point::const_iterator end1(lhs.end());
+		Point::const_iterator end2(rhs.end());
+
+		while (it1 != end1 && it2 != end2) {
+			if (it1->first != it2->first) {
+				return it1->first < it2->first;
+			}
+			else {
+				if (std::fabs(it1->second - it2->second) < EPSILON_PREDICATE) {
+					it1++;
+					it2++;
+				}
+				else {
+					return it1->second < it2->second;
+				}
+			}
+		}
+
+		if (it1 == end1 && it2 == end2) {
+			return false;
+		}
+		else {
+			return it1 == end1;
+		}
+	}
+};
+
+
+inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
+	for (auto const & kvp : rhs) {
+		if (kvp.second > 0) {
+			if (kvp.second == 1) {
+				stream << "+";
+				stream << kvp.first;
+			}
+			else {
+				stream << "+";
+				stream << kvp.second;
+				stream << kvp.first;
+			}
+		}
+		else if (kvp.second < 0) {
+			stream << kvp.second;
+			stream << kvp.first;
+		}
+	}
+	return stream;
+}
+
+
+std::string get_mps(std::string const & problem_name);
+std::string get_mapping(std::string const & problem_name);
+<<<<<<< HEAD
+double norm_point(Point & x0, Point & x1);
+int norm_int(IntVector & x0, IntVector & x1);
+=======
+double norm_point(Point const & x0, Point const & x1);
+
+>>>>>>> origin/dev_MR
+
+struct BendersData {
+	double lb;
+	double ub;
+	double best_ub;
+	int maxsimplexiter;
+	int minsimplexiter;
+	int deletedcut;
+	int it;
+	bool stop;
+	double alpha;
+	std::vector<double> alpha_i;
+	double slave_cost;
+	double invest_cost;
+	Point bestx;
+	Point x0;
+	int nslaves;
+	double dnslaves;
+};
+
+std::ostream & operator<<(std::ostream & stream, std::vector<IntVector> const & rhs);
