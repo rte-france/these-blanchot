@@ -34,7 +34,7 @@ public:
 
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void free(mpi::environment & env, mpi::communicator & world);
-	void init_slave_weight();
+	void init_slave_weight(std::string problemroot);
 	void print_solution(std::ostream&stream)const;
 	void print_log(std::ostream&stream) const;
 	void update_best_ub();

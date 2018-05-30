@@ -116,8 +116,8 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param mapping : path to mapping
 *  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::string const & problem_name, DblVector const & slave_weight, int nslaves) :Worker() {
-	init(problem_name);
+WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & problem_name, DblVector const & slave_weight, int nslaves) :Worker() {
+	init(variable_map, problem_name);
 
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	// add the variable alpha

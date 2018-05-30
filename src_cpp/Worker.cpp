@@ -68,6 +68,7 @@ void Worker::errormsg(const char *sSubName, int nLineNo, int nErrCode) {
 Worker::Worker() {
 
 }
+
 Worker::~Worker() {
 	
 }
@@ -92,19 +93,11 @@ void Worker::get_value(double & lb) {
 *  \param mps : path to mps file
 *  \param mapping : path to the relevant mapping file
 */
-void Worker::init(std::string const & problem_name) {
+void Worker::init(std::map<std::string, int> const & variable_map, std::string const & problem_name) {
 
-	std::size_t found = problem_name.find_last_of(PATH_SEPARATOR);
-	std::string root;
-	root = problem_name.substr(0, found);
 	_stream.push_back(&std::cout);
 
 	_path_to_mps = get_mps(problem_name);
-	_path_to_mapping = get_mapping(problem_name);
-
-	//std::cout << "problem_name : " << problem_name << std::endl;
-	//std::cout << "_path_to_mps : " << _path_to_mps << std::endl;
-	//std::cout << "_path_to_mapping : " << _path_to_mapping << std::endl;
 
 	XPRScreateprob(&_xprs);
 	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
@@ -114,28 +107,9 @@ void Worker::init(std::string const & problem_name) {
 	XPRSreadprob(_xprs, _path_to_mps.c_str(), "");
 
 	//std::ifstream file(_path_to_mapping.c_str());
-	std::string coupling_file("coupling_variables.txt");
-	coupling_file = root + PATH_SEPARATOR + coupling_file;
-	std::ifstream file(coupling_file);
-	std::string line;
-	if (!file) {
-		std::cout << "No coupling_variables.txt file available in the directory" << std::endl;
-	}
-	else {
-		while (std::getline(file, line)) {
-			std::stringstream buffer(line);
-			std::string problem_item;
-			buffer >> problem_item;
-			problem_item = root + PATH_SEPARATOR + problem_item;
-			if (problem_item == problem_name) {
-				std::string var_name;
-				int var_id;
-				buffer >> var_name;
-				buffer >> var_id;
-				_name_to_id[var_name] = var_id;
-				_id_to_name[var_id] = var_name;
-			}
-		}
+	_name_to_id = variable_map;
+	for(auto & kvp : variable_map) {
+		_id_to_name[kvp.second] = kvp.first;
 	}
 }
 

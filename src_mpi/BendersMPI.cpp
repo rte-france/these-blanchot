@@ -10,7 +10,7 @@ BendersMpi::BendersMpi() {
 
 }
 
-void BendersMpi::init_slave_weight() {
+void BendersMpi::init_slave_weight(std::string problemroot) {
 	_slave_weight_coeff.resize(_data.nslaves);
 	if (_options.SLAVE_WEIGHT == "UNIFORM") {
 		for (int i(0); i < _data.nslaves; i++) {
@@ -23,14 +23,15 @@ void BendersMpi::init_slave_weight() {
 		}
 	}
 	else {
-		std::ifstream file(_options.SLAVE_WEIGHT);
-		if (!file) {
-			std::cout << "Cannot open file " << _options.SLAVE_WEIGHT << std::endl;
-		}
 		std::string line;
-		std::size_t found = _problem_to_id.begin()->first.find_last_of(PATH_SEPARATOR);
+		std::size_t found = problemroot.find_last_of(PATH_SEPARATOR);
 		std::string root;
-		root = _problem_to_id.begin()->first.substr(0, found);
+		root = problemroot.substr(0, found);
+		std::string filename = root + PATH_SEPARATOR + _options.SLAVE_WEIGHT;
+		std::ifstream file(filename);
+		if (!file) {
+			std::cout << "Cannot open file " << filename << std::endl;
+		}
 		while (std::getline(file, line))
 		{
 			std::stringstream buffer(line);
@@ -38,6 +39,7 @@ void BendersMpi::init_slave_weight() {
 			buffer >> problem_name;
 			problem_name = root + PATH_SEPARATOR + problem_name;
 			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
+			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " <<  _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
 		}
 	}
 }
@@ -60,13 +62,10 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 		problem_names::const_iterator it(problem_list.begin());
 		problem_names::const_iterator end(problem_list.end());
 		_options = options;
-		init_slave_weight();
 		int rank(1);
 		if (world.rank() == 0) {
 
 			send_orders.reserve(problem_list.size() - 1);
-
-			_master.reset(new WorkerMaster(*it, _slave_weight_coeff, _data.nslaves));
 
 			++it;
 			int i(0);
@@ -80,6 +79,11 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 				++it;
 				i++;
 			}
+			problem_names::const_iterator beg(problem_list.begin());
+			init_slave_weight(*beg);
+
+			_master.reset(new WorkerMaster(*beg, _slave_weight_coeff, _data.nslaves));
+
 		}
 
 		bool stop_communication(false);
@@ -484,7 +488,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 	if (world.rank() == 0) {
 		print_solution(stream);
-		print_csv();
+		if (_options.TRACE) {
+			print_csv();
+		}
 	}
 
 }

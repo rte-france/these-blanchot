@@ -4,7 +4,7 @@
 Benders::~Benders() {
 }
 
-Benders::Benders(problem_names const & problem_list, BendersOptions const & options) {
+Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) {
 	_options = options;
 	if (!problem_list.empty()) {
 		_data.nslaves = static_cast<int>(problem_list.size()) - 1;
@@ -13,15 +13,19 @@ Benders::Benders(problem_names const & problem_list, BendersOptions const & opti
 		auto end(problem_list.end());
 		
 		int i(0);
+		auto it_master = problem_list.find(_options.MASTER_NAME);
+		std::string master_name(it_master->first);
+		std::map<std::string, int> master_variable(problem_list.find(_options.MASTER_NAME)->second);
 		while(++it != end) {
-			_id_to_problem[i] = *it; 
-			_problem_to_id[*it] = i;
-			_slaves.push_back(WorkerSlavePtr(new WorkerSlave(*it)));
-			i++;
+			if (it != it_master) {
+				_id_to_problem[i] = it->first;
+				_problem_to_id[it->first] = i;
+				_slaves.push_back(WorkerSlavePtr(new WorkerSlave(it->second, it->first)));
+				i++;
+			}
 		}
 		init_slave_weight();
-		it = problem_list.begin();
-		_master.reset(new WorkerMaster(*it, _slave_weight_coeff, _data.nslaves));
+		_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
 	}
 
 }
@@ -147,10 +151,9 @@ void Benders::get_slave_cut(int i_slave, std::string const & name_slave, SlaveCu
 	slave.solve();
 	slave.get_value(handler->get_dbl(SLAVE_COST));
 	slave.get_subgradient(handler->get_subgradient());
-
 	slave.get_simplex_ite(handler->get_int(SIMPLEXITER));
+	slave.get_basis();
 	_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
-
 }
 
 void Benders::update_trace() {
@@ -197,14 +200,15 @@ void Benders::init_slave_weight() {
 		}
 	}
 	else {
-		std::ifstream file(_options.SLAVE_WEIGHT);
-		if (!file) {
-			std::cout << "Cannot open file " << _options.SLAVE_WEIGHT << std::endl;
-		}
 		std::string line;
 		std::size_t found = _id_to_problem.begin()->second.find_last_of(PATH_SEPARATOR);
 		std::string root;
 		root = _id_to_problem.begin()->second.substr(0, found);
+		std::string filename(root + PATH_SEPARATOR + _options.SLAVE_WEIGHT);
+		std::ifstream file(filename);
+		if (!file) {
+			std::cout << "Cannot open file " << filename << std::endl;
+		}
 		while (std::getline(file, line))
 		{
 			std::stringstream buffer(line);
@@ -212,6 +216,7 @@ void Benders::init_slave_weight() {
 			buffer >> problem_name;
 			problem_name = root + PATH_SEPARATOR + problem_name;
 			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
+			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " << _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
 		}
 	}
 }
@@ -279,6 +284,7 @@ void Benders::run(std::ostream & stream) {
 	while (!_data.stop) {
 
 		++_data.it;
+
 		//Solve Master problem and get the trial values
 		get_master_value();
 
@@ -303,7 +309,9 @@ void Benders::run(std::ostream & stream) {
 	}
 	
 	print_solution(stream);
-	print_csv();
+	if (_options.TRACE) {
+		print_csv();
+	}
 
 }
 

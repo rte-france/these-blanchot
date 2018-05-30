@@ -4,8 +4,8 @@ WorkerSlave::WorkerSlave() {
 
 }
 
-WorkerSlave::WorkerSlave(std::string const & problem_name) {
-	init(problem_name);
+WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & problem_name) {
+	init(variable_map, problem_name);
 	
 }
 WorkerSlave::~WorkerSlave() {
@@ -57,10 +57,25 @@ void WorkerSlave::get_subgradient(Point & s) {
 	}
 }
 
-void WorkerSlave::get_basis(DblVector & basis) {
-	//int ncols;
-	//XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
-	//cstatus.resize(ncols);
-	//rstatus.resize(nrow);
-	//int status = XPRSgetbasis(_xprs, basis.data() 
+void WorkerSlave::get_basis() {
+	int ncols;
+	int nrows;
+	IntVector cstatus;
+	IntVector rstatus;
+	XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
+	XPRSgetintattrib(_xprs, XPRS_ROWS, &nrows);
+	cstatus.resize(ncols);
+	rstatus.resize(nrows);
+	int status = XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
+	SimplexBasis basis(rstatus, cstatus);
+	_basis.push_back(basis);
+	IntVector distance_row(_basis.size(),0);
+	IntVector distance_col(_basis.size(), 0);
+	for (int i(0); i < _basis.size(); i++) {
+		distance_row[i] = norm_int(_basis[i].first, basis.first);
+		distance_col[i] = norm_int(_basis[i].second, basis.second);
+	}
+	_gap_col_basis.push_back(distance_col);
+	_gap_row_basis.push_back(distance_row);
 }
+

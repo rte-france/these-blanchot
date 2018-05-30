@@ -29,3 +29,22 @@ IntVector const & SimplexBasisHandler::get_col() const {
 IntVector const & SimplexBasisHandler::get_row() const {
 	return _data->first;
 }
+
+void SimplexBasisHandler::print(std::ostream & stream)const {
+	std::stringstream buffer;
+	buffer << "Rows : (";
+	for (int i(0); i < get_row().size(); i++) {
+		buffer << get_row()[i] << " ";
+	}
+	buffer << ") || Cols : (";
+	for (int i(0); i < get_col().size(); i++) {
+		buffer << get_col()[i] << " ";
+	}
+	buffer << ")";
+	stream << buffer.str();
+}
+
+std::ostream & operator<<(std::ostream & stream, SimplexBasisHandler const & rhs) {
+	rhs.print(stream);
+	return stream;
+}

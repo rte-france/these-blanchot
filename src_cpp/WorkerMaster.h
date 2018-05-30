@@ -24,7 +24,7 @@ public:
 	*  \param mapping : path to the relevant mapping file
 	*/
 	WorkerMaster();
-	WorkerMaster(std::string const & problem_name, DblVector const & slave_weight, int nslaves=1);
+	WorkerMaster(std::map<std::string, int > const & variable_map, std::string const & problem_name, DblVector const & slave_weight, int nslaves=1);
 	virtual ~WorkerMaster();
 
 	void get(Point & x0, double & alpha, std::vector<double> & alpha_i);
