@@ -154,3 +154,12 @@ void merge_mps(std::string const & root, std::string const & structure, BendersO
 
 	XPRSfree();
 }
+
+void usage(int argc) {
+	if (argc < 2) {
+		std::cout << "first argument is the directory where files are, second is the txt file containing problems' names" << std::endl;
+	}
+	else {
+		std::cout << "argc = " << argc << std::endl;
+	}
+}

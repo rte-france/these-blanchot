@@ -11,13 +11,8 @@ int main(int argc, char** argv)
 	mpi::environment env;
 	mpi::communicator world;
 
-	if (argc < 2) {
-		std::cout << "first argument is the directory where files are, second is the txt file containing problems' names" << std::endl;
-		return 0;
-	}
-	else {
-		std::cout << "argc = " << argc << std::endl;
-	}
+	usage(argc);
+
 	std::string const root(argv[1]);
 	std::string const summary_name(root + "\\" + argv[2]);
 	if (world.size() == 1) {
