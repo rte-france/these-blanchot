@@ -71,7 +71,7 @@ struct Predicate {
 			return false;
 		}
 		else {
-			return it1 == end1;
+			return (it1 == end1);
 		}
 	}
 };
