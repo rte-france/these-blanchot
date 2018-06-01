@@ -18,6 +18,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 	if (!problem_list.empty()) {
 		_data.nslaves = static_cast<int>(problem_list.size()) - 1;
 		_slaves.reserve(_data.nslaves);
+		bool stop = false;
 		auto it(problem_list.begin());
 		auto end(problem_list.end());
 		
@@ -38,6 +39,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 	}
 
 }
+
 
 /*!
 *  \brief Method to free the memory used by each problem

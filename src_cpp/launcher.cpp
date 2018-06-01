@@ -41,6 +41,43 @@ int build_input(std::string const & root, std::string const & summary_name, Coup
 	return 0;
 }
 
+int build_input_partial(std::string const & root, std::string const & summary_name, CouplingMap & coupling_map, std::string const & master_name, int slave_number) {
+	coupling_map.clear();
+	std::ifstream summary(summary_name, std::ios::in);
+	if (!summary) {
+		std::cout << "Cannot open file " << summary_name << std::endl;
+		return 0;
+	}
+	std::string line;
+	int i(0);
+	bool master_found(false);
+	while (!(master_found) || (i <= slave_number))
+	{
+		std::getline(summary, line);
+		std::stringstream buffer(line);
+		std::string problem_name;
+		std::string variable_name;
+		int variable_id;
+		buffer >> problem_name;
+		problem_name = root + PATH_SEPARATOR + problem_name;
+		buffer >> variable_name;
+		buffer >> variable_id;
+		if (problem_name == master_name) {
+			coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+			master_found = true;
+		}
+		else if ((i <= slave_number)) {
+			coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+			i++;
+		}
+		else {
+			i++;
+		}
+	}
+	summary.close();
+	return 0;
+}
+
 /*!
 *  \brief Execute the Benders algorithm in sequential
 */
@@ -48,15 +85,18 @@ void sequential_launch(std::string const & root, std::string const & structure, 
 	Timer timer;
 	XPRSinit("");
 	CouplingMap input;
-	build_input(root, structure, input);
+	if (options.SLAVE_NUMBER == -1) {
+		build_input(root, structure, input);
+	}
+	else {
+		build_input_partial(root, structure, input, options.MASTER_NAME, options.SLAVE_NUMBER);
+	}
 	Benders benders(input, options);
 	benders.run(std::cout);
 	benders.free();
 	XPRSfree();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 }
-
-
 
 
 enum Attribute {

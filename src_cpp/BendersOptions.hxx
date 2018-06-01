@@ -27,3 +27,6 @@ BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT, std::string, "ONES")
 
 //Name of the master problem file, if different from 'master'
 BENDERS_OPTIONS_MACRO(MASTER_NAME, std::string, "master")
+
+//Number of slaves to use to solve the problem
+BENDERS_OPTIONS_MACRO(SLAVE_NUMBER, int, -1)
