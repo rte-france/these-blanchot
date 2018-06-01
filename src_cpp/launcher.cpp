@@ -21,7 +21,7 @@ int build_input(std::string const & root, std::string const & summary_name, Coup
 	coupling_map.clear();
 	std::ifstream summary(summary_name, std::ios::in);
 	if (!summary) {
-		std::cout << "Cannot open file " << summary_name << std::endl;
+		std::cout << "Cannot open file summary " << summary_name << std::endl;
 		return 0;
 	}
 	std::string line;
@@ -45,7 +45,7 @@ int build_input_partial(std::string const & root, std::string const & summary_na
 	coupling_map.clear();
 	std::ifstream summary(summary_name, std::ios::in);
 	if (!summary) {
-		std::cout << "Cannot open file " << summary_name << std::endl;
+		std::cout << "Cannot open file summary " << summary_name << std::endl;
 		return 0;
 	}
 	std::string line;

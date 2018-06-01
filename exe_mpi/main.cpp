@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 	usage(argc);
 
 	std::string const root(argv[1]);
-	std::string const summary_name(root + "\\" + argv[2]);
+	std::string const summary_name(root + SEP+ + argv[2]);
 	if (world.size() == 1) {
 		BendersOptions options;
 		options.read(argv[3]);
