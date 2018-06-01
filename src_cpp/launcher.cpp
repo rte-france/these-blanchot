@@ -5,6 +5,18 @@
 
 #include "BendersOptions.h"
 
+
+/*!
+*  \brief Build the input from the structure file
+*
+*	Function to build the map linking each problem name to its variables and their id
+*
+*  \param root : root of the structure file
+*
+*  \param summary_name : name of the structure file
+*
+*  \param coupling_map : empty map to increment
+*/
 int build_input(std::string const & root, std::string const & summary_name, CouplingMap & coupling_map) {
 	coupling_map.clear();
 	std::ifstream summary(summary_name, std::ios::in);
@@ -29,6 +41,9 @@ int build_input(std::string const & root, std::string const & summary_name, Coup
 	return 0;
 }
 
+/*!
+*  \brief Execute the Benders algorithm in sequential
+*/
 void sequential_launch(std::string const & root, std::string const & structure, BendersOptions const & options) {
 	Timer timer;
 	XPRSinit("");

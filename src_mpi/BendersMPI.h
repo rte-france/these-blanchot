@@ -18,7 +18,7 @@ public:
 	virtual ~BendersMpi();
 	BendersMpi();
 
-	void load(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options);
+	void load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options);
 	
 	DblVector _slave_weight_coeff;
 	BendersData _data;

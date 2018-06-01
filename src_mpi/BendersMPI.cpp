@@ -10,6 +10,13 @@ BendersMpi::BendersMpi() {
 
 }
 
+/*!
+*  \brief Get the slave weight from a input file
+*
+*  Method to build the weight coefficients vector from an input file stored in the options
+*
+*  \param problemroot : root where are stored the problem
+*/
 void BendersMpi::init_slave_weight(std::string problemroot) {
 	_slave_weight_coeff.resize(_data.nslaves);
 	if (_options.SLAVE_WEIGHT == "UNIFORM") {
@@ -52,37 +59,44 @@ void BendersMpi::init_slave_weight(std::string problemroot) {
 *  \param problem_list : list of string containing problems' names
 */
 
-void BendersMpi::load(problem_names const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options) {
+void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options) {
 
 	if (!problem_list.empty()) {
 
 		std::vector<mps_order> send_orders;
 
 		_data.nslaves = static_cast<int>(problem_list.size()) - 1;
-		problem_names::const_iterator it(problem_list.begin());
-		problem_names::const_iterator end(problem_list.end());
+		auto it(problem_list.begin());
+		auto end(problem_list.end());
 		_options = options;
 		int rank(1);
 		if (world.rank() == 0) {
 
 			send_orders.reserve(problem_list.size() - 1);
 
+			auto it_master = problem_list.find(_options.MASTER_NAME);
+			std::string master_name(it_master->first);
+			std::map<std::string, int> master_variable(problem_list.find(_options.MASTER_NAME)->second);
 			++it;
 			int i(0);
 			while (it != end) {
-				if (rank >= world.size()) {
-					rank = 1;
+				if (it == it_master) {
+					++it;
 				}
-				send_orders.push_back({ rank, *it });
-				_problem_to_id[*it] = i;
-				++rank;
-				++it;
-				i++;
+				else {
+					if (rank >= world.size()) {
+						rank = 1;
+					}
+					send_orders.push_back({ rank, it->first });
+					_problem_to_id[it->first] = i;
+					++rank;
+					++it;
+					i++;
+				}
 			}
-			problem_names::const_iterator beg(problem_list.begin());
-			init_slave_weight(*beg);
+			init_slave_weight(it_master->first);
 
-			_master.reset(new WorkerMaster(*beg, _slave_weight_coeff, _data.nslaves));
+			_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
 
 		}
 
@@ -111,7 +125,7 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 
 				if (world.rank() != 0) {
 					if (world.rank() == rank) {
-						_map_slaves[mps] = WorkerSlavePtr(new WorkerSlave(mps));
+						_map_slaves[mps] = WorkerSlavePtr(new WorkerSlave(problem_list.find(mps)->second, mps));
 					}
 				}
 				world.barrier();
@@ -122,8 +136,7 @@ void BendersMpi::load(problem_names const & problem_list, mpi::environment & env
 
 
 /*!
-*  \brief Method to solve, get, and send solution of a problem to every thread
-*
+*  \brief Solve, get and send solution of the Master Problem to every thread
 */
 
 void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
@@ -157,7 +170,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 }
 
 /*!
-*  \brief Method to solve and get solution of every problem on each thread
+*  \brief Get cut information of every Slave Problem in each thread and send it to thread 0
 *
 */
 void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
@@ -174,6 +187,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 
 			ptr->fix_to(_data.x0);
 			ptr->solve();
+			ptr->get_basis();
 
 			ptr->get_value(handler->get_dbl(SLAVE_COST));
 			ptr->get_subgradient(handler->get_subgradient());
@@ -188,6 +202,13 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	world.barrier();
 }
 
+/*!
+*  \brief Add cut to Master Problem and store the cut in a set
+*
+*  Method to add cut from a slave to the Master Problem and store this cut in a map linking each slave to its set of cuts.
+*
+*  \param slave_cut_package : cut information
+*/
 void BendersMpi::sort_cut_slave(SlaveCutPackage & slave_cut_package) {
 	for (auto & itmap : slave_cut_package) {
 
@@ -217,7 +238,7 @@ void BendersMpi::sort_cut_slave(SlaveCutPackage & slave_cut_package) {
 }
 
 /*!
-*  \brief Method to gather all information and add cut to Master problem
+*  \brief Method to gather every cut information from each thread in thread 0 and add cut to Master problem
 *
 */
 void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
@@ -241,6 +262,13 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 	world.barrier();
 }
 
+/*!
+*  \brief Add aggregated cut to Master Problem and store it in a set
+*
+*  Method to add aggregated cut from a slave to the Master Problem and store it in a map linking each slave to its set of cuts.
+*
+*  \param slave_cut_package : cut information
+*/
 void BendersMpi::sort_cut_slave_aggregate(SlaveCutPackage & slave_cut_package, Point & s, double & rhs) {
 	for (auto & itmap : slave_cut_package) {
 
@@ -270,6 +298,10 @@ void BendersMpi::sort_cut_slave_aggregate(SlaveCutPackage & slave_cut_package, P
 	}
 }
 
+/*!
+*  \brief Method to gather every cut information from each thread in thread 0 and add cut to Master problem
+*
+*/
 void BendersMpi::step_3_aggregated(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0) {
 
@@ -298,6 +330,9 @@ void BendersMpi::step_3_aggregated(mpi::environment & env, mpi::communicator & w
 	world.barrier();
 }
 
+/*!
+*  \brief Update trace of the Benders for the current iteration
+*/
 void BendersMpi::update_trace() {
 	_trace._master_trace[_data.it - 1]->_lb = _data.lb;
 	_trace._master_trace[_data.it - 1]->_ub = _data.ub;
@@ -306,6 +341,13 @@ void BendersMpi::update_trace() {
 	_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
 }
 
+/*!
+*  \brief Print iteration log
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*/
 void BendersMpi::print_log(std::ostream&stream) const {
 
 	stream << std::setw(10) << _data.it;
@@ -333,6 +375,13 @@ void BendersMpi::print_log(std::ostream&stream) const {
 	stream << std::endl;
 }
 
+/*!
+*  \brief Print the optimal solution of the problem
+*
+*  Method to print the optimal solution of the problem
+*
+* \param stream : stream to print the output
+*/
 void BendersMpi::print_solution(std::ostream&stream)const {
 	stream << std::endl;
 	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
@@ -351,6 +400,11 @@ void BendersMpi::print_solution(std::ostream&stream)const {
 	stream << std::endl;
 }
 
+/*!
+*  \brief Update maximum and minimum of a set of int
+*
+*  \param simplexiter : int to compare to current max and min
+*/
 void BendersMpi::bound_simplex_iter(int simplexiter) {
 	if (_data.maxsimplexiter < simplexiter) {
 		_data.maxsimplexiter = simplexiter;
@@ -361,6 +415,10 @@ void BendersMpi::bound_simplex_iter(int simplexiter) {
 	}
 }
 
+/*!
+*  \brief Update best upper bound and best optimal variables
+*
+*/
 void BendersMpi::update_best_ub() {
 	if (_data.best_ub > _data.ub) {
 		_data.best_ub = _data.ub;
@@ -368,10 +426,14 @@ void BendersMpi::update_best_ub() {
 	}
 }
 
+/*!
+*  \brief Update stopping criterion
+*
+*  Method updating the stopping criterion and reinitializing some datas
+*/
 bool BendersMpi::stopping_criterion() {
 	return(((_options.MAX_ITERATIONS != -1) && (_data.it > _options.MAX_ITERATIONS)) || (_data.lb + _options.GAP >= _data.best_ub));
 }
-
 
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
@@ -384,6 +446,13 @@ void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 	world.barrier();
 }
 
+/*!
+*  \brief Initialize Benders data and log
+*
+*  Method to initialize Benders data and log by printing each column title
+*
+*  \param stream : output to print log
+*/
 void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::ostream & stream) {
 	WorkerMaster & master(*_master);
 	_data.lb = -1e20;
@@ -409,6 +478,13 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 	}
 }
 
+/*!
+*  \brief Print the trace of the Benders algorithm in a csv file
+*
+*  Method to print trace of the Benders algorithm in a csv file
+*
+* \param stream : stream to print the output
+*/
 void BendersMpi::print_csv() {
 	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output.csv");
 	if (_options.AGGREGATION) {
@@ -454,6 +530,13 @@ void BendersMpi::print_csv() {
 	}
 }
 
+/*!
+*  \brief Run Benders algorithm in parallel 
+*
+*  Method to run Benders algorithm in parallel
+*
+* \param stream : stream to print the output
+*/
 void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ostream & stream) {
 
 	init(env, world, stream);

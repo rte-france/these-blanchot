@@ -1,15 +1,17 @@
 #include "common.h"
 
 
-
+/*!
+*  \brief Return the mps file associate to a problem
+*/
 std::string get_mps(std::string const & problem_name) {
 	return problem_name + ".mps";
 }
 
-std::string get_mapping(std::string const & problem_name) {
-	return problem_name + "_coupling_variables.txt";
-}
-double norm_point(Point & x0, Point & x1) {
+/*!
+*  \brief Return the distance between two point using 2-norm
+*/
+double norm_point(Point const & x0, Point const & x1) {
 	double result(0);
 	for (auto & kvp : x0) {
 		result += (x0.find(kvp.first)->second - x1.find(kvp.first)->second)*(x0.find(kvp.first)->second - x1.find(kvp.first)->second);
@@ -18,7 +20,10 @@ double norm_point(Point & x0, Point & x1) {
 	return result;
 }
 
-int norm_int(IntVector & x0, IntVector & x1) {
+/*!
+*  \brief Return the absolute distance between two vector of int
+*/
+int norm_int(IntVector const & x0, IntVector const & x1) {
 	int result(0);
 	if (x0.size() != x1.size()) {
 		return result;

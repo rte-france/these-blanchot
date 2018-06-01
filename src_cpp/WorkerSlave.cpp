@@ -4,6 +4,15 @@ WorkerSlave::WorkerSlave() {
 
 }
 
+
+/*!
+*  \brief Constructor of a Worker Slave
+*
+*  \param variable_map : Map of linking each variable of the problem to its id
+*
+*  \param problem_name : Name of the problem
+*
+*/
 WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & problem_name) {
 	init(variable_map, problem_name);
 	
@@ -12,6 +21,13 @@ WorkerSlave::~WorkerSlave() {
 
 }
 
+/*!
+*  \brief Write in a problem in an lp file 
+*
+* Method to write a problem in an lp file
+*
+*  \param it : id of the problem
+*/
 void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";
@@ -57,6 +73,11 @@ void WorkerSlave::get_subgradient(Point & s) {
 	}
 }
 
+/*!
+*  \brief Get simplex basis of a problem
+*
+*  Method to store simplex basis of a problem, and build the distance matrix
+*/
 void WorkerSlave::get_basis() {
 	int ncols;
 	int nrows;

@@ -4,6 +4,15 @@
 Benders::~Benders() {
 }
 
+/*!
+*  \brief Constructor of class Benders
+*
+*  Method to build a Benders element, initializing each problem from a list
+*
+*  \param problem_list : map linking each problem name to its variables and their ids
+*
+*  \param options : set of options fixed by the user 
+*/
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) {
 	_options = options;
 	if (!problem_list.empty()) {
@@ -30,12 +39,22 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 }
 
+/*!
+*  \brief Method to free the memory used by each problem
+*/
 void Benders::free() {
 	_master->free();
 	for (auto & ptr : _slaves)
 		ptr->free();
 }
 
+/*!
+*  \brief Initialize Benders log
+*
+*  Method to initialize Benders log by printing each column title
+*
+*  \param stream : output to print log
+*/
 void Benders::init_log(std::ostream&stream )const {
 	stream << std::setw(10) << "ITE";
 	stream << std::setw(20) << "LB";
@@ -53,6 +72,14 @@ void Benders::init_log(std::ostream&stream )const {
 	stream << std::endl;
 }
 
+
+/*!
+*  \brief Print iteration log
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*/
 void Benders::print_log(std::ostream&stream) const {
 
 	stream << std::setw(10) << _data.it;
@@ -81,6 +108,12 @@ void Benders::print_log(std::ostream&stream) const {
 
 }
 
+
+/*!
+*  \brief Update stopping criterion
+*
+*  Method updating the stopping criterion and reinitializing some datas
+*/
 bool Benders::stopping_criterion() {
 	_data.deletedcut = 0;
 	_data.maxsimplexiter = 0;
@@ -88,6 +121,10 @@ bool Benders::stopping_criterion() {
 	return(((_options.MAX_ITERATIONS != -1)&&(_data.it > _options.MAX_ITERATIONS))||(_data.lb + _options.GAP >= _data.best_ub));
 }
 
+/*!
+*  \brief Initialize set of datas used in the loop
+*
+*/
 void Benders::init() {
 	_data.lb = -1e20;
 	_data.ub = +1e20;
@@ -108,6 +145,12 @@ void Benders::init() {
 	}
 }
 
+
+/*!
+*  \brief Update maximum and minimum of a set of int
+*
+*  \param simplexiter : int to compare to current max and min
+*/
 void Benders::bound_simplex_iter(int simplexiter) {
 	if (_data.maxsimplexiter < simplexiter) {
 		_data.maxsimplexiter = simplexiter;
@@ -118,6 +161,12 @@ void Benders::bound_simplex_iter(int simplexiter) {
 	}
 }
 
+/*!
+*  \brief Solve and get optimal variables of the Master Problem
+*
+*  Method to solve and get optimal variables of the Master Problem and update upper and lower bound
+*
+*/
 void Benders::get_master_value() {
 	_data.alpha_i.resize(_data.nslaves);
 	_master->solve();
@@ -132,6 +181,17 @@ void Benders::get_master_value() {
 
 }
 
+/*!
+*  \brief Add cut to Master Problem and store the cut in a set
+*
+*  Method to add cut from a slave to the Master Problem and store this cut in a map linking each slave to its set of cuts.
+*
+*  \param handler : reference to an handler containing the cut information
+*
+*  \param i_slave : id of the slave
+*
+*  \param name_slave : name of the slave
+*/
 void Benders::sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave) {
 	SlaveCutTrimmer trimmercut(handler, _data.x0);
 	
@@ -145,6 +205,17 @@ void Benders::sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::strin
 	}
 }
 
+/*!
+*  \brief Get cut information of a Slave Problem
+*
+*  Method to get cut information from a Slave Problem and update upper bound
+*
+*  \param handler : reference to an empty handler receiving the cut information
+*
+*  \param i_slave : id of the slave
+*
+*  \param name_slave : name of the slave
+*/
 void Benders::get_slave_cut(int i_slave, std::string const & name_slave, SlaveCutDataHandlerPtr & handler) {
 	WorkerSlave & slave(*_slaves[i_slave]);
 	slave.fix_to(_data.x0);
@@ -156,6 +227,9 @@ void Benders::get_slave_cut(int i_slave, std::string const & name_slave, SlaveCu
 	_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
 }
 
+/*!
+*  \brief Update trace of the Benders for the current iteration
+*/
 void Benders::update_trace() {
 	_trace._master_trace[_data.it - 1]->_lb = _data.lb;
 	_trace._master_trace[_data.it - 1]->_ub = _data.ub;
@@ -164,6 +238,12 @@ void Benders::update_trace() {
 	_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
 }
 
+/*!
+*  \brief Build Slave cut and store it in the Benders trace
+*
+*  Method to build Slave cut, store it in the Benders trace and update the max and min of simplex iteration for all slaves
+*
+*/
 void Benders::build_cut() {
 
 	for (auto const & kvp : _id_to_problem) {
@@ -187,6 +267,12 @@ void Benders::build_cut() {
 	}
 }
 
+/*!
+*  \brief Get the slave weight from a input file
+*
+*  Method to build the weight coefficients vector from an input file stored in the options
+*
+*/
 void Benders::init_slave_weight() {
 	_slave_weight_coeff.resize(_data.nslaves);
 	if (_options.SLAVE_WEIGHT == "UNIFORM") {
@@ -221,6 +307,21 @@ void Benders::init_slave_weight() {
 	}
 }
 
+/*!
+*  \brief Add aggregated cut to Master Problem and store it in a set
+*
+*  Method to add aggregated cut from a slave to the Master Problem and store it in a map linking each slave to its set of cuts.
+*
+*  \param handler : reference to an handler containing the cut information
+*
+*  \param i_slave : id of the slave
+*
+*  \param name_slave : name of the slave
+*
+*  \param s : empty point to receive the aggregation of every slave subgradient
+*
+*  \param rhs : empty point to receive the aggregation of every slave optimal value
+*/
 void Benders::sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave, Point & s, double & rhs) {
 
 	rhs += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
@@ -238,6 +339,12 @@ void Benders::sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, 
 	_all_cuts_storage.find(name_slave)->second.insert(trimmercut);
 }
 
+/*!
+*  \brief Build aggregated cut and store it in the Benders trace
+*
+*  Method to build aggregated cut, store it in the Benders trace and update the max and min of simplex iteration for all slaves
+*
+*/
 void Benders::build_cut_aggregate() {
 	Point s;
 	double rhs(0);
@@ -265,6 +372,10 @@ void Benders::build_cut_aggregate() {
 
 }
 
+/*!
+*  \brief Update best upper bound and best optimal variables
+*
+*/
 void Benders::update_best_ub() {
 	if (_data.best_ub > _data.ub) {
 		_data.best_ub = _data.ub;
@@ -272,7 +383,13 @@ void Benders::update_best_ub() {
 	}
 }
 
-
+/*!
+*  \brief Run Benders algorithm
+*
+*  Method to run Benders algorithm
+*
+* \param stream : stream to print the output
+*/
 void Benders::run(std::ostream & stream) {
 
 	WorkerMaster & master(*_master);
@@ -315,6 +432,13 @@ void Benders::run(std::ostream & stream) {
 
 }
 
+/*!
+*  \brief Print the optimal solution of the problem
+*
+*  Method to print the optimal solution of the problem
+*
+* \param stream : stream to print the output
+*/
 void Benders::print_solution(std::ostream&stream)const {
 	stream << std::endl;
 	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
@@ -333,47 +457,54 @@ void Benders::print_solution(std::ostream&stream)const {
 	stream << std::endl;
 }
 
+/*!
+*  \brief Print the trace of the Benders algorithm in a csv file
+*
+*  Method to print trace of the Benders algorithm in a csv file
+*
+* \param stream : stream to print the output
+*/
 void Benders::print_csv() {
-	//std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
-	//if (_options.AGGREGATION) {
-	//	output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
-	//}
-	//std::ofstream file(output, std::ios::out | std::ios::trunc);
+	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
+	if (_options.AGGREGATION) {
+		output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
+	}
+	std::ofstream file(output, std::ios::out | std::ios::trunc);
 
-	//if (file)
-	//{
-	//	file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
-	//	Point xopt;
-	//	int nite;
-	//	nite = _trace.get_ite();
-	//	xopt = _trace._master_trace[nite-1]->get_point();
-	//	for (int i(0); i < nite; i++) {
-	//		file << i + 1 << ";";
-	//		file << "Master" << ";";
-	//		file<< "master" << ";";
-	//		file << _slaves.size() << ";";
-	//		file << _trace._master_trace[i]->get_ub() << ";";
-	//		file << _trace._master_trace[i]->get_lb() << ";";
-	//		file << _trace._master_trace[i]->get_bestub() << ";";
-	//		file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
-	//		file << _trace._master_trace[i]->get_deletedcut() << std::endl;
-	//		for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-	//			std::size_t found = kvp.first.find_last_of("/\\");
-	//			SlaveCutDataHandler handler(kvp.second);
-	//			file << i + 1 << ";";
-	//			file << "Slave" << ";";
-	//			file << kvp.first.substr(found+1) << ";";
-	//			file << _problem_to_id[kvp.first] << ";";
-	//			file << handler.get_dbl(SLAVE_COST) << ";";
-	//			file << handler.get_dbl(ALPHA_I) << ";";
-	//			file << ";";
-	//			file << handler.get_int(SIMPLEXITER) << ";";
-	//			file << std::endl;
-	//		}
-	//	}
-	//	file.close();
-	//}
-	//else {
-	//	std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-	//}
+	if (file)
+	{
+		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
+		Point xopt;
+		int nite;
+		nite = _trace.get_ite();
+		xopt = _trace._master_trace[nite-1]->get_point();
+		for (int i(0); i < nite; i++) {
+			file << i + 1 << ";";
+			file << "Master" << ";";
+			file<< "master" << ";";
+			file << _slaves.size() << ";";
+			file << _trace._master_trace[i]->get_ub() << ";";
+			file << _trace._master_trace[i]->get_lb() << ";";
+			file << _trace._master_trace[i]->get_bestub() << ";";
+			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
+			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
+			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
+				std::size_t found = kvp.first.find_last_of("/\\");
+				SlaveCutDataHandler handler(kvp.second);
+				file << i + 1 << ";";
+				file << "Slave" << ";";
+				file << kvp.first.substr(found+1) << ";";
+				file << _problem_to_id[kvp.first] << ";";
+				file << handler.get_dbl(SLAVE_COST) << ";";
+				file << handler.get_dbl(ALPHA_I) << ";";
+				file << ";";
+				file << handler.get_int(SIMPLEXITER) << ";";
+				file << std::endl;
+			}
+		}
+		file.close();
+	}
+	else {
+		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+	}
 }

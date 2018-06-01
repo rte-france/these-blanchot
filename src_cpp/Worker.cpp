@@ -90,8 +90,8 @@ void Worker::get_value(double & lb) {
 *  \brief Initialization of a problem 
 *
 *
-*  \param mps : path to mps file
-*  \param mapping : path to the relevant mapping file
+*  \param variable_map : map linking each problem name to its variables and their ids
+*  \param problem_name : name of the problem
 */
 void Worker::init(std::map<std::string, int> const & variable_map, std::string const & problem_name) {
 

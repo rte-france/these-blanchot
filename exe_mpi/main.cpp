@@ -18,6 +18,7 @@ int main(int argc, char** argv)
 	if (world.size() == 1) {
 		BendersOptions options;
 		options.read(argv[3]);
+		options.MASTER_NAME = root + PATH_SEPARATOR + options.MASTER_NAME;
 		sequential_launch(root, summary_name, options);
 	}
 	else {
@@ -28,6 +29,7 @@ int main(int argc, char** argv)
 		BendersMpi bendersMpi;
 		BendersOptions options;
 		options.read(argv[3]);
+		options.MASTER_NAME = root + PATH_SEPARATOR + options.MASTER_NAME;
 		bendersMpi.load(input, env, world, options);
 		bendersMpi.run(env, world, std::cout);
 		bendersMpi.free(env, world);
