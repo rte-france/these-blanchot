@@ -105,17 +105,13 @@ void SlaveCutDataHandler::print(std::ostream & stream)const {
 	std::stringstream buffer;
 	buffer << get_dbl(SLAVE_COST) << get_subgradient();
 	stream << buffer.str();
-	if (get_int(SIMPLEXITER) != NULL) {
-		stream << " Simplexiter " << get_int(SIMPLEXITER) << " | ";
-	}
+	stream << " Simplexiter " << get_int(SIMPLEXITER) << " | ";
 }
 
 std::ostream & operator<<(std::ostream & stream, SlaveCutData const & rhs) {
 	std::stringstream buffer;
 	buffer << rhs.first.second[SLAVE_COST] << rhs.first.first.first;
 	stream << buffer.str();
-	if (&rhs.first.first.second[SIMPLEXITER] != NULL) {
-		stream << " Simplexiter " << rhs.first.first.second[SIMPLEXITER] << " | ";
-	}
+	stream << " Simplexiter " << rhs.first.first.second[SIMPLEXITER] << " | ";
 	return stream;
 }
