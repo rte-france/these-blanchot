@@ -14,6 +14,7 @@ public:
 	void read(std::string const & file_name);
 	void print(std::ostream  & stream)const;
 
+	void write_default();
 };
 
 

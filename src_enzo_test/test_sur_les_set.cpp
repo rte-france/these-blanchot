@@ -8,8 +8,8 @@
 int main(int argc, char** argv)
 {
 	std::string const root(argv[1]);
-	std::string const summary_name(root + "\\" + argv[2]);
-	std::ofstream output(root + "\\" + "coupling_variables.txt");
+	std::string const summary_name(root + PATH_SEPARATOR + argv[2]);
+	std::ofstream output(root + PATH_SEPARATOR + "coupling_variables.txt");
 	if (output.good()) {
 		std::ifstream file(summary_name);
 		if (file.good()) {

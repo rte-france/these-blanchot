@@ -11,13 +11,20 @@ int main(int argc, char** argv)
 	mpi::environment env;
 	mpi::communicator world;
 
-	usage(argc);
+	if (world.rank() == 0)
+		usage(argc);
 
 	std::string const root(argv[1]);
-	std::string const summary_name(root + PATH_SEPARATOR + argv[2]);
+	std::string const summary_name(argv[2]);
 	if (world.size() == 1) {
+
 		BendersOptions options;
-		options.read(argv[3]);
+		if (argc > 3) {
+			options.read(argv[3]);
+		}
+		else {
+			options.write_default();
+		}
 		options.MASTER_NAME = root + PATH_SEPARATOR + options.MASTER_NAME;
 		sequential_launch(root, summary_name, options);
 	}
@@ -26,9 +33,15 @@ int main(int argc, char** argv)
 		XPRSinit("");
 		CouplingMap input;
 		build_input(root, summary_name, input);
-		BendersMpi bendersMpi;
+
 		BendersOptions options;
-		options.read(argv[3]);
+		if (argc > 3) {
+			options.read(argv[3]);
+		}
+		else {
+			options.write_default();
+		}
+		BendersMpi bendersMpi;
 		options.MASTER_NAME = root + PATH_SEPARATOR + options.MASTER_NAME;
 		bendersMpi.load(input, env, world, options);
 		bendersMpi.run(env, world, std::cout);

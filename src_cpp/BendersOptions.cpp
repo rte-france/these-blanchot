@@ -7,6 +7,12 @@ BendersOptions::BendersOptions() {
 #undef BENDERS_OPTIONS_MACRO
 
 }
+void BendersOptions::write_default(){
+std::ofstream file("Options_default.txt");
+print(file);
+file.close();
+
+}
 void BendersOptions::read(std::string const & file_name) {
 	std::ifstream file(file_name.c_str());
 	if (file.good()) {
@@ -22,8 +28,7 @@ void BendersOptions::read(std::string const & file_name) {
 		}
 	}
 	else {
-		std::ofstream file("Options_default.txt");
-		print(file);
+		write_default();
 	}
 }
 

@@ -11,7 +11,7 @@ BENDERS_OPTIONS_MACRO(GAP, double, 1e-6)
 BENDERS_OPTIONS_MACRO(AGGREGATION, bool, false)
 
 //Path to the folder where output files should be printed
-BENDERS_OPTIONS_MACRO(ROOTPATH, std::string, "D:\\repos\\stage-enzo\\build\\Release")
+BENDERS_OPTIONS_MACRO(ROOTPATH, std::string, ".")
 
 //True if a trace should be built, false otherwise
 BENDERS_OPTIONS_MACRO(TRACE, bool, true)
