@@ -461,6 +461,10 @@ void Benders::print_solution(std::ostream&stream)const {
 
 
 
+
+
+
+
 /*!
 *  \brief Print the trace of the Benders algorithm in a csv file
 *
