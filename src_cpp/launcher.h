@@ -2,11 +2,12 @@
 
 #include "common.h"
 class BendersOptions;
-int build_input(std::string const & root, std::string const & summary_name, CouplingMap & coupling_map);
-int build_input_partial(std::string const & root, std::string const & summary_name, CouplingMap & coupling_map, std::string const & master_name, int slave_number);
+int build_input(BendersOptions const & options, CouplingMap & coupling_map);
 
-void sequential_launch(std::string const & root, std::string const & structure, BendersOptions const &options);
+BendersOptions build_benders_options(int argc, char** argv);
 
-void merge_mps(std::string const & root, std::string const & structure, BendersOptions const &options);
+void sequential_launch(BendersOptions const &options);
+
+void merge_mps(BendersOptions const &options);
 
 void usage(int argc);

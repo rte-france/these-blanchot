@@ -34,10 +34,8 @@ public:
 
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void free(mpi::environment & env, mpi::communicator & world);
-	void init_slave_weight(std::string problemroot);
-	void print_solution(std::ostream&stream)const;
+	void init_slave_weight();
 	void print_log(std::ostream&stream) const;
-	void update_best_ub();
 	void bound_simplex_iter(int simplexiter);
 	bool stopping_criterion();
 	void sort_cut_slave(SlaveCutPackage & slave_cut_package);

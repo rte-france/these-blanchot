@@ -17,7 +17,7 @@ BendersMpi::BendersMpi() {
 *
 *  \param problemroot : root where are stored the problem
 */
-void BendersMpi::init_slave_weight(std::string problemroot) {
+void BendersMpi::init_slave_weight() {
 	_slave_weight_coeff.resize(_data.nslaves);
 	if (_options.SLAVE_WEIGHT == "UNIFORM") {
 		for (int i(0); i < _data.nslaves; i++) {
@@ -31,10 +31,7 @@ void BendersMpi::init_slave_weight(std::string problemroot) {
 	}
 	else {
 		std::string line;
-		std::size_t found = problemroot.find_last_of(PATH_SEPARATOR);
-		std::string root;
-		root = problemroot.substr(0, found);
-		std::string filename = root + PATH_SEPARATOR + _options.SLAVE_WEIGHT;
+		std::string filename = _options.INPUTROOT + PATH_SEPARATOR + _options.SLAVE_WEIGHT;
 		std::ifstream file(filename);
 		if (!file) {
 			std::cout << "Cannot open file " << filename << std::endl;
@@ -44,7 +41,7 @@ void BendersMpi::init_slave_weight(std::string problemroot) {
 			std::stringstream buffer(line);
 			std::string problem_name;
 			buffer >> problem_name;
-			problem_name = root + PATH_SEPARATOR + problem_name;
+			problem_name = _options.INPUTROOT + PATH_SEPARATOR + problem_name;
 			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
 			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " <<  _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
 		}
@@ -94,7 +91,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 					i++;
 				}
 			}
-			init_slave_weight(it_master->first);
+			init_slave_weight();
 
 			_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
 
@@ -145,7 +142,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 	{
 		_data.deletedcut = 0;
 		_data.maxsimplexiter = 0;
-		_data.minsimplexiter = 1000000;
+		_data.minsimplexiter = std::numeric_limits<int>::max();
 		_data.alpha_i.resize(_data.nslaves);
 		_data.alpha = 0;
 
@@ -253,7 +250,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 			sort_cut_slave(all_package[i]);
 		}
 
-		update_best_ub();
+		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 		_data.stop = stopping_criterion();
 	}
@@ -322,7 +319,7 @@ void BendersMpi::step_3_aggregated(mpi::environment & env, mpi::communicator & w
 
 		_master->add_cut(s, _data.x0, rhs);
 
-		update_best_ub();
+		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 		_data.stop = stopping_criterion();
 	}
 
@@ -375,30 +372,6 @@ void BendersMpi::print_log(std::ostream&stream) const {
 	stream << std::endl;
 }
 
-/*!
-*  \brief Print the optimal solution of the problem
-*
-*  Method to print the optimal solution of the problem
-*
-* \param stream : stream to print the output
-*/
-void BendersMpi::print_solution(std::ostream&stream)const {
-	stream << std::endl;
-	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-	stream << "*                                                             *" << std::endl;
-	stream << "*                     Investment solution                     *" << std::endl;
-	stream << "*                                                             *" << std::endl;
-	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-	stream << "|                                                             |" << std::endl;
-	for (auto const & kvp : _data.bestx) {
-		stream << "|   " << std::setw(35) << std::left << kvp.first;
-		stream << " = ";
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
-		stream << "|" << std::endl;
-	}
-	stream << "|_____________________________________________________________|" << std::endl;
-	stream << std::endl;
-}
 
 /*!
 *  \brief Update maximum and minimum of a set of int
@@ -412,17 +385,6 @@ void BendersMpi::bound_simplex_iter(int simplexiter) {
 
 	if (_data.minsimplexiter > simplexiter) {
 		_data.minsimplexiter = simplexiter;
-	}
-}
-
-/*!
-*  \brief Update best upper bound and best optimal variables
-*
-*/
-void BendersMpi::update_best_ub() {
-	if (_data.best_ub > _data.ub) {
-		_data.best_ub = _data.ub;
-		_data.bestx = _data.x0;
 	}
 }
 
@@ -464,13 +426,19 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 
 
 	if (world.rank() == 0) {
+		_options.print(stream);
 		stream << std::setw(10) << "ITE";
 		stream << std::setw(20) << "LB";
 		stream << std::setw(20) << "UB";
 		stream << std::setw(20) << "BESTUB";
-		stream << std::setw(15) << "MINSIMPLEXIT";
-		stream << std::setw(15) << "MAXSIMPLEXIT";
-		stream << std::setw(15) << "DELETEDCUT";
+		if (_options.LOG_LEVEL > 1) {
+			stream << std::setw(15) << "MINSIMPLEXIT";
+			stream << std::setw(15) << "MAXSIMPLEXIT";
+		}
+
+		if (_options.LOG_LEVEL > 2) {
+			stream << std::setw(15) << "DELETEDCUT";
+		}
 		stream << std::endl;
 		for (auto const & kvp : _problem_to_id) {
 			_all_cuts_storage[kvp.first] = SlaveCutStorage();
@@ -485,50 +453,50 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 *
 * \param stream : stream to print the output
 */
-void BendersMpi::print_csv() {
-	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output.csv");
-	if (_options.AGGREGATION) {
-		output = (_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output_aggregate.csv");
-	}
-	std::ofstream file(output, std::ios::out | std::ios::trunc);
-
-	if (file)
-	{
-		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
-		Point xopt;
-		int nite;
-		nite = _trace.get_ite();
-		xopt = _trace._master_trace[nite - 1]->get_point();
-		for (int i(0); i < nite; i++) {
-			file << i + 1 << ";";
-			file << "Master" << ";";
-			file << "master" << ";";
-			file << _data.nslaves << ";";
-			file << _trace._master_trace[i]->get_ub() << ";";
-			file << _trace._master_trace[i]->get_lb() << ";";
-			file << _trace._master_trace[i]->get_bestub() << ";";
-			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
-			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
-			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-				std::size_t found = kvp.first.find_last_of("/\\");
-				SlaveCutDataHandler handler(kvp.second);
-				file << i + 1 << ";";
-				file << "Slave" << ";";
-				file << kvp.first.substr(found + 1) << ";";
-				file << _problem_to_id[kvp.first] << ";";
-				file << handler.get_dbl(SLAVE_COST) << ";";
-				file << handler.get_dbl(ALPHA_I) << ";";
-				file << ";";
-				file << handler.get_int(SIMPLEXITER) << ";";
-				file << std::endl;
-			}
-		}
-		file.close();
-	}
-	else {
-		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-	}
-}
+//void BendersMpi::print_csv() {
+//	 std::string output(_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output.csv");
+//	 if (_options.AGGREGATION) {
+//		 output = (_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output_aggregate.csv");
+//	 }
+//	 std::ofstream file(output, std::ios::out | std::ios::trunc);
+//
+//	 if (file)
+//	 {
+//		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
+//		 Point xopt;
+//		 int nite;
+//		 nite = _trace.get_ite();
+//		 xopt = _trace._master_trace[nite - 1]->get_point();
+//		 for (int i(0); i < nite; i++) {
+//			 file << i + 1 << ";";
+//			 file << "Master" << ";";
+//			 file << "master" << ";";
+//			 file << _data.nslaves << ";";
+//			 file << _trace._master_trace[i]->get_ub() << ";";
+//			 file << _trace._master_trace[i]->get_lb() << ";";
+//			 file << _trace._master_trace[i]->get_bestub() << ";";
+//			 file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
+//			 file << _trace._master_trace[i]->get_deletedcut() << std::endl;
+//			 for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
+//				 std::size_t found = kvp.first.find_last_of(PATH_SEPARATOR);
+//				 SlaveCutDataHandler handler(kvp.second);
+//				 file << i + 1 << ";";
+//				 file << "Slave" << ";";
+//				 file << kvp.first.substr(found + 1) << ";";
+//				 file << _problem_to_id[kvp.first] << ";";
+//				 file << handler.get_dbl(SLAVE_COST) << ";";
+//				 file << handler.get_dbl(ALPHA_I) << ";";
+//				 file << ";";
+//				 file << handler.get_int(SIMPLEXITER) << ";";
+//				 file << std::endl;
+//			 }
+//		 }
+//		 file.close();
+//	 }
+//	 else {
+//		 std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+//	 }
+//}
 // my test !!!!
 /*!
 *  \brief Run Benders algorithm in parallel 
@@ -570,10 +538,10 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	}
 
 	if (world.rank() == 0) {
-		print_solution(stream);
-		if (_options.TRACE) {
-			print_csv();
-		}
+		print_solution(stream, _data.bestx, true);
+		//if (_options.TRACE) {
+		//	print_csv();
+		//}
 	}
 
 }

@@ -61,7 +61,6 @@ std::string const & SlaveCutDataHandler::get_str(SlaveCutStr key) const {
 
 bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
 	Predicate point_comp;
-	//return((get_const_cut() < other.get_const_cut()) || ((std::fabs(get_const_cut() == other.get_const_cut()) < EPSILON_PREDICATE)) && (point_comp(_x0, other._x0)));
 	if (std::fabs(get_const_cut() - other.get_const_cut()) < EPSILON_PREDICATE) {
 		return point_comp(_data_cut->get_subgradient(), other._data_cut->get_subgradient());
 	}

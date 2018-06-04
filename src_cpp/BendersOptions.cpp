@@ -8,7 +8,7 @@ BendersOptions::BendersOptions() {
 
 }
 void BendersOptions::write_default(){
-std::ofstream file("Options_default.txt");
+std::ofstream file("options_default.txt");
 print(file);
 file.close();
 
@@ -33,7 +33,8 @@ void BendersOptions::read(std::string const & file_name) {
 }
 
 void BendersOptions::print(std::ostream & stream)const {
-#define BENDERS_OPTIONS_MACRO(name__, type__, default__) stream<<std::setw(25)<<#name__<<std::setw(25)<<name__<<std::endl;
+#define BENDERS_OPTIONS_MACRO(name__, type__, default__) stream<<std::setw(20)<<#name__<<std::setw(40)<<name__<<std::endl;
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
+	stream << std::endl;
 }

@@ -1,5 +1,5 @@
 //Determine the degree of detail of the output, from 1 to 3
-BENDERS_OPTIONS_MACRO(LOG_LEVEL, int, 1)
+BENDERS_OPTIONS_MACRO(LOG_LEVEL, int, 3)
 
 //Maximum number of iterations accepted
 BENDERS_OPTIONS_MACRO(MAX_ITERATIONS, int, -1)
@@ -30,3 +30,9 @@ BENDERS_OPTIONS_MACRO(MASTER_NAME, std::string, "master")
 
 //Number of slaves to use to solve the problem
 BENDERS_OPTIONS_MACRO(SLAVE_NUMBER, int, -1)
+
+//Number of slaves to use to solve the problem
+BENDERS_OPTIONS_MACRO(STRUCTURE_FILE, std::string, "structure.txt")
+
+//Path to the folder where input files are stored
+BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
