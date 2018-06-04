@@ -36,6 +36,45 @@ int norm_int(IntVector const & x0, IntVector const & x1) {
 	}
 }
 
+/*!
+*  \brief Print the optimal solution of the problem
+*
+*  Method to print the optimal solution of the problem
+*
+* \param stream : stream to print the output
+*/
+void print_solution(std::ostream&stream, Point const & point, bool filter_non_zero) {
+	stream << std::endl;
+	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+	stream << "*                                                                                               *" << std::endl;
+	stream << "*                                      Investment solution                                      *" << std::endl;
+	stream << "*                                                                                               *" << std::endl;
+	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+	stream << "|                                                                                               |" << std::endl;
+	for (auto const & kvp : point) {
+		if (!filter_non_zero || std::fabs(kvp.second) > 1e-10) {
+			stream << "|  " << std::setw(70) << std::left << kvp.first;
+			stream << " = ";
+			stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
+			stream << "|" << std::endl;
+		}
+	}
+	stream << "|_______________________________________________________________________________________________|" << std::endl;
+	stream << std::endl;
+}
+
+
+/*!
+*  \brief Update best upper bound and best optimal variables
+*
+*/
+void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0) {
+	if (best_ub > ub) {
+		best_ub = ub;
+		bestx = x0;
+	}
+}
+
 std::ostream & operator<<(std::ostream & stream, std::vector<IntVector> const & rhs) {
 	int n(rhs.size());
 	for (int i(0); i < n; i++) {

@@ -119,7 +119,7 @@ void Benders::print_log(std::ostream&stream) const {
 bool Benders::stopping_criterion() {
 	_data.deletedcut = 0;
 	_data.maxsimplexiter = 0;
-	_data.minsimplexiter = 1000000;
+	_data.minsimplexiter = std::numeric_limits<int>::max();
 	return(((_options.MAX_ITERATIONS != -1)&&(_data.it > _options.MAX_ITERATIONS))||(_data.lb + _options.GAP >= _data.best_ub));
 }
 
@@ -289,10 +289,7 @@ void Benders::init_slave_weight() {
 	}
 	else {
 		std::string line;
-		std::size_t found = _id_to_problem.begin()->second.find_last_of(PATH_SEPARATOR);
-		std::string root;
-		root = _id_to_problem.begin()->second.substr(0, found);
-		std::string filename(root + PATH_SEPARATOR + _options.SLAVE_WEIGHT);
+		std::string filename(_options.INPUTROOT + PATH_SEPARATOR + _options.SLAVE_WEIGHT);
 		std::ifstream file(filename);
 		if (!file) {
 			std::cout << "Cannot open file " << filename << std::endl;
@@ -302,7 +299,7 @@ void Benders::init_slave_weight() {
 			std::stringstream buffer(line);
 			std::string problem_name;
 			buffer >> problem_name;
-			problem_name = root + PATH_SEPARATOR + problem_name;
+			problem_name = _options.INPUTROOT + PATH_SEPARATOR + problem_name;
 			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
 			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " << _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
 		}
@@ -375,17 +372,6 @@ void Benders::build_cut_aggregate() {
 }
 
 /*!
-*  \brief Update best upper bound and best optimal variables
-*
-*/
-void Benders::update_best_ub() {
-	if (_data.best_ub > _data.ub) {
-		_data.best_ub = _data.ub;
-		_data.bestx = _data.x0;
-	}
-}
-
-/*!
 *  \brief Run Benders algorithm
 *
 *  Method to run Benders algorithm
@@ -415,7 +401,7 @@ void Benders::run(std::ostream & stream) {
 			build_cut();
 		}
 
-		update_best_ub();
+		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 		//Update best upper bound 
 		print_log(stream);
@@ -427,42 +413,12 @@ void Benders::run(std::ostream & stream) {
 		_data.stop = stopping_criterion();
 	}
 	
-	print_solution(stream);
-	if (_options.TRACE) {
-		print_csv();
-	}
+	print_solution(stream, _data.bestx, true);
+	//if (_options.TRACE) {
+	//	print_csv();
+	//}
 
 }
-
-/*!
-*  \brief Print the optimal solution of the problem
-*
-*  Method to print the optimal solution of the problem
-*
-* \param stream : stream to print the output
-*/
-void Benders::print_solution(std::ostream&stream)const {
-	stream << std::endl;
-	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-	stream << "*                                                             *" << std::endl;
-	stream << "*                     Investment solution                     *" << std::endl;
-	stream << "*                                                             *" << std::endl;
-	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-	stream << "|                                                             |" << std::endl;
-	for (auto const & kvp : _data.bestx) {
-		stream << "|   " << std::setw(35) << std::left << kvp.first;
-		stream << " = ";
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
-		stream << "|" << std::endl;
-	}
-	stream << "|_____________________________________________________________|" << std::endl;
-	stream << std::endl;
-}
-
-
-
-
-
 
 
 /*!
@@ -472,47 +428,47 @@ void Benders::print_solution(std::ostream&stream)const {
 *
 * \param stream : stream to print the output
 */
-void Benders::print_csv() {
-	//std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
-	//if (_options.AGGREGATION) {
-	//	output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
-	//}
-	//std::ofstream file(output, std::ios::out | std::ios::trunc);
-
-	//if (file)
-	//{
-	//	file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
-	//	Point xopt;
-	//	int nite;
-	//	nite = _trace.get_ite();
-	//	xopt = _trace._master_trace[nite-1]->get_point();
-	//	for (int i(0); i < nite; i++) {
-	//		file << i + 1 << ";";
-	//		file << "Master" << ";";
-	//		file<< "master" << ";";
-	//		file << _slaves.size() << ";";
-	//		file << _trace._master_trace[i]->get_ub() << ";";
-	//		file << _trace._master_trace[i]->get_lb() << ";";
-	//		file << _trace._master_trace[i]->get_bestub() << ";";
-	//		file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
-	//		file << _trace._master_trace[i]->get_deletedcut() << std::endl;
-	//		for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-	//			std::size_t found = kvp.first.find_last_of("/\\");
-	//			SlaveCutDataHandler handler(kvp.second);
-	//			file << i + 1 << ";";
-	//			file << "Slave" << ";";
-	//			file << kvp.first.substr(found+1) << ";";
-	//			file << _problem_to_id[kvp.first] << ";";
-	//			file << handler.get_dbl(SLAVE_COST) << ";";
-	//			file << handler.get_dbl(ALPHA_I) << ";";
-	//			file << ";";
-	//			file << handler.get_int(SIMPLEXITER) << ";";
-	//			file << std::endl;
-	//		}
-	//	}
-	//	file.close();
-	//}
-	//else {
-	//	std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-	//}
-}
+//void Benders::print_csv() {
+//	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
+//	if (_options.AGGREGATION) {
+//		output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
+//	}
+//	std::ofstream file(output, std::ios::out | std::ios::trunc);
+//
+//	if (file)
+//	{
+//		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
+//		Point xopt;
+//		int nite;
+//		nite = _trace.get_ite();
+//		xopt = _trace._master_trace[nite-1]->get_point();
+//		for (int i(0); i < nite; i++) {
+//			file << i + 1 << ";";
+//			file << "Master" << ";";
+//			file<< "master" << ";";
+//			file << _slaves.size() << ";";
+//			file << _trace._master_trace[i]->get_ub() << ";";
+//			file << _trace._master_trace[i]->get_lb() << ";";
+//			file << _trace._master_trace[i]->get_bestub() << ";";
+//			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
+//			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
+//			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
+//				std::size_t found = kvp.first.find_last_of(PATH_SEPARATOR);
+//				SlaveCutDataHandler handler(kvp.second);
+//				file << i + 1 << ";";
+//				file << "Slave" << ";";
+//				file << kvp.first.substr(found+1) << ";";
+//				file << _problem_to_id[kvp.first] << ";";
+//				file << handler.get_dbl(SLAVE_COST) << ";";
+//				file << handler.get_dbl(ALPHA_I) << ";";
+//				file << ";";
+//				file << handler.get_int(SIMPLEXITER) << ";";
+//				file << std::endl;
+//			}
+//		}
+//		file.close();
+//	}
+//	else {
+//		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+//	}
+//}

@@ -22,6 +22,7 @@
 #include <set>
 #include <memory>
 #include <algorithm>
+#include <thread>
 
 struct Predicate;
 typedef std::map<std::string, double> Point;
@@ -102,6 +103,9 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 std::string get_mps(std::string const & problem_name);
 
 double norm_point(Point const & x0, Point const & x1);
+
+void print_solution(std::ostream&stream, Point const & point, bool filter_non_zero);
+void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0);
 
 int norm_int(IntVector const & x0, IntVector const & x1);
 

@@ -6,6 +6,25 @@
 #include "BendersOptions.h"
 
 
+BendersOptions build_benders_options(int argc, char** argv) {
+	BendersOptions result;
+	if (argc == 4) {
+		result.read(argv[3]);
+		result.INPUTROOT = argv[1];
+		std::string const summary_name(argv[2]);
+		result.STRUCTURE_FILE = summary_name;
+	}
+	else if (argc == 2){
+		result.read(argv[1]);
+	}
+	else if (argc == 3) {
+		result.read(argv[2]);
+		result.INPUTROOT = argv[1];
+	}
+	result.MASTER_NAME = result.INPUTROOT + PATH_SEPARATOR + result.MASTER_NAME;
+	return result;
+}
+
 /*!
 *  \brief Build the input from the structure file
 *
@@ -17,81 +36,71 @@
 *
 *  \param coupling_map : empty map to increment
 */
-int build_input(std::string const & root, std::string const & summary_name, CouplingMap & coupling_map) {
+int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 	coupling_map.clear();
-	std::ifstream summary(summary_name, std::ios::in);
+	std::ifstream summary(options.STRUCTURE_FILE, std::ios::in);
 	if (!summary) {
-		std::cout << "Cannot open file summary " << summary_name << std::endl;
+		std::cout << "Cannot open file summary " << options.STRUCTURE_FILE << std::endl;
 		return 0;
 	}
 	std::string line;
-	while (std::getline(summary, line))
-	{
-		std::stringstream buffer(line);
+	if (options.SLAVE_NUMBER == -1) {
+		while (std::getline(summary, line))
+		{
+			std::stringstream buffer(line);
+			std::string problem_name;
+			std::string variable_name;
+			int variable_id;
+			buffer >> problem_name;
+			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
+			buffer >> variable_name;
+			buffer >> variable_id;
+			coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+		}
+	}
+	else {
+		int i(0);
+		bool master_found(false);
 		std::string problem_name;
 		std::string variable_name;
 		int variable_id;
-		buffer >> problem_name;
-		problem_name = root + PATH_SEPARATOR + problem_name;
-		buffer >> variable_name;
-		buffer >> variable_id;
-		coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name,variable_id));
+		while (!(master_found) || (i <= options.SLAVE_NUMBER))
+		{
+			std::getline(summary, line);
+			std::stringstream buffer(line);
+			buffer >> problem_name;
+			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
+			buffer >> variable_name;
+			buffer >> variable_id;
+			if (problem_name == options.MASTER_NAME) {
+				coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+				master_found = true;
+			}
+			else if (coupling_map.find(problem_name) != coupling_map.end()) {
+				coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+			}
+			else {
+				coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+				i++;
+			}
+		}
+		coupling_map.erase(problem_name);
 	}
 	summary.close();
 	return 0;
 }
 
-int build_input_partial(std::string const & root, std::string const & summary_name, CouplingMap & coupling_map, std::string const & master_name, int slave_number) {
-	coupling_map.clear();
-	std::ifstream summary(summary_name, std::ios::in);
-	if (!summary) {
-		std::cout << "Cannot open file summary " << summary_name << std::endl;
-		return 0;
-	}
-	std::string line;
-	int i(0);
-	bool master_found(false);
-	while (!(master_found) || (i <= slave_number))
-	{
-		std::getline(summary, line);
-		std::stringstream buffer(line);
-		std::string problem_name;
-		std::string variable_name;
-		int variable_id;
-		buffer >> problem_name;
-		problem_name = root + PATH_SEPARATOR + problem_name;
-		buffer >> variable_name;
-		buffer >> variable_id;
-		if (problem_name == master_name) {
-			coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
-			master_found = true;
-		}
-		else if ((i <= slave_number)) {
-			coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
-			i++;
-		}
-		else {
-			i++;
-		}
-	}
-	summary.close();
-	return 0;
-}
 
 /*!
 *  \brief Execute the Benders algorithm in sequential
 */
-void sequential_launch(std::string const & root, std::string const & structure, BendersOptions const & options) {
+void sequential_launch(BendersOptions const & options) {
 	Timer timer;
 	XPRSinit("");
 	CouplingMap input;
-	if (options.SLAVE_NUMBER == -1) {
-		build_input(root, structure, input);
-	}
-	else {
-		build_input_partial(root, structure, input, options.MASTER_NAME, options.SLAVE_NUMBER);
-	}
+	build_input(options, input);
 	Benders benders(input, options);
+	options.print(std::cout);
 	benders.run(std::cout);
 	benders.free();
 	XPRSfree();
@@ -200,10 +209,10 @@ public:
 	}
 };
 
-void merge_mps(std::string const & root, std::string const & structure, BendersOptions const &options) {
+void merge_mps(BendersOptions const &options) {
 	XPRSinit("");
 	CouplingMap input;
-	build_input(root, structure, input);
+	build_input(options, input);
 	XPRSprob full;
 	XPRScreateprob(&full);
 
@@ -213,6 +222,8 @@ void merge_mps(std::string const & root, std::string const & structure, BendersO
 void usage(int argc) {
 	if (argc < 2) {
 		std::cout << "usage is : <exe> <root_dir> <structure_file> <option_file> " << std::endl;
+		BendersOptions input;
+		input.write_default();
 		std::exit(0);
 	}
 	else {

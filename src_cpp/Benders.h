@@ -27,7 +27,6 @@ public:
 
 	void init_log(std::ostream&)const;
 	void print_log(std::ostream&)const;
-	void print_solution(std::ostream & stream) const;
 	void init();
 	void init_slave_weight();
 
@@ -41,7 +40,6 @@ public:
 	void update_trace();
 	void build_cut();
 	void build_cut_aggregate();
-	void update_best_ub();
 	void run(std::ostream & stream);
 	void print_csv();
 };
