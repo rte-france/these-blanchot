@@ -1,6 +1,6 @@
 #include "BendersMPI.h"
 
-#define __DEBUG_BENDERS_MPI__ 1
+#define __DEBUG_BENDERS_MPI__ 0
 
 BendersMpi::~BendersMpi() {
 
@@ -43,7 +43,7 @@ void BendersMpi::init_slave_weight() {
 			buffer >> problem_name;
 			problem_name = _options.INPUTROOT + PATH_SEPARATOR + problem_name;
 			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
-			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " <<  _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
+			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " << _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
 		}
 	}
 }
@@ -51,7 +51,7 @@ void BendersMpi::init_slave_weight() {
 /*!
 *  \brief Method to load each problem in a thread
 *
-*  The initialization of each problem is done sequentially 
+*  The initialization of each problem is done sequentially
 *
 *  \param problem_list : list of string containing problems' names
 */
@@ -181,7 +181,7 @@ void BendersMpi::get_slave_cut(std::string const & name_slave, SlaveCutDataHandl
 /*!
 *  \brief Get cut information from each Slave and add it to the Master problem
 *
-*	Get cut information of every Slave Problem in each thread and send it to thread 0 to build new Master's cuts 
+*	Get cut information of every Slave Problem in each thread and send it to thread 0 to build new Master's cuts
 */
 void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	SlaveCutPackage slave_cut_package;
@@ -189,7 +189,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0) {
 		std::vector<SlaveCutPackage> all_package;
 		gather(world, slave_cut_package, all_package, 0);
-		if(_options.AGGREGATION == 0){
+		if (_options.AGGREGATION == 0) {
 			sort_cut_slave(all_package);
 		}
 		else {
@@ -198,16 +198,34 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	}
 	else {
 		for (auto & kvp : _map_slaves) {
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "step_2 on " << kvp.first << std::endl;
+#endif
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-
 			get_slave_cut(kvp.first, handler);
+
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "fix_to done" << std::endl;
+#endif
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "solve done" << std::endl;
+#endif
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "get_basis done" << std::endl;
+#endif
 			slave_cut_package[kvp.first] = *slave_cut_data;
 
 		}
+#if __DEBUG_BENDERS_MPI__
+		std::cout << "gathering ..." << std::endl;
+#endif
 		gather(world, slave_cut_package, 0);
+#if __DEBUG_BENDERS_MPI__
+		std::cout << "... done" << std::endl;
+#endif
 	}
 	world.barrier();
 }
@@ -298,7 +316,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 
 	broadcast(world, _data.stop, 0);
 	world.barrier();
- }
+}
 
 /*!
 *  \brief Update trace of the Benders for the current iteration
@@ -338,7 +356,7 @@ bool BendersMpi::stopping_criterion() {
 
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
-	if(world.rank() == 0)
+	if (world.rank() == 0)
 		_master->free();
 	else {
 		for (auto & ptr : _map_slaves)
@@ -423,9 +441,9 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 //		 std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
 //	 }
 //}
- //my test !!!!
+//my test !!!!
 /*!
-*  \brief Run Benders algorithm in parallel 
+*  \brief Run Benders algorithm in parallel
 *
 *  Method to run Benders algorithm in parallel
 *
@@ -440,15 +458,27 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	while (!_data.stop) {
 		++_data.it;
 		_data.deletedcut = 0;
-
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "new loop" << std::endl;
+#endif
 		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "step1 ended" << std::endl;
+#endif
 
 		/*Fix trial values in each slaves and send back data for Master to build cuts*/
 		step_2(env, world);
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "step2 ended" << std::endl;
+#endif
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
 		step_3(env, world);
+
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "step3 ended" << std::endl;
+#endif
 
 		if (world.rank() == 0) {
 			print_log(stream, _data, _options.LOG_LEVEL);
