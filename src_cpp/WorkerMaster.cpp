@@ -83,6 +83,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double rhs) {
+	std::cout << "adding " << i << " : " << s << ", " << x0 << ", " << rhs << std::endl;
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
@@ -119,7 +120,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & problem_name, DblVector const & slave_weight, int nslaves) :Worker() {
 	init(variable_map, problem_name);
 
-	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	// add the variable alpha
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));

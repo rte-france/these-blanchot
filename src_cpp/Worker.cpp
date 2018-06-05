@@ -100,8 +100,8 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 	_path_to_mps = get_mps(problem_name);
 
 	XPRScreateprob(&_xprs);
-	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, this);
 	XPRSreadprob(_xprs, _path_to_mps.c_str(), "");
