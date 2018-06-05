@@ -150,18 +150,16 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 		_master->get(_data.x0, _data.alpha, _data.alpha_i);
 		_master->get_value(_data.lb);
 
-		if (_options.TRACE) {
-			_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-		}
+		//if (_options.TRACE) {
+		//	_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+		//}
 
 		_data.invest_cost = _data.lb - _data.alpha;
 		_data.ub = _data.invest_cost;
 
 	}
-
-
+	world.barrier();
 	broadcast(world, _data.x0, 0);
-
 	world.barrier();
 
 }
@@ -246,18 +244,19 @@ void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package
 			handler->get_dbl(ALPHA_I) = _data.alpha_i[_problem_to_id[itmap.first]];
 			_data.ub += handler->get_dbl(SLAVE_COST)* _slave_weight_coeff[_problem_to_id[itmap.first]];
 
-			SlaveCutTrimmer cut(handler, _data.x0);
-			if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
-				_data.deletedcut++;
-			}
-			else {
-				_master->add_cut_slave(_problem_to_id[itmap.first], handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
-				_all_cuts_storage[itmap.first].insert(cut);
-			}
+			_master->add_cut_slave(_problem_to_id[itmap.first], handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
+			//SlaveCutTrimmer cut(handler, _data.x0);
+			//if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
+			//	_data.deletedcut++;
+			//}
+			//else {
+			//	_master->add_cut_slave(_problem_to_id[itmap.first], handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
+			//	_all_cuts_storage[itmap.first].insert(cut);
+			//}
 
-			if (_options.TRACE) {
-				_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-			}
+			//if (_options.TRACE) {
+			//	_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+			//}
 			bound_simplex_iter(handler->get_int(SIMPLEXITER));
 		}
 	}
@@ -287,17 +286,17 @@ void BendersMpi::sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & a
 				s[var.first] += handler->get_subgradient()[var.first] * _slave_weight_coeff[_problem_to_id[itmap.first]];
 			}
 
-			SlaveCutTrimmer cut(handler, _data.x0);
+			//SlaveCutTrimmer cut(handler, _data.x0);
 
 
-			if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
-				_data.deletedcut++;
-			}
-			_all_cuts_storage.find(itmap.first)->second.insert(cut);
+			//if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
+			//	_data.deletedcut++;
+			//}
+			//_all_cuts_storage.find(itmap.first)->second.insert(cut);
 
-			if (_options.TRACE) {
-				_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-			}
+			//if (_options.TRACE) {
+			//	_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+			//}
 
 			bound_simplex_iter(handler->get_int(SIMPLEXITER));
 		}
@@ -323,11 +322,11 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 *  \brief Update trace of the Benders for the current iteration
 */
 void BendersMpi::update_trace() {
-	_trace._master_trace[_data.it - 1]->_lb = _data.lb;
-	_trace._master_trace[_data.it - 1]->_ub = _data.ub;
-	_trace._master_trace[_data.it - 1]->_bestub = _data.best_ub;
-	_trace._master_trace[_data.it - 1]->_x0 = PointPtr(new Point(_data.x0));
-	_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
+	//_trace._master_trace[_data.it - 1]->_lb = _data.lb;
+	//_trace._master_trace[_data.it - 1]->_ub = _data.ub;
+	//_trace._master_trace[_data.it - 1]->_bestub = _data.best_ub;
+	//_trace._master_trace[_data.it - 1]->_x0 = PointPtr(new Point(_data.x0));
+	//_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
 }
 
 
@@ -385,9 +384,9 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 
 	if (world.rank() == 0) {
 		init_log(stream, _options.LOG_LEVEL);
-		for (auto const & kvp : _problem_to_id) {
-			_all_cuts_storage[kvp.first] = SlaveCutStorage();
-		}
+		//for (auto const & kvp : _problem_to_id) {
+		//	_all_cuts_storage[kvp.first] = SlaveCutStorage();
+		//}
 	}
 }
 

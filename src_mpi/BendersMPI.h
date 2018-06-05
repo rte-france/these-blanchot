@@ -24,8 +24,8 @@ public:
 	BendersData _data;
 	BendersOptions _options;
 
-	AllCutStorage _all_cuts_storage;
-	WorkerMasterTrace _trace;
+	//AllCutStorage _all_cuts_storage;
+	//WorkerMasterTrace _trace;
 
 
 	Slaves_Ptr_map _map_slaves;
