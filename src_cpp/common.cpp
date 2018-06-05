@@ -63,6 +63,64 @@ void print_solution(std::ostream&stream, Point const & point, bool filter_non_ze
 	stream << std::endl;
 }
 
+/*!
+*  \brief Print iteration log
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*/
+void print_log(std::ostream&stream, BendersData const & data, int const log_level) {
+
+	stream << std::setw(10) << data.it;
+	if (data.lb == -1e20)
+		stream << std::setw(20) << "-INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.lb;
+	if (data.ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.ub;
+	if (data.best_ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
+
+	if (log_level > 1) {
+		stream << std::setw(15) << data.minsimplexiter;
+		stream << std::setw(15) << data.maxsimplexiter;
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << data.deletedcut;
+	}
+	stream << std::endl;
+
+}
+
+/*!
+*  \brief Initialize Benders log
+*
+*  Method to initialize Benders log by printing each column title
+*
+*  \param stream : output to print log
+*/
+void init_log(std::ostream&stream, int const log_level) {
+	stream << std::setw(10) << "ITE";
+	stream << std::setw(20) << "LB";
+	stream << std::setw(20) << "UB";
+	stream << std::setw(20) << "BESTUB";
+
+	if (log_level > 1) {
+		stream << std::setw(15) << "MINSIMPLEXIT";
+		stream << std::setw(15) << "MAXSIMPLEXIT";
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << "DELETEDCUT";
+	}
+	stream << std::endl;
+}
 
 /*!
 *  \brief Update best upper bound and best optimal variables

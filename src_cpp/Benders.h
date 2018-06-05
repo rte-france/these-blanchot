@@ -25,8 +25,6 @@ public:
 
 	void free();
 
-	void init_log(std::ostream&)const;
-	void print_log(std::ostream&)const;
 	void init();
 	void init_slave_weight();
 
