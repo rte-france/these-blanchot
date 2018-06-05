@@ -1,6 +1,6 @@
 #include "BendersMPI.h"
 
-#define __DEBUG_BENDERS_MPI__ 1
+#define __DEBUG_BENDERS_MPI__ 0
 
 BendersMpi::~BendersMpi() {
 
