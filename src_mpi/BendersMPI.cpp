@@ -215,6 +215,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 			std::cout << "get_basis done" << std::endl;
 #endif
 			slave_cut_package[kvp.first] = *slave_cut_data;
+			std::cout << world.rank() << " sending " << kvp.first << std::endl;
 
 		}
 #if __DEBUG_BENDERS_MPI__
