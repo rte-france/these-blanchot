@@ -41,7 +41,7 @@ public:
 	void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
-	void BendersMpi::get_slave_cut(std::string const & name_slave, SlaveCutDataHandlerPtr & handler);
+	void get_slave_cut(std::string const & name_slave, SlaveCutDataHandlerPtr & handler);
 	void step_3(mpi::environment & env, mpi::communicator & world);
 	void update_trace();
 	void init(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
