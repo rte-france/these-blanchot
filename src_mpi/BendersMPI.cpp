@@ -314,6 +314,7 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 		_data.stop = stopping_criterion();
 	}
 
+	world.barrier();
 	broadcast(world, _data.stop, 0);
 	world.barrier();
 }
