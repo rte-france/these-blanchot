@@ -247,7 +247,7 @@ void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package
 			_data.ub += handler->get_dbl(SLAVE_COST)* _slave_weight_coeff[_problem_to_id[itmap.first]];
 
 			SlaveCutTrimmer cut(handler, _data.x0);
-			if (!(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
+			if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
 				_data.deletedcut++;
 			}
 			else {
@@ -289,7 +289,8 @@ void BendersMpi::sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & a
 
 			SlaveCutTrimmer cut(handler, _data.x0);
 
-			if (!(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
+
+			if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
 				_data.deletedcut++;
 			}
 			_all_cuts_storage.find(itmap.first)->second.insert(cut);

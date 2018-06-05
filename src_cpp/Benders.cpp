@@ -136,7 +136,7 @@ void Benders::get_master_value() {
 void Benders::sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave) {
 	SlaveCutTrimmer trimmercut(handler, _data.x0);
 	
-	if (_all_cuts_storage[name_slave].find(trimmercut) != _all_cuts_storage[name_slave].end())
+	if (_options.DELETE_CUT && _all_cuts_storage[name_slave].find(trimmercut) != _all_cuts_storage[name_slave].end())
 	{
 		_data.deletedcut++;
 	}
@@ -271,8 +271,8 @@ void Benders::sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, 
 	}
 
 	SlaveCutTrimmer trimmercut(handler, _data.x0);
-
-	if (_all_cuts_storage[name_slave].find(trimmercut) != _all_cuts_storage[name_slave].end())
+	
+	if (_options.DELETE_CUT && _all_cuts_storage[name_slave].find(trimmercut) != _all_cuts_storage[name_slave].end())
 	{
 		_data.deletedcut++;
 	}

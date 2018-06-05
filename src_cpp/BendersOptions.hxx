@@ -14,10 +14,10 @@ BENDERS_OPTIONS_MACRO(AGGREGATION, bool, false)
 BENDERS_OPTIONS_MACRO(ROOTPATH, std::string, ".")
 
 //True if a trace should be built, false otherwise
-BENDERS_OPTIONS_MACRO(TRACE, bool, true)
+BENDERS_OPTIONS_MACRO(TRACE, bool, false)
 
 //True if similar cuts should be deleted, false otherwise
-BENDERS_OPTIONS_MACRO(DELETE_CUT, bool, true)
+BENDERS_OPTIONS_MACRO(DELETE_CUT, bool, false)
 
 //Either "COMMAND" to print the log in the command prompt, or a file name to print in
 BENDERS_OPTIONS_MACRO(LOG_OUTPUT, std::string, "COMMAND")
