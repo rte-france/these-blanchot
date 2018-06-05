@@ -100,8 +100,8 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 	_path_to_mps = get_mps(problem_name);
 
 	XPRScreateprob(&_xprs);
-	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, this);
 	XPRSreadprob(_xprs, _path_to_mps.c_str(), "");
@@ -114,7 +114,18 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 }
 
 void Worker::solve() {
-	XPRSlpoptimize(_xprs, "");
+	int status = XPRSlpoptimize(_xprs, "");
+	int lp_status;
+	if (status) {
+		std::cout << "Worker::solve() status " << status << std::endl;
+		std::exit(0);
+	}
+	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);
+	if (lp_status != XPRS_LP_OPTIMAL) {
+		std::cout << "lp_status is : " << lp_status << std::endl;
+		std::exit(0);
+	}
+
 }
 
 /*!
