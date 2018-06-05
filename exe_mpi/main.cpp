@@ -15,7 +15,11 @@ int main(int argc, char** argv)
 		usage(argc);
 
 	BendersOptions options(build_benders_options(argc, argv));
-
+	if (world.rank() == 0) {
+		std::cout << "INPUTROOT      : " << options.INPUTROOT << std::endl;
+		std::cout << "MASTER_NAME    : " << options.MASTER_NAME << std::endl;
+		std::cout << "STRUCTURE_FILE : " << options.STRUCTURE_FILE << std::endl;
+	}
 	if (world.size() == 1) {
 		sequential_launch(options);
 	}

@@ -22,9 +22,6 @@ BendersOptions build_benders_options(int argc, char** argv) {
 		result.INPUTROOT = argv[1];
 	}
 	result.MASTER_NAME = result.INPUTROOT + PATH_SEPARATOR + result.MASTER_NAME;
-	std::cout << "INPUTROOT      : " << result.INPUTROOT << std::endl;
-	std::cout << "MASTER_NAME    : " << result.MASTER_NAME << std::endl;
-	std::cout << "STRUCTURE_FILE : " << result.STRUCTURE_FILE << std::endl;
 	return result;
 }
 

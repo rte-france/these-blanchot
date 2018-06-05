@@ -176,6 +176,9 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		SlaveCutPackage slave_cut_package;
 
 		for (auto & kvp : _map_slaves) {
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "step_2 on " << kvp.first << std::endl;
+#endif
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
@@ -183,8 +186,17 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 			WorkerSlavePtr & ptr(kvp.second);
 
 			ptr->fix_to(_data.x0);
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "fix_to done"<< std::endl;
+#endif
 			ptr->solve();
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "solve done" << std::endl;
+#endif
 			ptr->get_basis();
+#if __DEBUG_BENDERS_MPI__
+			std::cout << "get_basis done" << std::endl;
+#endif
 
 			ptr->get_value(handler->get_dbl(SLAVE_COST));
 			ptr->get_subgradient(handler->get_subgradient());
@@ -194,7 +206,13 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 			slave_cut_package[kvp.first] = *slave_cut_data;
 	
 		}
+#if __DEBUG_BENDERS_MPI__
+		std::cout << "gathering ..." << std::endl;
+#endif
 		gather(world, slave_cut_package, 0);
+#if __DEBUG_BENDERS_MPI__
+		std::cout << "... done" << std::endl;
+#endif
 	}
 	world.barrier();
 }
