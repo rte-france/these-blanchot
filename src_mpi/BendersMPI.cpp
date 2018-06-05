@@ -1,6 +1,6 @@
 #include "BendersMPI.h"
 
-
+#define __DEBUG_BENDERS_MPI__ 1
 
 BendersMpi::~BendersMpi() {
 
@@ -514,12 +514,20 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	while (!_data.stop) {
 		++_data.it;
 		_data.deletedcut = 0;
-
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "new loop" << std::endl;
+#endif
 		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "step1 ended" << std::endl;
+#endif
 
 		/*Fix trial values in each slaves and send back data for Master to build cuts*/
 		step_2(env, world);
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "step2 ended" << std::endl;
+#endif
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
 		if (_options.AGGREGATION == true) {
@@ -528,13 +536,17 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		else {
 			step_3(env, world);
 		}
+#if __DEBUG_BENDERS_MPI__ 
+		std::cout << "step3 ended" << std::endl;
+#endif
+
 		if (world.rank() == 0) {
 			print_log(stream);
 			if (_options.TRACE) {
 				update_trace();
 			}
 		}
-
+		world.barrier();
 	}
 
 	if (world.rank() == 0) {
