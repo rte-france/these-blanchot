@@ -51,67 +51,6 @@ void Benders::free() {
 }
 
 /*!
-*  \brief Initialize Benders log
-*
-*  Method to initialize Benders log by printing each column title
-*
-*  \param stream : output to print log
-*/
-void Benders::init_log(std::ostream&stream )const {
-	stream << std::setw(10) << "ITE";
-	stream << std::setw(20) << "LB";
-	stream << std::setw(20) << "UB";
-	stream << std::setw(20) << "BESTUB";
-
-	if (_options.LOG_LEVEL > 1) {
-		stream << std::setw(15) << "MINSIMPLEXIT";
-		stream << std::setw(15) << "MAXSIMPLEXIT";
-	}
-
-	if (_options.LOG_LEVEL > 2) {
-		stream << std::setw(15) << "DELETEDCUT";
-	}
-	stream << std::endl;
-}
-
-
-/*!
-*  \brief Print iteration log
-*
-*  Method to print the log of an iteration
-*
-*  \param stream : output to print log
-*/
-void Benders::print_log(std::ostream&stream) const {
-
-	stream << std::setw(10) << _data.it;
-	if (_data.lb == -1e20)
-		stream << std::setw(20) << "-INF";
-	else
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << _data.lb;
-	if (_data.ub == +1e20)
-		stream << std::setw(20) << "+INF";
-	else
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << _data.ub;
-	if (_data.best_ub == +1e20)
-		stream << std::setw(20) << "+INF";
-	else
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << _data.best_ub;
-
-	if (_options.LOG_LEVEL > 1) {
-		stream << std::setw(15) << _data.minsimplexiter;
-		stream << std::setw(15) << _data.maxsimplexiter;
-	}
-
-	if (_options.LOG_LEVEL > 2) {
-		stream << std::setw(15) << _data.deletedcut;
-	}
-	stream << std::endl;
-
-}
-
-
-/*!
 *  \brief Update stopping criterion
 *
 *  Method updating the stopping criterion and reinitializing some datas
@@ -225,7 +164,9 @@ void Benders::get_slave_cut(int i_slave, std::string const & name_slave, SlaveCu
 	slave.get_value(handler->get_dbl(SLAVE_COST));
 	slave.get_subgradient(handler->get_subgradient());
 	slave.get_simplex_ite(handler->get_int(SIMPLEXITER));
-	slave.get_basis();
+	if (_options.BASIS) {
+		slave.get_basis();
+	}
 	_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
 }
 
@@ -382,7 +323,7 @@ void Benders::run(std::ostream & stream) {
 
 	WorkerMaster & master(*_master);
 	
-	init_log(stream);
+	init_log(stream, _options.LOG_LEVEL);
 	init();
 
 	master.write(0);
@@ -404,7 +345,7 @@ void Benders::run(std::ostream & stream) {
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 		//Update best upper bound 
-		print_log(stream);
+		print_log(stream, _data, _options.LOG_LEVEL);
 
 		if (_options.TRACE) {
 			update_trace();
@@ -414,9 +355,9 @@ void Benders::run(std::ostream & stream) {
 	}
 	
 	print_solution(stream, _data.bestx, true);
-	//if (_options.TRACE) {
-	//	print_csv();
-	//}
+	if (_options.TRACE) {
+		print_csv();
+	}
 
 }
 
@@ -428,47 +369,47 @@ void Benders::run(std::ostream & stream) {
 *
 * \param stream : stream to print the output
 */
-//void Benders::print_csv() {
-//	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
-//	if (_options.AGGREGATION) {
-//		output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
-//	}
-//	std::ofstream file(output, std::ios::out | std::ios::trunc);
-//
-//	if (file)
-//	{
-//		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
-//		Point xopt;
-//		int nite;
-//		nite = _trace.get_ite();
-//		xopt = _trace._master_trace[nite-1]->get_point();
-//		for (int i(0); i < nite; i++) {
-//			file << i + 1 << ";";
-//			file << "Master" << ";";
-//			file<< "master" << ";";
-//			file << _slaves.size() << ";";
-//			file << _trace._master_trace[i]->get_ub() << ";";
-//			file << _trace._master_trace[i]->get_lb() << ";";
-//			file << _trace._master_trace[i]->get_bestub() << ";";
-//			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
-//			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
-//			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-//				std::size_t found = kvp.first.find_last_of(PATH_SEPARATOR);
-//				SlaveCutDataHandler handler(kvp.second);
-//				file << i + 1 << ";";
-//				file << "Slave" << ";";
-//				file << kvp.first.substr(found+1) << ";";
-//				file << _problem_to_id[kvp.first] << ";";
-//				file << handler.get_dbl(SLAVE_COST) << ";";
-//				file << handler.get_dbl(ALPHA_I) << ";";
-//				file << ";";
-//				file << handler.get_int(SIMPLEXITER) << ";";
-//				file << std::endl;
-//			}
-//		}
-//		file.close();
-//	}
-//	else {
-//		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-//	}
-//}
+void Benders::print_csv() {
+	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
+	if (_options.AGGREGATION) {
+		output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
+	}
+	std::ofstream file(output, std::ios::out | std::ios::trunc);
+
+	if (file)
+	{
+		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
+		std::size_t found = _options.MASTER_NAME.find_last_of(PATH_SEPARATOR);
+		Point xopt;
+		int nite;
+		nite = _trace.get_ite();
+		xopt = _trace._master_trace[nite-1]->get_point();
+		for (int i(0); i < nite; i++) {
+			file << i + 1 << ";";
+			file << "Master" << ";";
+			file<< _options.MASTER_NAME.substr(found+1) << ";";
+			file << _slaves.size() << ";";
+			file << _trace._master_trace[i]->get_ub() << ";";
+			file << _trace._master_trace[i]->get_lb() << ";";
+			file << _trace._master_trace[i]->get_bestub() << ";";
+			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
+			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
+			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
+				SlaveCutDataHandler handler(kvp.second);
+				file << i + 1 << ";";
+				file << "Slave" << ";";
+				file << kvp.first.substr(found+1) << ";";
+				file << _problem_to_id[kvp.first] << ";";
+				file << handler.get_dbl(SLAVE_COST) << ";";
+				file << handler.get_dbl(ALPHA_I) << ";";
+				file << ";";
+				file << handler.get_int(SIMPLEXITER) << ";";
+				file << std::endl;
+			}
+		}
+		file.close();
+	}
+	else {
+		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+	}
+}

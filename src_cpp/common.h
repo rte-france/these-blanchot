@@ -99,16 +99,6 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 	return stream;
 }
 
-
-std::string get_mps(std::string const & problem_name);
-
-double norm_point(Point const & x0, Point const & x1);
-
-void print_solution(std::ostream&stream, Point const & point, bool filter_non_zero);
-void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0);
-
-int norm_int(IntVector const & x0, IntVector const & x1);
-
 struct BendersData {
 	double lb;
 	double ub;
@@ -127,5 +117,16 @@ struct BendersData {
 	int nslaves;
 	double dnslaves;
 };
+
+std::string get_mps(std::string const & problem_name);
+
+double norm_point(Point const & x0, Point const & x1);
+
+void print_solution(std::ostream&stream, Point const & point, bool filter_non_zero);
+void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0);
+void print_log(std::ostream&stream, BendersData const & data, int const log_level);
+void init_log(std::ostream&stream, int const log_level);
+
+int norm_int(IntVector const & x0, IntVector const & x1);
 
 std::ostream & operator<<(std::ostream & stream, std::vector<IntVector> const & rhs);

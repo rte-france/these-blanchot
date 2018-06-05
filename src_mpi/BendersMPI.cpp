@@ -166,31 +166,44 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 }
 
+void BendersMpi::get_slave_cut(std::string const & name_slave, SlaveCutDataHandlerPtr & handler) {
+	WorkerSlavePtr & ptr(_map_slaves[name_slave]);
+	ptr->fix_to(_data.x0);
+	ptr->solve();
+	if (_options.BASIS) {
+		ptr->get_basis();
+	}
+	ptr->get_value(handler->get_dbl(SLAVE_COST));
+	ptr->get_subgradient(handler->get_subgradient());
+	ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+}
+
 /*!
-*  \brief Get cut information of every Slave Problem in each thread and send it to thread 0
+*  \brief Get cut information from each Slave and add it to the Master problem
 *
+*	Get cut information of every Slave Problem in each thread and send it to thread 0 to build new Master's cuts 
 */
 void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
-	if (world.rank() != 0)
-	{
-		SlaveCutPackage slave_cut_package;
+	SlaveCutPackage slave_cut_package;
 
+	if (world.rank() == 0) {
+		std::vector<SlaveCutPackage> all_package;
+		gather(world, slave_cut_package, all_package, 0);
+		if(_options.AGGREGATION == 0){
+			sort_cut_slave(all_package);
+		}
+		else {
+			sort_cut_slave_aggregate(all_package);
+		}
+	}
+	else {
 		for (auto & kvp : _map_slaves) {
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			WorkerSlavePtr & ptr(kvp.second);
+			get_slave_cut(kvp.first, handler);
 
-			ptr->fix_to(_data.x0);
-			ptr->solve();
-			ptr->get_basis();
-
-			ptr->get_value(handler->get_dbl(SLAVE_COST));
-			ptr->get_subgradient(handler->get_subgradient());
-			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
-
-			SlaveCutTrimmer trimmercut(handler, _data.x0);
 			slave_cut_package[kvp.first] = *slave_cut_data;
 	
 		}
@@ -206,58 +219,32 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 *
 *  \param slave_cut_package : cut information
 */
-void BendersMpi::sort_cut_slave(SlaveCutPackage & slave_cut_package) {
-	for (auto & itmap : slave_cut_package) {
+void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package) {
+	for (int i(1); i < all_package.size(); i++) {
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			handler->get_subgradient() = itmap.second.first.first.first;
+			handler->get_dbl(ALPHA_I) = _data.alpha_i[_problem_to_id[itmap.first]];
+			_data.ub += handler->get_dbl(SLAVE_COST)* _slave_weight_coeff[_problem_to_id[itmap.first]];
 
-		SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
-		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			SlaveCutTrimmer cut(handler, _data.x0);
+			if (!(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
+				_data.deletedcut++;
+			}
+			else {
+				_master->add_cut_slave(_problem_to_id[itmap.first], handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
+				_all_cuts_storage[itmap.first].insert(cut);
+			}
 
-		handler->get_subgradient() = itmap.second.first.first.first;
-		handler->get_dbl(ALPHA_I) = _data.alpha_i[_problem_to_id[itmap.first]];
-
-		_data.ub += handler->get_dbl(SLAVE_COST)* _slave_weight_coeff[_problem_to_id[itmap.first]];
-
-		SlaveCutTrimmer cut(handler, _data.x0);
-		if (!(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
-			_data.deletedcut++;
+			if (_options.TRACE) {
+				_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+			}
+			bound_simplex_iter(handler->get_int(SIMPLEXITER));
 		}
-		else {
-			_master->add_cut_slave(_problem_to_id[itmap.first], handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
-			_all_cuts_storage[itmap.first].insert(cut);
-		}
-
-		if (_options.TRACE) {
-			_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-		}
-
-		bound_simplex_iter(handler->get_int(SIMPLEXITER));
 	}
 }
 
-/*!
-*  \brief Method to gather every cut information from each thread in thread 0 and add cut to Master problem
-*
-*/
-void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
-	if (world.rank() == 0) {
-
-		SlaveCutPackage slave_cut_package;
-		std::vector<SlaveCutPackage> all_package;
-
-		gather(world, slave_cut_package, all_package, 0);
-
-		for (int i(1); i < world.size(); i++) {
-			sort_cut_slave(all_package[i]);
-		}
-
-		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
-
-		_data.stop = stopping_criterion();
-	}
-
-	broadcast(world, _data.stop, 0);
-	world.barrier();
-}
 
 /*!
 *  \brief Add aggregated cut to Master Problem and store it in a set
@@ -266,66 +253,52 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 *
 *  \param slave_cut_package : cut information
 */
-void BendersMpi::sort_cut_slave_aggregate(SlaveCutPackage & slave_cut_package, Point & s, double & rhs) {
-	for (auto & itmap : slave_cut_package) {
+void BendersMpi::sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package) {
+	Point s;
+	double rhs(0);
+	for (int i(1); i < all_package.size(); i++) {
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			handler->get_subgradient() = itmap.second.first.first.first;
 
-		SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
-		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-		handler->get_subgradient() = itmap.second.first.first.first;
+			_data.ub += handler->get_dbl(SLAVE_COST) * _slave_weight_coeff[_problem_to_id[itmap.first]];
+			rhs += handler->get_dbl(SLAVE_COST) * _slave_weight_coeff[_problem_to_id[itmap.first]];
 
-		_data.ub += handler->get_dbl(SLAVE_COST) * _slave_weight_coeff[_problem_to_id[itmap.first]];
-		rhs += handler->get_dbl(SLAVE_COST) * _slave_weight_coeff[_problem_to_id[itmap.first]];
+			for (auto & var : _data.x0) {
+				s[var.first] += handler->get_subgradient()[var.first] * _slave_weight_coeff[_problem_to_id[itmap.first]];
+			}
 
-		for (auto & var : s) {
-			s[var.first] += handler->get_subgradient()[var.first]* _slave_weight_coeff[_problem_to_id[itmap.first]];
+			SlaveCutTrimmer cut(handler, _data.x0);
+
+			if (!(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
+				_data.deletedcut++;
+			}
+			_all_cuts_storage.find(itmap.first)->second.insert(cut);
+
+			if (_options.TRACE) {
+				_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+			}
+
+			bound_simplex_iter(handler->get_int(SIMPLEXITER));
 		}
-
-		SlaveCutTrimmer cut(handler, _data.x0);
-
-		if (!(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
-			_data.deletedcut++;
-		}
-		_all_cuts_storage.find(itmap.first)->second.insert(cut);
-
-		if (_options.TRACE) {
-			_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-		}
-
-		bound_simplex_iter(handler->get_int(SIMPLEXITER));
 	}
+	_master->add_cut(s, _data.x0, rhs);
 }
 
 /*!
-*  \brief Method to gather every cut information from each thread in thread 0 and add cut to Master problem
+*  \brief Update best upper bound and stop criterion for each thread
 *
 */
-void BendersMpi::step_3_aggregated(mpi::environment & env, mpi::communicator & world) {
+void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0) {
-
-		Point s;
-		double rhs;
-		for (auto & var : _data.x0) {
-			s[var.first] = 0;
-		}
-
-		SlaveCutPackage slave_cut_package;
-		std::vector<SlaveCutPackage> all_package;
-
-		gather(world, slave_cut_package, all_package, 0);
-
-		for (int i(1); i < world.size(); i++) {
-			sort_cut_slave_aggregate(all_package[i], s, rhs);
-		}
-
-		_master->add_cut(s, _data.x0, rhs);
-
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 		_data.stop = stopping_criterion();
 	}
 
 	broadcast(world, _data.stop, 0);
 	world.barrier();
-}
+ }
 
 /*!
 *  \brief Update trace of the Benders for the current iteration
@@ -336,40 +309,6 @@ void BendersMpi::update_trace() {
 	_trace._master_trace[_data.it - 1]->_bestub = _data.best_ub;
 	_trace._master_trace[_data.it - 1]->_x0 = PointPtr(new Point(_data.x0));
 	_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
-}
-
-/*!
-*  \brief Print iteration log
-*
-*  Method to print the log of an iteration
-*
-*  \param stream : output to print log
-*/
-void BendersMpi::print_log(std::ostream&stream) const {
-
-	stream << std::setw(10) << _data.it;
-	if (_data.lb == -1e20)
-		stream << std::setw(20) << "-INF";
-	else
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << _data.lb;
-	if (_data.ub == +1e20)
-		stream << std::setw(20) << "+INF";
-	else
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << _data.ub;
-	if (_data.best_ub == +1e20)
-		stream << std::setw(20) << "+INF";
-	else
-		stream << std::setw(20) << std::scientific << std::setprecision(10) << _data.best_ub;
-
-	if (_options.LOG_LEVEL > 1) {
-		stream << std::setw(15) << _data.minsimplexiter;
-		stream << std::setw(15) << _data.maxsimplexiter;
-	}
-
-	if (_options.LOG_LEVEL > 2) {
-		stream << std::setw(15) << _data.deletedcut;
-	}
-	stream << std::endl;
 }
 
 
@@ -426,20 +365,7 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 
 
 	if (world.rank() == 0) {
-		_options.print(stream);
-		stream << std::setw(10) << "ITE";
-		stream << std::setw(20) << "LB";
-		stream << std::setw(20) << "UB";
-		stream << std::setw(20) << "BESTUB";
-		if (_options.LOG_LEVEL > 1) {
-			stream << std::setw(15) << "MINSIMPLEXIT";
-			stream << std::setw(15) << "MAXSIMPLEXIT";
-		}
-
-		if (_options.LOG_LEVEL > 2) {
-			stream << std::setw(15) << "DELETEDCUT";
-		}
-		stream << std::endl;
+		init_log(stream, _options.LOG_LEVEL);
 		for (auto const & kvp : _problem_to_id) {
 			_all_cuts_storage[kvp.first] = SlaveCutStorage();
 		}
@@ -467,10 +393,11 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 //		 int nite;
 //		 nite = _trace.get_ite();
 //		 xopt = _trace._master_trace[nite - 1]->get_point();
+//		 std::size_t found = _options.MASTER_NAME.find_last_of(PATH_SEPARATOR);
 //		 for (int i(0); i < nite; i++) {
 //			 file << i + 1 << ";";
 //			 file << "Master" << ";";
-//			 file << "master" << ";";
+//			 file << _options.MASTER_NAME.substr(found+1) << ";";
 //			 file << _data.nslaves << ";";
 //			 file << _trace._master_trace[i]->get_ub() << ";";
 //			 file << _trace._master_trace[i]->get_lb() << ";";
@@ -478,7 +405,6 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 //			 file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
 //			 file << _trace._master_trace[i]->get_deletedcut() << std::endl;
 //			 for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-//				 std::size_t found = kvp.first.find_last_of(PATH_SEPARATOR);
 //				 SlaveCutDataHandler handler(kvp.second);
 //				 file << i + 1 << ";";
 //				 file << "Slave" << ";";
@@ -497,7 +423,7 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 //		 std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
 //	 }
 //}
-// my test !!!!
+ //my test !!!!
 /*!
 *  \brief Run Benders algorithm in parallel 
 *
@@ -522,14 +448,10 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		step_2(env, world);
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
-		if (_options.AGGREGATION == true) {
-			step_3_aggregated(env, world);
-		}
-		else {
-			step_3(env, world);
-		}
+		step_3(env, world);
+
 		if (world.rank() == 0) {
-			print_log(stream);
+			print_log(stream, _data, _options.LOG_LEVEL);
 			if (_options.TRACE) {
 				update_trace();
 			}
@@ -539,9 +461,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 	if (world.rank() == 0) {
 		print_solution(stream, _data.bestx, true);
-		//if (_options.TRACE) {
-		//	print_csv();
-		//}
+		if (_options.TRACE) {
+			//print_csv();
+		}
 	}
 
 }
