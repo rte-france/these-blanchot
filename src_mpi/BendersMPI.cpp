@@ -198,46 +198,16 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	}
 	else {
 		for (auto & kvp : _map_slaves) {
-#if __DEBUG_BENDERS_MPI__
-			std::cout << "step_2 on " << kvp.first << std::endl;
-#endif
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-<<<<<<< HEAD
+
 			get_slave_cut(kvp.first, handler);
-=======
-			WorkerSlavePtr & ptr(kvp.second);
-
-			ptr->fix_to(_data.x0);
-#if __DEBUG_BENDERS_MPI__
-			std::cout << "fix_to done"<< std::endl;
-#endif
-			ptr->solve();
-#if __DEBUG_BENDERS_MPI__
-			std::cout << "solve done" << std::endl;
-#endif
-			ptr->get_basis();
-#if __DEBUG_BENDERS_MPI__
-			std::cout << "get_basis done" << std::endl;
-#endif
-
-			ptr->get_value(handler->get_dbl(SLAVE_COST));
-			ptr->get_subgradient(handler->get_subgradient());
-			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
->>>>>>> origin/dev_MR
-
 			slave_cut_package[kvp.first] = *slave_cut_data;
-	
+
 		}
-#if __DEBUG_BENDERS_MPI__
-		std::cout << "gathering ..." << std::endl;
-#endif
 		gather(world, slave_cut_package, 0);
-#if __DEBUG_BENDERS_MPI__
-		std::cout << "... done" << std::endl;
-#endif
 	}
 	world.barrier();
 }
@@ -470,35 +440,15 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	while (!_data.stop) {
 		++_data.it;
 		_data.deletedcut = 0;
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "new loop" << std::endl;
-#endif
+
 		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "step1 ended" << std::endl;
-#endif
 
 		/*Fix trial values in each slaves and send back data for Master to build cuts*/
 		step_2(env, world);
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "step2 ended" << std::endl;
-#endif
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
-<<<<<<< HEAD
 		step_3(env, world);
-=======
-		if (_options.AGGREGATION == true) {
-			step_3_aggregated(env, world);
-		}
-		else {
-			step_3(env, world);
-		}
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "step3 ended" << std::endl;
-#endif
->>>>>>> origin/dev_MR
 
 		if (world.rank() == 0) {
 			print_log(stream, _data, _options.LOG_LEVEL);
