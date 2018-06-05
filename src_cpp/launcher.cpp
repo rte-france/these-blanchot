@@ -52,10 +52,12 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 			std::string variable_name;
 			int variable_id;
 			buffer >> problem_name;
-			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
 			buffer >> variable_name;
 			buffer >> variable_id;
-			coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
+			
+			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
+
+			coupling_map[problem_name][variable_name] = variable_id;
 		}
 	}
 	else {

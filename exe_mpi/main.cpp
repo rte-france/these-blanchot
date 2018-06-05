@@ -16,9 +16,7 @@ int main(int argc, char** argv)
 
 	BendersOptions options(build_benders_options(argc, argv));
 	if (world.rank() == 0) {
-		std::cout << "INPUTROOT      : " << options.INPUTROOT << std::endl;
-		std::cout << "MASTER_NAME    : " << options.MASTER_NAME << std::endl;
-		std::cout << "STRUCTURE_FILE : " << options.STRUCTURE_FILE << std::endl;
+		options.print(std::cout);
 	}
 	if (world.size() == 1) {
 		sequential_launch(options);
@@ -28,9 +26,12 @@ int main(int argc, char** argv)
 		XPRSinit("");
 		CouplingMap input;
 		build_input(options, input);
+		world.barrier();
 		BendersMpi bendersMpi;
 		bendersMpi.load(input, env, world, options);
+		world.barrier();
 		bendersMpi.run(env, world, std::cout);
+		world.barrier();
 		bendersMpi.free(env, world);
 		XPRSfree();
 		world.barrier();
