@@ -355,9 +355,9 @@ void Benders::run(std::ostream & stream) {
 	}
 	
 	print_solution(stream, _data.bestx, true);
-	if (_options.TRACE) {
-		print_csv();
-	}
+	//if (_options.TRACE) {
+	//	print_csv();
+	//}
 
 }
 
@@ -369,47 +369,47 @@ void Benders::run(std::ostream & stream) {
 *
 * \param stream : stream to print the output
 */
-void Benders::print_csv() {
-	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
-	if (_options.AGGREGATION) {
-		output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
-	}
-	std::ofstream file(output, std::ios::out | std::ios::trunc);
-
-	if (file)
-	{
-		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
-		std::size_t found = _options.MASTER_NAME.find_last_of(PATH_SEPARATOR);
-		Point xopt;
-		int nite;
-		nite = _trace.get_ite();
-		xopt = _trace._master_trace[nite-1]->get_point();
-		for (int i(0); i < nite; i++) {
-			file << i + 1 << ";";
-			file << "Master" << ";";
-			file<< _options.MASTER_NAME.substr(found+1) << ";";
-			file << _slaves.size() << ";";
-			file << _trace._master_trace[i]->get_ub() << ";";
-			file << _trace._master_trace[i]->get_lb() << ";";
-			file << _trace._master_trace[i]->get_bestub() << ";";
-			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
-			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
-			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-				SlaveCutDataHandler handler(kvp.second);
-				file << i + 1 << ";";
-				file << "Slave" << ";";
-				file << kvp.first.substr(found+1) << ";";
-				file << _problem_to_id[kvp.first] << ";";
-				file << handler.get_dbl(SLAVE_COST) << ";";
-				file << handler.get_dbl(ALPHA_I) << ";";
-				file << ";";
-				file << handler.get_int(SIMPLEXITER) << ";";
-				file << std::endl;
-			}
-		}
-		file.close();
-	}
-	else {
-		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-	}
-}
+//void Benders::print_csv() {
+//	std::string output(_options.ROOTPATH + PATH_SEPARATOR + "benders_output.csv");
+//	if (_options.AGGREGATION) {
+//		output = (_options.ROOTPATH + PATH_SEPARATOR + "benders_output_aggregate.csv");
+//	}
+//	std::ofstream file(output, std::ios::out | std::ios::trunc);
+//
+//	if (file)
+//	{
+//		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
+//		std::size_t found = _options.MASTER_NAME.find_last_of(PATH_SEPARATOR);
+//		Point xopt;
+//		int nite;
+//		nite = _trace.get_ite();
+//		xopt = _trace._master_trace[nite-1]->get_point();
+//		for (int i(0); i < nite; i++) {
+//			file << i + 1 << ";";
+//			file << "Master" << ";";
+//			file<< _options.MASTER_NAME.substr(found+1) << ";";
+//			file << _slaves.size() << ";";
+//			file << _trace._master_trace[i]->get_ub() << ";";
+//			file << _trace._master_trace[i]->get_lb() << ";";
+//			file << _trace._master_trace[i]->get_bestub() << ";";
+//			file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
+//			file << _trace._master_trace[i]->get_deletedcut() << std::endl;
+//			for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
+//				SlaveCutDataHandler handler(kvp.second);
+//				file << i + 1 << ";";
+//				file << "Slave" << ";";
+//				file << kvp.first.substr(found+1) << ";";
+//				file << _problem_to_id[kvp.first] << ";";
+//				file << handler.get_dbl(SLAVE_COST) << ";";
+//				file << handler.get_dbl(ALPHA_I) << ";";
+//				file << ";";
+//				file << handler.get_int(SIMPLEXITER) << ";";
+//				file << std::endl;
+//			}
+//		}
+//		file.close();
+//	}
+//	else {
+//		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+//	}
+//}
