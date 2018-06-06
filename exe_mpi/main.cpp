@@ -27,16 +27,6 @@ int main(int argc, char** argv)
 		CouplingMap input;
 		build_input(options, input);
 		world.barrier();
-		for (int i(1); i < world.size(); ++i) {
-			std::stringstream buffer;
-			for (auto & toto : input) {
-				for (auto & tata : toto.second) {
-					buffer << "[" << toto.first << ", " << tata.first << ", " << tata.second << "] ";
-				}
-			}
-			std::cout << buffer.str() << std::endl;
-		}
-		world.barrier();
 		BendersMpi bendersMpi;
 		bendersMpi.load(input, env, world, options);
 		world.barrier();
