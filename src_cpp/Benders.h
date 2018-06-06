@@ -3,6 +3,7 @@
 #include "WorkerMaster.h"
 #include "WorkerTrace.h"
 #include "BendersOptions.h"
+#include "BendersFunctions.h"
 
 class Benders {
 public:
@@ -26,13 +27,7 @@ public:
 	void free();
 
 	void init();
-	void init_slave_weight();
-
-	bool stopping_criterion();
-	void bound_simplex_iter(int simplexiter);
 	
-	void get_master_value();
-	void get_slave_cut(int i_slave, std::string const & name_slave, SlaveCutDataHandlerPtr & handler);
 	void sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave);
 	void sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave, Point & s, double & rhs);
 	void update_trace();

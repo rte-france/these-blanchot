@@ -8,6 +8,7 @@
 #include "WorkerMaster.h"
 #include "BendersOptions.h"
 #include "WorkerTrace.h"
+#include "BendersFunctions.h"
 
 typedef std::map<std::string, WorkerSlavePtr> Slaves_Ptr_map;
 
@@ -34,15 +35,10 @@ public:
 
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void free(mpi::environment & env, mpi::communicator & world);
-	void init_slave_weight();
-	void bound_simplex_iter(int simplexiter);
-	bool stopping_criterion();
 	void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package);
 	void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
-	void get_slave_cut(std::string const & name_slave, SlaveCutDataHandlerPtr & handler);
-	void step_3(mpi::environment & env, mpi::communicator & world);
 	void update_trace();
 	void init(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void print_csv();

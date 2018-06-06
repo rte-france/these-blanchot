@@ -34,7 +34,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				i++;
 			}
 		}
-		init_slave_weight();
+		init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
 		_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
 	}
 
@@ -50,17 +50,6 @@ void Benders::free() {
 		ptr->free();
 }
 
-/*!
-*  \brief Update stopping criterion
-*
-*  Method updating the stopping criterion and reinitializing some datas
-*/
-bool Benders::stopping_criterion() {
-	_data.deletedcut = 0;
-	_data.maxsimplexiter = 0;
-	_data.minsimplexiter = std::numeric_limits<int>::max();
-	return(((_options.MAX_ITERATIONS != -1)&&(_data.it > _options.MAX_ITERATIONS))||(_data.lb + _options.GAP >= _data.best_ub));
-}
 
 /*!
 *  \brief Initialize set of datas used in the loop
@@ -73,53 +62,15 @@ void Benders::init() {
 	_data.stop = false;
 	_data.it = 0;
 	_data.alpha = 0;
-	_data.slave_cost = 0;
 	_data.invest_cost = 0;
-	_data.dnslaves = (double)_slaves.size();
 	_data.deletedcut = 0;
 	_data.maxsimplexiter = 0;
-	_data.minsimplexiter = 1000000;
+	_data.minsimplexiter = std::numeric_limits<int>::max();
 	
 
 	for (auto const & kvp : _id_to_problem) {
 		_all_cuts_storage[kvp.second] = SlaveCutStorage();
 	}
-}
-
-
-/*!
-*  \brief Update maximum and minimum of a set of int
-*
-*  \param simplexiter : int to compare to current max and min
-*/
-void Benders::bound_simplex_iter(int simplexiter) {
-	if (_data.maxsimplexiter < simplexiter) {
-		_data.maxsimplexiter = simplexiter;
-	}
-
-	if (_data.minsimplexiter > simplexiter) {
-		_data.minsimplexiter = simplexiter;
-	}
-}
-
-/*!
-*  \brief Solve and get optimal variables of the Master Problem
-*
-*  Method to solve and get optimal variables of the Master Problem and update upper and lower bound
-*
-*/
-void Benders::get_master_value() {
-	_data.alpha_i.resize(_data.nslaves);
-	_master->solve();
-	_master->get(_data.x0, _data.alpha, _data.alpha_i); /*Get the optimal variables of the Master Problem*/
-	_master->get_value(_data.lb); /*Get the optimal value of the Master Problem*/
-	_data.invest_cost = _data.lb - _data.alpha;
-	_data.ub = _data.invest_cost;
-
-	if (_options.TRACE) {
-		_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-	}
-
 }
 
 /*!
@@ -147,30 +98,6 @@ void Benders::sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::strin
 }
 
 /*!
-*  \brief Get cut information of a Slave Problem
-*
-*  Method to get cut information from a Slave Problem and update upper bound
-*
-*  \param handler : reference to an empty handler receiving the cut information
-*
-*  \param i_slave : id of the slave
-*
-*  \param name_slave : name of the slave
-*/
-void Benders::get_slave_cut(int i_slave, std::string const & name_slave, SlaveCutDataHandlerPtr & handler) {
-	WorkerSlave & slave(*_slaves[i_slave]);
-	slave.fix_to(_data.x0);
-	slave.solve();
-	slave.get_value(handler->get_dbl(SLAVE_COST));
-	slave.get_subgradient(handler->get_subgradient());
-	slave.get_simplex_ite(handler->get_int(SIMPLEXITER));
-	if (_options.BASIS) {
-		slave.get_basis();
-	}
-	_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
-}
-
-/*!
 *  \brief Update trace of the Benders for the current iteration
 */
 void Benders::update_trace() {
@@ -194,56 +121,21 @@ void Benders::build_cut() {
 		int i_slave(kvp.first);
 		std::string const & name_slave(kvp.second);
 
+		WorkerSlavePtr & ptr(_slaves[i_slave]);
 		IntVector intParam(SlaveCutInt::MAXINT);
 		DblVector dblParam(SlaveCutDbl::MAXDBL);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
-		get_slave_cut(i_slave, name_slave, handler);
+		get_slave_cut(handler, ptr, _options, _data);
+		_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
 		sort_cut(handler, i_slave, name_slave);
 		handler->get_dbl(ALPHA_I) = _data.alpha_i[i_slave];
 
 		if (_options.TRACE) {
 			_trace._master_trace[_data.it - 1]->_cut_trace[name_slave] = slave_cut_data;
 		}
-		bound_simplex_iter(handler->get_int(SIMPLEXITER));
-	}
-}
-
-/*!
-*  \brief Get the slave weight from a input file
-*
-*  Method to build the weight coefficients vector from an input file stored in the options
-*
-*/
-void Benders::init_slave_weight() {
-	_slave_weight_coeff.resize(_data.nslaves);
-	if (_options.SLAVE_WEIGHT == "UNIFORM") {
-		for (int i(0); i < _data.nslaves; i++) {
-			_slave_weight_coeff[i] = 1/static_cast<double>(_data.nslaves);
-		}
-	}
-	else if (_options.SLAVE_WEIGHT == "ONES") {
-		for (int i(0); i < _data.nslaves; i++) {
-			_slave_weight_coeff[i] = 1;
-		}
-	}
-	else {
-		std::string line;
-		std::string filename(_options.INPUTROOT + PATH_SEPARATOR + _options.SLAVE_WEIGHT);
-		std::ifstream file(filename);
-		if (!file) {
-			std::cout << "Cannot open file " << filename << std::endl;
-		}
-		while (std::getline(file, line))
-		{
-			std::stringstream buffer(line);
-			std::string problem_name;
-			buffer >> problem_name;
-			problem_name = _options.INPUTROOT + PATH_SEPARATOR + problem_name;
-			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
-			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " << _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
-		}
+		bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
 	}
 }
 
@@ -294,15 +186,16 @@ void Benders::build_cut_aggregate() {
 		int i_slave(kvp.first);
 		std::string const & name_slave(kvp.second);
 
+		WorkerSlavePtr & ptr(_slaves[i_slave]);
 		IntVector intParam(SlaveCutInt::MAXINT);
 		DblVector dblParam(SlaveCutDbl::MAXDBL);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
-		get_slave_cut(i_slave, name_slave, handler);
+		get_slave_cut(handler, ptr, _options, _data);
 		sort_cut_aggregate(handler, i_slave, name_slave, s, rhs);
 
-		bound_simplex_iter(handler->get_int(SIMPLEXITER));
+		bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
 
 		if (_options.TRACE) {
 			_trace._master_trace[_data.it - 1]->_cut_trace[name_slave] = slave_cut_data;
@@ -332,8 +225,10 @@ void Benders::run(std::ostream & stream) {
 		++_data.it;
 
 		//Solve Master problem and get the trial values
-		get_master_value();
-
+		get_master_value(_master, _data);
+		if (_options.TRACE) {
+			_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+		}
 		//Solve Slaves problem and add cuts to Master problem
 		if (_options.AGGREGATION) {
 			build_cut_aggregate();
@@ -351,7 +246,7 @@ void Benders::run(std::ostream & stream) {
 			update_trace();
 		}
 
-		_data.stop = stopping_criterion();
+		_data.stop = stopping_criterion(_data, _options);
 	}
 	
 	print_solution(stream, _data.bestx, true);

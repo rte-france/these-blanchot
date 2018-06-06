@@ -11,44 +11,6 @@ BendersMpi::BendersMpi() {
 }
 
 /*!
-*  \brief Get the slave weight from a input file
-*
-*  Method to build the weight coefficients vector from an input file stored in the options
-*
-*  \param problemroot : root where are stored the problem
-*/
-void BendersMpi::init_slave_weight() {
-	_slave_weight_coeff.resize(_data.nslaves);
-	if (_options.SLAVE_WEIGHT == "UNIFORM") {
-		for (int i(0); i < _data.nslaves; i++) {
-			_slave_weight_coeff[i] = 1 / static_cast<double>(_data.nslaves);
-		}
-	}
-	else if (_options.SLAVE_WEIGHT == "ONES") {
-		for (int i(0); i < _data.nslaves; i++) {
-			_slave_weight_coeff[i] = 1;
-		}
-	}
-	else {
-		std::string line;
-		std::string filename = _options.INPUTROOT + PATH_SEPARATOR + _options.SLAVE_WEIGHT;
-		std::ifstream file(filename);
-		if (!file) {
-			std::cout << "Cannot open file " << filename << std::endl;
-		}
-		while (std::getline(file, line))
-		{
-			std::stringstream buffer(line);
-			std::string problem_name;
-			buffer >> problem_name;
-			problem_name = _options.INPUTROOT + PATH_SEPARATOR + problem_name;
-			buffer >> _slave_weight_coeff[_problem_to_id[problem_name]];
-			std::cout << problem_name << " : " << _problem_to_id[problem_name] << "  :  " << _slave_weight_coeff[_problem_to_id[problem_name]] << std::endl;
-		}
-	}
-}
-
-/*!
 *  \brief Method to load each problem in a thread
 *
 *  The initialization of each problem is done sequentially
@@ -91,7 +53,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 					i++;
 				}
 			}
-			init_slave_weight();
+			init_slave_weight(_data,_options,_slave_weight_coeff,_problem_to_id);
 
 			_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
 
@@ -140,40 +102,15 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 	if (world.rank() == 0)
 	{
-		_data.deletedcut = 0;
-		_data.maxsimplexiter = 0;
-		_data.minsimplexiter = std::numeric_limits<int>::max();
-		_data.alpha_i.resize(_data.nslaves);
-		_data.alpha = 0;
-
-		_master->solve();
-		_master->get(_data.x0, _data.alpha, _data.alpha_i);
-		_master->get_value(_data.lb);
-
+		get_master_value(_master, _data);
 		//if (_options.TRACE) {
 		//	_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
 		//}
-
-		_data.invest_cost = _data.lb - _data.alpha;
-		_data.ub = _data.invest_cost;
-
 	}
 	world.barrier();
 	broadcast(world, _data.x0, 0);
 	world.barrier();
 
-}
-
-void BendersMpi::get_slave_cut(std::string const & name_slave, SlaveCutDataHandlerPtr & handler) {
-	WorkerSlavePtr & ptr(_map_slaves[name_slave]);
-	ptr->fix_to(_data.x0);
-	ptr->solve();
-	if (_options.BASIS) {
-		ptr->get_basis();
-	}
-	ptr->get_value(handler->get_dbl(SLAVE_COST));
-	ptr->get_subgradient(handler->get_subgradient());
-	ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 }
 
 /*!
@@ -199,11 +136,12 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 #if __DEBUG_BENDERS_MPI__
 			std::cout << "step_2 on " << kvp.first << std::endl;
 #endif
+			WorkerSlavePtr & ptr(_map_slaves[kvp.first]);
 			IntVector intParam(SlaveCutInt::MAXINT);
 			DblVector dblParam(SlaveCutDbl::MAXDBL);
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			get_slave_cut(kvp.first, handler);
+			get_slave_cut(handler, ptr, _options, _data);
 
 #if __DEBUG_BENDERS_MPI__
 			std::cout << "fix_to done" << std::endl;
@@ -258,7 +196,7 @@ void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package
 			//if (_options.TRACE) {
 			//	_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
 			//}
-			bound_simplex_iter(handler->get_int(SIMPLEXITER));
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
 		}
 	}
 }
@@ -299,25 +237,10 @@ void BendersMpi::sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & a
 			//	_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
 			//}
 
-			bound_simplex_iter(handler->get_int(SIMPLEXITER));
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
 		}
 	}
 	_master->add_cut(s, _data.x0, rhs);
-}
-
-/*!
-*  \brief Update best upper bound and stop criterion for each thread
-*
-*/
-void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
-	if (world.rank() == 0) {
-		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
-		_data.stop = stopping_criterion();
-	}
-
-	world.barrier();
-	broadcast(world, _data.stop, 0);
-	world.barrier();
 }
 
 /*!
@@ -330,32 +253,6 @@ void BendersMpi::update_trace() {
 	//_trace._master_trace[_data.it - 1]->_x0 = PointPtr(new Point(_data.x0));
 	//_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
 }
-
-
-/*!
-*  \brief Update maximum and minimum of a set of int
-*
-*  \param simplexiter : int to compare to current max and min
-*/
-void BendersMpi::bound_simplex_iter(int simplexiter) {
-	if (_data.maxsimplexiter < simplexiter) {
-		_data.maxsimplexiter = simplexiter;
-	}
-
-	if (_data.minsimplexiter > simplexiter) {
-		_data.minsimplexiter = simplexiter;
-	}
-}
-
-/*!
-*  \brief Update stopping criterion
-*
-*  Method updating the stopping criterion and reinitializing some datas
-*/
-bool BendersMpi::stopping_criterion() {
-	return(((_options.MAX_ITERATIONS != -1) && (_data.it > _options.MAX_ITERATIONS)) || (_data.lb + _options.GAP >= _data.best_ub));
-}
-
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0)
@@ -382,7 +279,7 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 	_data.best_ub = +1e20;
 	_data.stop = false;
 	_data.it = 0;
-
+	_data.alpha = 0;
 
 	if (world.rank() == 0) {
 		init_log(stream, _options.LOG_LEVEL);
@@ -476,14 +373,21 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 #endif
 
 		/*Receive datas from each slaves and add cuts to Master Problem*/
-		step_3(env, world);
+		if (world.rank() == 0) {
+			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+			print_log(stream, _data, _options.LOG_LEVEL);
+			_data.stop = stopping_criterion(_data,_options);
+		}
+
+		world.barrier();
+		broadcast(world, _data.stop, 0);
+		world.barrier();
 
 #if __DEBUG_BENDERS_MPI__ 
 		std::cout << "step3 ended" << std::endl;
 #endif
 
 		if (world.rank() == 0) {
-			print_log(stream, _data, _options.LOG_LEVEL);
 			if (_options.TRACE) {
 				update_trace();
 			}
