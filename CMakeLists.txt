@@ -82,7 +82,7 @@ IF( USE_MPI )
 	IF(WIN32)
 		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67)
 	ELSE(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs boost_serialization boost_mpi)
+		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs boost_serialization boost_mpi-mt.so)
 	ENDIF(WIN32)
 	
 ELSE( USE_MPI )

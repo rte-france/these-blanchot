@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-	mpi::environment env;
+	mpi::environment env(argc, argv);
 	mpi::communicator world;
 
 	if (world.rank() == 0)
@@ -27,6 +27,7 @@ int main(int argc, char** argv)
 		CouplingMap input;
 		build_input(options, input);
 		world.barrier();
+
 		BendersMpi bendersMpi;
 		bendersMpi.load(input, env, world, options);
 		world.barrier();
