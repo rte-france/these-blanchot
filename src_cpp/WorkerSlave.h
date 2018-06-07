@@ -9,6 +9,8 @@
 class WorkerSlave;
 typedef std::shared_ptr<WorkerSlave> WorkerSlavePtr;
 typedef std::vector<WorkerSlavePtr> WorkerSlaves;
+typedef std::map<std::string, WorkerSlavePtr> SlavesMapPtr;
+
 
 class WorkerSlave : public Worker {
 public:

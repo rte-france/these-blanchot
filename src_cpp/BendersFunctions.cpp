@@ -210,25 +210,95 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data) {
 
 
 /*!
-*  \brief Solve and get optimal variables of a Slave Problem
+*  \brief Solve and store optimal variables of a Slave Problem
 *
-*  Method to solve and get optimal variables of a Slave Problem after fixing trial values
+*  Method to solve and store optimal variables of a Slave Problem after fixing trial values
 *
-*  \param handler : handler to receive cut information
+*  \param slave_cut_package : map storing for each slave its cut
 *
-*  \param slave : pointer to a Slave Problem
+*  \param map_slaves : map linking each problem name to its problem
 *
 *  \param data : data containing trial values
 *
 *  \param options : set of parameters
 */
-void get_slave_cut(SlaveCutDataHandlerPtr & handler, WorkerSlavePtr & slave, BendersOptions const & options, BendersData const & data) {
-	slave->fix_to(data.x0);
-	slave->solve();
-	if (options.BASIS) {
-		slave->get_basis();
+void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
+	for (auto & kvp : map_slaves) {
+		WorkerSlavePtr & ptr(map_slaves[kvp.first]);
+		IntVector intParam(SlaveCutInt::MAXINT);
+		DblVector dblParam(SlaveCutDbl::MAXDBL);
+		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
+		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+
+		ptr->fix_to(data.x0);
+		ptr->solve();
+		if (options.BASIS) {
+			ptr->get_basis();
+		}
+		ptr->get_value(handler->get_dbl(SLAVE_COST));
+		ptr->get_subgradient(handler->get_subgradient());
+		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+		slave_cut_package[kvp.first] = *slave_cut_data;
 	}
-	slave->get_value(handler->get_dbl(SLAVE_COST));
-	slave->get_subgradient(handler->get_subgradient());
-	slave->get_simplex_ite(handler->get_int(SIMPLEXITER));
+}
+
+/*!
+*  \brief Update trace of the Benders for the current iteration
+*/
+void update_trace(WorkerMasterTrace & trace, BendersData const & data) {
+	trace._master_trace[data.it - 1]->_lb = data.lb;
+	trace._master_trace[data.it - 1]->_ub = data.ub;
+	trace._master_trace[data.it - 1]->_bestub = data.best_ub;
+	trace._master_trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
+	trace._master_trace[data.it - 1]->_deleted_cut = data.deletedcut;
+}
+
+/*!
+*  \brief Initialize set of datas used in the loop
+*
+*/
+void init(BendersData & data) {
+	data.lb = -1e20;
+	data.ub = +1e20;
+	data.best_ub = +1e20;
+	data.stop = false;
+	data.it = 0;
+	data.alpha = 0;
+	data.invest_cost = 0;
+	data.deletedcut = 0;
+	data.maxsimplexiter = 0;
+	data.minsimplexiter = std::numeric_limits<int>::max();
+}
+
+/*!
+*  \brief Add cut to Master Problem and store the cut in a set
+*
+*  Method to add cut from a slave to the Master Problem and store this cut in a map linking each slave to its set of cuts.
+*
+*  \param slave_cut_package : cut information
+*/
+void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & _trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
+			data.ub += handler->get_dbl(SLAVE_COST)* slave_weight_coeff[problem_to_id[itmap.first]];
+
+			master->add_cut_slave(problem_to_id.find(itmap.first)->second, handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+			SlaveCutTrimmer cut(handler, data.x0);
+			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
+				data.deletedcut++;
+			}
+			else {
+				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+				all_cuts_storage[itmap.first].insert(cut);
+			}
+
+			if (options.TRACE) {
+				_trace._master_trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+			}
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
+		}
+	}
 }

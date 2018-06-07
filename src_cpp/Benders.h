@@ -11,7 +11,7 @@ public:
 	virtual ~Benders();
 
 	WorkerMasterPtr _master;
-	WorkerSlaves _slaves;
+	SlavesMapPtr _slaves;
 
 	std::stringstream _line_trace;
 	WorkerMasterTrace _trace;
@@ -25,12 +25,8 @@ public:
 	BendersData _data;
 
 	void free();
-
-	void init();
 	
-	void sort_cut(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave);
 	void sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave, Point & s, double & rhs);
-	void update_trace();
 	void build_cut();
 	void build_cut_aggregate();
 	void run(std::ostream & stream);

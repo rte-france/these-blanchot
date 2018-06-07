@@ -15,7 +15,7 @@ BendersMpi::BendersMpi() {
 *
 *  The initialization of each problem is done sequentially
 *
-*  \param problem_list : list of string containing problems' names
+*  \param problem_list : map linking each problem name to its variables and their id
 */
 
 void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options) {
@@ -96,7 +96,6 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 /*!
 *  \brief Solve, get and send solution of the Master Problem to every thread
 */
-
 void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 	if (world.rank() == 0)
@@ -123,6 +122,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0) {
 		std::vector<SlaveCutPackage> all_package;
 		gather(world, slave_cut_package, all_package, 0);
+		all_package.erase(all_package.begin());
 		if (_options.AGGREGATION == 0) {
 			sort_cut_slave(all_package);
 		}
@@ -131,16 +131,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		}
 	}
 	else {
-		for (auto & kvp : _map_slaves) {
-#if __DEBUG_BENDERS_MPI__
-			std::cout << "step_2 on " << kvp.first << std::endl;
-#endif
-			WorkerSlavePtr & ptr(_map_slaves[kvp.first]);
-			IntVector intParam(SlaveCutInt::MAXINT);
-			DblVector dblParam(SlaveCutDbl::MAXDBL);
-			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
-			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			get_slave_cut(handler, ptr, _options, _data);
+			get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
 
 #if __DEBUG_BENDERS_MPI__
 			std::cout << "fix_to done" << std::endl;
@@ -151,8 +142,6 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 #if __DEBUG_BENDERS_MPI__
 			std::cout << "get_basis done" << std::endl;
 #endif
-			slave_cut_package[kvp.first] = *slave_cut_data;
-
 		}
 #if __DEBUG_BENDERS_MPI__
 		std::cout << "gathering ..." << std::endl;
@@ -161,7 +150,6 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 #if __DEBUG_BENDERS_MPI__
 		std::cout << "... done" << std::endl;
 #endif
-	}
 	world.barrier();
 }
 
@@ -173,15 +161,13 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 *  \param slave_cut_package : cut information
 */
 void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package) {
-	for (int i(1); i < all_package.size(); i++) {
+	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			handler->get_subgradient() = itmap.second.first.first.first;
 			handler->get_dbl(ALPHA_I) = _data.alpha_i[_problem_to_id[itmap.first]];
 			_data.ub += handler->get_dbl(SLAVE_COST)* _slave_weight_coeff[_problem_to_id[itmap.first]];
 
-			//std::cout << itmap.first << std::endl;
 			_master->add_cut_slave(_problem_to_id.find(itmap.first)->second, handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
 			//SlaveCutTrimmer cut(handler, _data.x0);
 			//if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
@@ -211,7 +197,7 @@ void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package
 void BendersMpi::sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package) {
 	Point s;
 	double rhs(0);
-	for (int i(1); i < all_package.size(); i++) {
+	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
@@ -242,16 +228,7 @@ void BendersMpi::sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & a
 	_master->add_cut(s, _data.x0, rhs);
 }
 
-/*!
-*  \brief Update trace of the Benders for the current iteration
-*/
-void BendersMpi::update_trace() {
-	//_trace._master_trace[_data.it - 1]->_lb = _data.lb;
-	//_trace._master_trace[_data.it - 1]->_ub = _data.ub;
-	//_trace._master_trace[_data.it - 1]->_bestub = _data.best_ub;
-	//_trace._master_trace[_data.it - 1]->_x0 = PointPtr(new Point(_data.x0));
-	//_trace._master_trace[_data.it - 1]->_deleted_cut = _data.deletedcut;
-}
+
 
 void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0)
@@ -259,32 +236,6 @@ void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 	else {
 		for (auto & ptr : _map_slaves)
 			ptr.second->free();
-	}
-	world.barrier();
-}
-
-/*!
-*  \brief Initialize Benders data and log
-*
-*  Method to initialize Benders data and log by printing each column title
-*
-*  \param stream : output to print log
-*/
-void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::ostream & stream) {
-	WorkerMaster & master(*_master);
-	_data.lb = -1e20;
-	_data.ub = +1e20;
-	_data.x0.clear();
-	_data.best_ub = +1e20;
-	_data.stop = false;
-	_data.it = 0;
-	_data.alpha = 0;
-
-	if (world.rank() == 0) {
-		init_log(stream, _options.LOG_LEVEL);
-		//for (auto const & kvp : _problem_to_id) {
-		//	_all_cuts_storage[kvp.first] = SlaveCutStorage();
-		//}
 	}
 	world.barrier();
 }
@@ -341,6 +292,7 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 //	 }
 //}
 //my test !!!!
+
 /*!
 *  \brief Run Benders algorithm in parallel
 *
@@ -349,9 +301,18 @@ void BendersMpi::init(mpi::environment & env, mpi::communicator & world, std::os
 * \param stream : stream to print the output
 */
 void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ostream & stream) {
+	if (world.rank() == 0) {
+		WorkerMaster & master(*_master);
+	}
 
-	init(env, world, stream);
+	init(_data);
 
+	if (world.rank() == 0) {
+		init_log(stream, _options.LOG_LEVEL);
+		//for (auto const & kvp : _problem_to_id) {
+		//	_all_cuts_storage[kvp.first] = SlaveCutStorage();
+		//}
+	}
 	world.barrier();
 
 	while (!_data.stop) {
@@ -388,9 +349,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 #endif
 
 		if (world.rank() == 0) {
-			if (_options.TRACE) {
-				update_trace();
-			}
+			/*if (_options.TRACE) {
+				update_trace(_trace, _data);
+			}*/
 		}
 		world.barrier();
 	}
