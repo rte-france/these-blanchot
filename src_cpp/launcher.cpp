@@ -42,6 +42,7 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 		return 0;
 	}
 	std::string line;
+
 	while (std::getline(summary, line))
 	{
 		std::stringstream buffer(line);
@@ -53,7 +54,19 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 		buffer >> variable_id;
 		coupling_map[problem_name][variable_name] = variable_id;
 	}
-
+	int n(0);
+	if (options.SLAVE_NUMBER >= 0) {
+		CouplingMap trimmer;
+		for (auto const & problem : coupling_map) {
+			if (problem.first == options.MASTER_NAME)
+				trimmer.insert(problem);
+			else if (n< options.SLAVE_NUMBER){
+				trimmer.insert(problem);
+				++n;
+			}
+		}
+		coupling_map = trimmer;
+	}
 	summary.close();
 	return 0;
 }
