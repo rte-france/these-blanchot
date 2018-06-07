@@ -23,18 +23,19 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		
 		int i(0);
 		auto it_master = problem_list.find(_options.MASTER_NAME);
-		std::string master_name(it_master->first);
-		std::map<std::string, int> master_variable(problem_list.find(_options.MASTER_NAME)->second);
+		std::string const & master_name(it_master->first);
+		std::map<std::string, int> const & master_variable(it_master->second);
 		while(++it != end) {
 			if (it != it_master) {
 				_id_to_problem[i] = it->first;
 				_problem_to_id[it->first] = i;
-				_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(problem_list.find(it->first)->second, it->first));
+				_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first)));
 				i++;
 			}
 		}
 		init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
-		_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
+		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
+		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _slave_weight_coeff, _data.nslaves));
 	}
 
 }

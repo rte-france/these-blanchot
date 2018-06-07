@@ -6,7 +6,7 @@ BendersMpi::~BendersMpi() {
 
 }
 
-BendersMpi::BendersMpi() {
+BendersMpi::BendersMpi(mpi::environment & env, mpi::communicator & world, BendersOptions const & options):_options(options) {
 
 }
 
@@ -18,7 +18,7 @@ BendersMpi::BendersMpi() {
 *  \param problem_list : map linking each problem name to its variables and their id
 */
 
-void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options) {
+void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world) {
 	StrVector names;
 	_data.nslaves = -1;
 	std::vector<CouplingMap::const_iterator> real_problem_list;
@@ -28,15 +28,12 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 			if (_data.nslaves < 0) {
 				_data.nslaves = problem_list.size() - 1;
 			}
-			_data.nslaves = static_cast<int>(problem_list.size()) - 1;
 			std::string const & master_name(_options.MASTER_NAME);			
 			auto const it_master(problem_list.find(master_name));
 			if (it_master == problem_list.end()) {
 				std::cout << "UNABLE TO FIND " << master_name << std::endl;
 				std::exit(0);
 			}
-			init_slave_weight(_data,_options,_slave_weight_coeff,_problem_to_id);
-			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _slave_weight_coeff, _data.nslaves));
 			// real problem list taking into account SLAVE_NUMBER
 			
 			real_problem_list.resize(_data.nslaves, problem_list.end());
@@ -45,10 +42,14 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 			for (int i(0); i < _data.nslaves; ++it) {
 				if (it != it_master) {
 					real_problem_list[i] = it;
+					_problem_to_id[it->first] = i;
 					++i;
 				}
-				//std::cout << i << "  :  " << it->first << std::endl;
+				std::cout << i << "  :  " << _options.get_slave_path(it->first)<< std::endl;
 			}
+			init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
+			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _slave_weight_coeff, _data.nslaves));
+			std::cout << _options.get_master_path() << std::endl;
 			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
 		}
 		mpi::broadcast(world, _data.nslaves, 0);
@@ -150,11 +151,11 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0)
 	{
 		get_master_value(_master, _data);
-		//if (_options.TRACE) {
-		//	_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-		//}
+		if (_options.TRACE) {
+			_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+		}
 	}
-	world.barrier();
+
 	broadcast(world, _data.x0, 0);
 	world.barrier();
 
@@ -173,15 +174,16 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		gather(world, slave_cut_package, all_package, 0);
 		all_package.erase(all_package.begin());
 		if (_options.AGGREGATION == 0) {
-			sort_cut_slave(all_package);
+			sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 		}
 		else {
 			sort_cut_slave_aggregate(all_package);
 		}
 	}
 	else {
-			get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
-
+		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+		gather(world, slave_cut_package, 0);
+	}
 #if __DEBUG_BENDERS_MPI__
 			std::cout << "fix_to done" << std::endl;
 #endif
@@ -191,50 +193,16 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 #if __DEBUG_BENDERS_MPI__
 			std::cout << "get_basis done" << std::endl;
 #endif
-		}
+	
 #if __DEBUG_BENDERS_MPI__
 		std::cout << "gathering ..." << std::endl;
 #endif
-		gather(world, slave_cut_package, 0);
 #if __DEBUG_BENDERS_MPI__
 		std::cout << "... done" << std::endl;
 #endif
+
 	world.barrier();
 }
-
-/*!
-*  \brief Add cut to Master Problem and store the cut in a set
-*
-*  Method to add cut from a slave to the Master Problem and store this cut in a map linking each slave to its set of cuts.
-*
-*  \param slave_cut_package : cut information
-*/
-void BendersMpi::sort_cut_slave(std::vector<SlaveCutPackage> const & all_package) {
-	for (int i(0); i < all_package.size(); i++) {
-		for (auto & itmap : all_package[i]) {
-			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
-			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			handler->get_dbl(ALPHA_I) = _data.alpha_i[_problem_to_id[itmap.first]];
-			_data.ub += handler->get_dbl(SLAVE_COST)* _slave_weight_coeff[_problem_to_id[itmap.first]];
-
-			_master->add_cut_slave(_problem_to_id.find(itmap.first)->second, handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
-			//SlaveCutTrimmer cut(handler, _data.x0);
-			//if (_options.DELETE_CUT && !(_all_cuts_storage[itmap.first].find(cut) == _all_cuts_storage[itmap.first].end())) {
-			//	_data.deletedcut++;
-			//}
-			//else {
-			//	_master->add_cut_slave(_problem_to_id[itmap.first], handler->get_subgradient(), _data.x0, handler->get_dbl(SLAVE_COST));
-			//	_all_cuts_storage[itmap.first].insert(cut);
-			//}
-
-			//if (_options.TRACE) {
-			//	_trace._master_trace[_data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-			//}
-			bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
-		}
-	}
-}
-
 
 /*!
 *  \brief Add aggregated cut to Master Problem and store it in a set
@@ -358,9 +326,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 	if (world.rank() == 0) {
 		init_log(stream, _options.LOG_LEVEL);
-		//for (auto const & kvp : _problem_to_id) {
-		//	_all_cuts_storage[kvp.first] = SlaveCutStorage();
-		//}
+		for (auto const & kvp : _problem_to_id) {
+			_all_cuts_storage[kvp.first] = SlaveCutStorage();
+		}
 	}
 	world.barrier();
 
@@ -389,7 +357,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 			_data.stop = stopping_criterion(_data,_options);
 		}
 
-		world.barrier();
 		broadcast(world, _data.stop, 0);
 		world.barrier();
 

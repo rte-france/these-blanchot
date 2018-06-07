@@ -118,8 +118,6 @@ struct BendersData {
 	double dnslaves;
 };
 
-std::string get_mps(std::string const & problem_name);
-
 double norm_point(Point const & x0, Point const & x1);
 int norm_int(IntVector const & x0, IntVector const & x1);
 

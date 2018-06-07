@@ -28,8 +28,8 @@ int main(int argc, char** argv)
 		build_input(options, input);
 		world.barrier();
 
-		BendersMpi bendersMpi;
-		bendersMpi.load(input, env, world, options);
+		BendersMpi bendersMpi(env, world, options);
+		bendersMpi.load(input, env, world);
 		world.barrier();
 		bendersMpi.run(env, world, std::cout);
 		world.barrier();

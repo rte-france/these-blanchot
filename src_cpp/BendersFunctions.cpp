@@ -105,7 +105,7 @@ void init_slave_weight(BendersData const & data, BendersOptions const & options,
 			std::stringstream buffer(line);
 			std::string problem_name;
 			buffer >> problem_name;
-			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
+			
 			buffer >> slave_weight_coeff[problem_to_id[problem_name]];
 			std::cout << problem_name << " : " << problem_to_id[problem_name] << "  :  " << slave_weight_coeff[problem_to_id[problem_name]] << std::endl;
 		}

@@ -1,12 +1,6 @@
 #include "common.h"
 
 
-/*!
-*  \brief Return the mps file associate to a problem
-*/
-std::string get_mps(std::string const & problem_name) {
-	return problem_name + ".mps";
-}
 
 /*!
 *  \brief Return the distance between two point using 2-norm
