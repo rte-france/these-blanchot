@@ -32,12 +32,12 @@ typedef std::shared_ptr<Point> PointPtr;
 double const EPSILON_PREDICATE = 1e-8;
 
 typedef std::set<std::string> problem_names;
-
+typedef std::map<std::string, int> Str2Int;
 typedef std::vector<int> IntVector;
 typedef std::vector<char> CharVector;
 typedef std::vector<double> DblVector;
 typedef std::vector<std::string> StrVector;
-typedef std::map < std::string, std::map<std::string, int>> CouplingMap;
+typedef std::map < std::string, Str2Int> CouplingMap;
 
 typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
