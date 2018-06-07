@@ -33,9 +33,6 @@ public:
 
 	void free();
 public:
-	std::string _path_to_mps; /*!< path to the mps file*/
-	std::string _path_to_mapping; /*!< path to the relevant mapping file*/
-
 	std::map< std::string, int> _name_to_id; /*!< Link between the variable name and its identifier */
 	std::map< int, std::string> _id_to_name; /*!< Link between the identifier of a variable and its name*/
 public:

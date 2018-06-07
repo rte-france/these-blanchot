@@ -101,7 +101,7 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, this);
-	XPRSreadprob(_xprs, _path_to_mps.c_str(), "");
+	XPRSreadprob(_xprs, path_to_mps.c_str(), "");
 
 	//std::ifstream file(_path_to_mapping.c_str());
 	_name_to_id = variable_map;
