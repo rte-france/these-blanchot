@@ -24,7 +24,7 @@ public:
 	*  \param mapping : path to the relevant mapping file 
 	*/
 	Worker();
-	void init(std::map<std::string, int> const & variable_map, std::string const & problem_name); 
+	void init(std::map<std::string, int> const & variable_map, std::string const & path_to_mps);
 	virtual ~Worker();
 
 	void get_value(double & lb);

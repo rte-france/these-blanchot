@@ -14,7 +14,7 @@ class WorkerSlave : public Worker {
 public:
 
 	WorkerSlave();
-	WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & problem_name);
+	WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps);
 	virtual ~WorkerSlave();
 	SlaveCutStorage _slave_storage;
 	std::vector<SimplexBasis> _basis;

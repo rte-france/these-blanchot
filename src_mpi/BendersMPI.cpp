@@ -57,77 +57,126 @@ void BendersMpi::init_slave_weight() {
 */
 
 void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world, BendersOptions const & options) {
-
+	StrVector names;
+	_data.nslaves = -1;
+	std::vector<CouplingMap::const_iterator> real_problem_list;
 	if (!problem_list.empty()) {
-
-		std::vector<mps_order> send_orders;
-
-		_data.nslaves = static_cast<int>(problem_list.size()) - 1;
-		auto it(problem_list.begin());
-		auto end(problem_list.end());
-		_options = options;
-		int rank(1);
 		if (world.rank() == 0) {
-
-			send_orders.reserve(problem_list.size() - 1);
-
-			auto it_master = problem_list.find(_options.MASTER_NAME);
-			std::string master_name(it_master->first);
-			std::map<std::string, int> master_variable(problem_list.find(_options.MASTER_NAME)->second);
-			++it;
-			int i(0);
-			while (it != end) {
-				if (it == it_master) {
-					++it;
-				}
-				else {
-					if (rank >= world.size()) {
-						rank = 1;
-					}
-					send_orders.push_back({ rank, it->first });
-					_problem_to_id[it->first] = i;
-					++rank;
-					++it;
-					i++;
-				}
+			_data.nslaves = _options.SLAVE_NUMBER;
+			if (_data.nslaves < 0) {
+				_data.nslaves = problem_list.size() - 1;
+			}
+			_data.nslaves = static_cast<int>(problem_list.size()) - 1;
+			std::string const & master_name(_options.MASTER_NAME);			
+			auto const it_master(problem_list.find(master_name));
+			if (it_master == problem_list.end()) {
+				std::cout << "UNABLE TO FIND " << master_name << std::endl;
+				std::exit(0);
 			}
 			init_slave_weight();
-			_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
+			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _slave_weight_coeff, _data.nslaves));
+			// real problem list taking into account SLAVE_NUMBER
+			
+			real_problem_list.resize(_data.nslaves, problem_list.end());
 
-		}
-
-		bool stop_communication(false);
-		std::string mps;
-		std::vector<mps_order>::const_iterator it_order(send_orders.begin());
-		std::vector<mps_order>::const_iterator end_order(send_orders.end());
-
-		while (!stop_communication) {
-			if (world.rank() == 0) {
-				if (it_order == end_order) {
-					stop_communication = true;
+			CouplingMap::const_iterator it(problem_list.begin());
+			for (int i(0); i < _data.nslaves; ++it) {
+				if (it != it_master) {
+					real_problem_list[i] = it;
+					++i;
 				}
-				else {
-					mps = it_order->second;
-					rank = it_order->first;
-					++it_order;
-				}
+				//std::cout << i << "  :  " << it->first << std::endl;
 			}
-			mpi::broadcast(world, stop_communication, 0);
-			world.barrier();
-			if (!stop_communication) {
-
-				mpi::broadcast(world, mps, 0);
-				mpi::broadcast(world, rank, 0);
-				world.barrier();
-				if (world.rank() != 0) {
-					if (world.rank() == rank) {
-						_map_slaves[mps] = WorkerSlavePtr(new WorkerSlave(problem_list.find(mps)->second, mps));
-					}
-				}
-				world.barrier();
+			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
+		}
+		mpi::broadcast(world, _data.nslaves, 0);
+		int current_worker(1);
+		for (int islave(0); islave < _data.nslaves; ++islave, ++current_worker) {
+			if (current_worker >= world.size()) {
+				current_worker = 1;
+			}
+			if (world.rank() == 0) {
+				CouplingMap::value_type kvp(*real_problem_list[islave]);
+				//std::cout << "#" << world.rank() << " send " << kvp.first <<" | "<<islave<< std::endl;
+				world.send(current_worker, islave, kvp);
+			}
+			else if (world.rank() == current_worker) {
+				CouplingMap::value_type kvp;
+				world.recv(0, islave, kvp);
+				//std::cout << "#" << world.rank() << " recv " << kvp.first << " | " << islave << std::endl;
+				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first)));
 			}
 		}
 	}
+	std::cout << "#" << world.rank() << " : " << _map_slaves.size() << std::endl;
+	//if (!problem_list.empty()) {
+	//	std::vector<mps_order> send_orders;
+	//	_data.nslaves = static_cast<int>(problem_list.size()) - 1;
+	//	auto it(problem_list.begin());
+	//	auto end(problem_list.end());
+	//	_options = options;
+	//	int rank(1);
+	//	if (world.rank() == 0) {
+
+	//		send_orders.reserve(problem_list.size() - 1);
+
+	//		auto it_master = problem_list.find(_options.MASTER_NAME);
+	//		std::string master_name(it_master->first);
+	//		std::map<std::string, int> master_variable(problem_list.find(_options.MASTER_NAME)->second);
+	//		++it;
+	//		int i(0);
+	//		while (it != end) {
+	//			if (it == it_master) {
+	//				++it;
+	//			}
+	//			else {
+	//				if (rank >= world.size()) {
+	//					rank = 1;
+	//				}
+	//				send_orders.push_back({ rank, it->first });
+	//				_problem_to_id[it->first] = i;
+	//				++rank;
+	//				++it;
+	//				i++;
+	//			}
+	//		}
+	//		init_slave_weight();
+	//		_master.reset(new WorkerMaster(master_variable, master_name, _slave_weight_coeff, _data.nslaves));
+
+	//	}
+
+	//	bool stop_communication(false);
+	//	std::string mps;
+	//	std::vector<mps_order>::const_iterator it_order(send_orders.begin());
+	//	std::vector<mps_order>::const_iterator end_order(send_orders.end());
+
+	//	while (!stop_communication) {
+	//		if (world.rank() == 0) {
+	//			if (it_order == end_order) {
+	//				stop_communication = true;
+	//			}
+	//			else {
+	//				mps = it_order->second;
+	//				rank = it_order->first;
+	//				++it_order;
+	//			}
+	//		}
+	//		mpi::broadcast(world, stop_communication, 0);
+	//		world.barrier();
+	//		if (!stop_communication) {
+
+	//			mpi::broadcast(world, mps, 0);
+	//			mpi::broadcast(world, rank, 0);
+	//			world.barrier();
+	//			if (world.rank() != 0) {
+	//				if (world.rank() == rank) {
+	//					_map_slaves[mps] = WorkerSlavePtr(new WorkerSlave(problem_list.find(mps)->second, mps));
+	//				}
+	//			}
+	//			world.barrier();
+	//		}
+	//	}
+	//}
 }
 
 

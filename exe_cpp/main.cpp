@@ -18,7 +18,6 @@ int main(int argc, char** argv)
 	else {
 		options.write_default();
 	}
-	options.MASTER_NAME = root + PATH_SEPARATOR + options.MASTER_NAME;
 	sequential_launch(root, summary_name, options);
 
 	return 0;

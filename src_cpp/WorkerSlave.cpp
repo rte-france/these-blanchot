@@ -13,8 +13,8 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & problem_name) {
-	init(variable_map, problem_name);
+WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps) {
+	init(variable_map, path_to_mps);
 	
 }
 WorkerSlave::~WorkerSlave() {

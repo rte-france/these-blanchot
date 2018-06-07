@@ -21,10 +21,8 @@ BendersOptions build_benders_options(int argc, char** argv) {
 		result.read(argv[2]);
 		result.INPUTROOT = argv[1];
 	}
-	result.MASTER_NAME = result.INPUTROOT + PATH_SEPARATOR + result.MASTER_NAME;
 	return result;
 }
-
 /*!
 *  \brief Build the input from the structure file
 *
@@ -38,56 +36,24 @@ BendersOptions build_benders_options(int argc, char** argv) {
 */
 int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 	coupling_map.clear();
-	std::ifstream summary(options.STRUCTURE_FILE, std::ios::in);
+	std::ifstream summary(options.get_structure_path(), std::ios::in);
 	if (!summary) {
-		std::cout << "Cannot open file summary " << options.STRUCTURE_FILE << std::endl;
+		std::cout << "Cannot open file summary " << options.get_structure_path() << std::endl;
 		return 0;
 	}
 	std::string line;
-	if (options.SLAVE_NUMBER == -1) {
-		while (std::getline(summary, line))
-		{
-			std::stringstream buffer(line);
-			std::string problem_name;
-			std::string variable_name;
-			int variable_id;
-			buffer >> problem_name;
-			buffer >> variable_name;
-			buffer >> variable_id;
-			
-			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
-
-			coupling_map[problem_name][variable_name] = variable_id;
-		}
-	}
-	else {
-		int i(0);
-		bool master_found(false);
+	while (std::getline(summary, line))
+	{
+		std::stringstream buffer(line);
 		std::string problem_name;
 		std::string variable_name;
 		int variable_id;
-		while (!(master_found) || (i <= options.SLAVE_NUMBER))
-		{
-			std::getline(summary, line);
-			std::stringstream buffer(line);
-			buffer >> problem_name;
-			problem_name = options.INPUTROOT + PATH_SEPARATOR + problem_name;
-			buffer >> variable_name;
-			buffer >> variable_id;
-			if (problem_name == options.MASTER_NAME) {
-				coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
-				master_found = true;
-			}
-			else if (coupling_map.find(problem_name) != coupling_map.end()) {
-				coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
-			}
-			else {
-				coupling_map[problem_name].insert(std::pair<std::string, int>(variable_name, variable_id));
-				i++;
-			}
-		}
-		coupling_map.erase(problem_name);
+		buffer >> problem_name;
+		buffer >> variable_name;
+		buffer >> variable_id;
+		coupling_map[problem_name][variable_name] = variable_id;
 	}
+
 	summary.close();
 	return 0;
 }

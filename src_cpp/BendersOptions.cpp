@@ -13,6 +13,17 @@ print(file);
 file.close();
 
 }
+std::string BendersOptions::get_master_path() const {
+	return INPUTROOT + PATH_SEPARATOR + MASTER_NAME;
+}
+
+std::string BendersOptions::get_structure_path() const {
+	return INPUTROOT + PATH_SEPARATOR + STRUCTURE_FILE;
+}
+std::string BendersOptions::get_slave_path(std::string const & slave_name) const {
+	return INPUTROOT + PATH_SEPARATOR + slave_name;
+}
+
 void BendersOptions::read(std::string const & file_name) {
 	std::ifstream file(file_name.c_str());
 	if (file.good()) {

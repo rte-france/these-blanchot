@@ -15,6 +15,10 @@ public:
 	void print(std::ostream  & stream)const;
 
 	void write_default();
+
+	std::string get_master_path() const;
+	std::string get_structure_path() const;
+	std::string get_slave_path(std::string const & slave_name) const;
 };
 
 

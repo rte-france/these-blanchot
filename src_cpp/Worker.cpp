@@ -93,12 +93,9 @@ void Worker::get_value(double & lb) {
 *  \param variable_map : map linking each problem name to its variables and their ids
 *  \param problem_name : name of the problem
 */
-void Worker::init(std::map<std::string, int> const & variable_map, std::string const & problem_name) {
+void Worker::init(std::map<std::string, int> const & variable_map, std::string const & path_to_mps) {
 
 	_stream.push_back(&std::cout);
-
-	_path_to_mps = get_mps(problem_name);
-
 	XPRScreateprob(&_xprs);
 	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
