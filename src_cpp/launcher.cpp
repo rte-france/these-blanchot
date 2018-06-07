@@ -102,7 +102,6 @@ void sequential_launch(BendersOptions const & options) {
 	CouplingMap input;
 	build_input(options, input);
 	Benders benders(input, options);
-	options.print(std::cout);
 	benders.run(std::cout);
 	benders.free();
 	XPRSfree();

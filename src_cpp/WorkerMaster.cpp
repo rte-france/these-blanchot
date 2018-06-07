@@ -83,7 +83,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double rhs) {
-	std::cout << "adding " << i <<" | " << rhs << std::endl;
+	//std::cout << "adding " << i <<" | " << rhs << std::endl;
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
