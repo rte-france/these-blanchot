@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common_mpi.h"
 #include "SlaveCut.h"
 #include "Worker.h"
 #include "WorkerSlave.h"
