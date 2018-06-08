@@ -13,22 +13,18 @@ public:
 	WorkerMasterPtr _master;
 	SlavesMapPtr _slaves;
 
+	std::map< std::string, int > _problem_to_id;
+	DblVector _slave_weight_coeff;
+	BendersData _data;
+	BendersOptions _options;
+
 	std::stringstream _line_trace;
 	WorkerMasterTrace _trace;
 	AllCutStorage _all_cuts_storage;
-	std::map< int, std::string> _id_to_problem;
-	std::map< std::string, int > _problem_to_id;
-	DblVector _slave_weight_coeff;
-
-	BendersOptions _options;
-
-	BendersData _data;
 
 	void free();
 	
-	void sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave, Point & s, double & rhs);
 	void build_cut();
-	void build_cut_aggregate();
 	void run(std::ostream & stream);
 	void print_csv();
 };

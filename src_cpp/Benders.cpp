@@ -16,7 +16,10 @@ Benders::~Benders() {
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) {
 	_options = options;
 	if (!problem_list.empty()) {
-		_data.nslaves = static_cast<int>(problem_list.size()) - 1;
+		_data.nslaves = _options.SLAVE_NUMBER;
+		if (_data.nslaves < 0) {
+			_data.nslaves = problem_list.size() - 1;
+		}
 		bool stop = false;
 		auto it(problem_list.begin());
 		auto end(problem_list.end());
@@ -25,9 +28,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		auto it_master = problem_list.find(_options.MASTER_NAME);
 		std::string const & master_name(it_master->first);
 		std::map<std::string, int> const & master_variable(it_master->second);
-		while(++it != end) {
+		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
-				_id_to_problem[i] = it->first;
 				_problem_to_id[it->first] = i;
 				_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first)));
 				i++;
@@ -53,7 +55,7 @@ void Benders::free() {
 /*!
 *  \brief Build Slave cut and store it in the Benders trace
 *
-*  Method to build Slave cut, store it in the Benders trace and update the max and min of simplex iteration for all slaves
+*  Method to build Slaves cuts, store them in the Benders trace and add them to the Master problem
 *
 */
 void Benders::build_cut() {
@@ -61,93 +63,12 @@ void Benders::build_cut() {
 	std::vector<SlaveCutPackage> all_package;
 	get_slave_cut(slave_cut_package, _slaves, _options, _data);
 	all_package.push_back(slave_cut_package);
-	sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
-	//for (auto const & kvp : _id_to_problem) {
-
-	//	int i_slave(kvp.first);
-	//	std::string const & name_slave(kvp.second);
-
-	//	WorkerSlavePtr & ptr(_slaves[kvp.second]);
-	//	IntVector intParam(SlaveCutInt::MAXINT);
-	//	DblVector dblParam(SlaveCutDbl::MAXDBL);
-	//	SlaveCutDataPtr slave_cut_data(new SlaveCutData);
-	//	SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-
-	//	_data.ub += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
-	//	sort_cut(handler, i_slave, name_slave);
-	//	handler->get_dbl(ALPHA_I) = _data.alpha_i[i_slave];
-
-	//	if (_options.TRACE) {
-	//		_trace._master_trace[_data.it - 1]->_cut_trace[name_slave] = slave_cut_data;
-	//	}
-	//	bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
-	//}
-}
-
-/*!
-*  \brief Add aggregated cut to Master Problem and store it in a set
-*
-*  Method to add aggregated cut from a slave to the Master Problem and store it in a map linking each slave to its set of cuts.
-*
-*  \param handler : reference to an handler containing the cut information
-*
-*  \param i_slave : id of the slave
-*
-*  \param name_slave : name of the slave
-*
-*  \param s : empty point to receive the aggregation of every slave subgradient
-*
-*  \param rhs : empty point to receive the aggregation of every slave optimal value
-*/
-void Benders::sort_cut_aggregate(SlaveCutDataHandlerPtr & handler, int i_slave, std::string const & name_slave, Point & s, double & rhs) {
-
-	rhs += handler->get_dbl(SLAVE_COST)*_slave_weight_coeff[i_slave];
-
-	for (auto & var : _data.x0) {
-		s[var.first] += handler->get_subgradient()[var.first]*_slave_weight_coeff[i_slave];
+	if (!_options.AGGREGATION) {
+		sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 	}
-
-	SlaveCutTrimmer trimmercut(handler, _data.x0);
-	
-	if (_options.DELETE_CUT && _all_cuts_storage[name_slave].find(trimmercut) != _all_cuts_storage[name_slave].end())
-	{
-		_data.deletedcut++;
+	else {
+		sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 	}
-	_all_cuts_storage.find(name_slave)->second.insert(trimmercut);
-}
-
-/*!
-*  \brief Build aggregated cut and store it in the Benders trace
-*
-*  Method to build aggregated cut, store it in the Benders trace and update the max and min of simplex iteration for all slaves
-*
-*/
-void Benders::build_cut_aggregate() {
-	Point s;
-	double rhs(0);
-
-	for (auto const & kvp : _id_to_problem) {
-
-		int i_slave(kvp.first);
-		std::string const & name_slave(kvp.second);
-
-		WorkerSlavePtr & ptr(_slaves[name_slave]);
-		IntVector intParam(SlaveCutInt::MAXINT);
-		DblVector dblParam(SlaveCutDbl::MAXDBL);
-		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
-		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-
-		//get_slave_cut(handler, ptr, _options, _data);
-		sort_cut_aggregate(handler, i_slave, name_slave, s, rhs);
-
-		bound_simplex_iter(handler->get_int(SIMPLEXITER), _data);
-
-		if (_options.TRACE) {
-			_trace._master_trace[_data.it - 1]->_cut_trace[name_slave] = slave_cut_data;
-		}
-	}
-	_master->add_cut(s, _data.x0, rhs);
-
 }
 
 /*!
@@ -163,26 +84,18 @@ void Benders::run(std::ostream & stream) {
 	
 	init_log(stream, _options.LOG_LEVEL);
 	init(_data);
-	for (auto const & kvp : _id_to_problem) {
-		_all_cuts_storage[kvp.second] = SlaveCutStorage();
+	for (auto const & kvp : _problem_to_id) {
+		_all_cuts_storage[kvp.first] = SlaveCutStorage();
 	}
 	master.write(0);
 	while (!_data.stop) {
 
 		++_data.it;
-
-		//Solve Master problem and get the trial values
 		get_master_value(_master, _data);
 		if (_options.TRACE) {
 			_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
 		}
-		//Solve Slaves problem and add cuts to Master problem
-		if (_options.AGGREGATION) {
-			build_cut_aggregate();
-		}
-		else {
-			build_cut();
-		}
+		build_cut();
 
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 

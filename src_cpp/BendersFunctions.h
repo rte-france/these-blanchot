@@ -19,4 +19,5 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options);
 void get_master_value(WorkerMasterPtr & master, BendersData & data);
 void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data);
 void update_trace(WorkerMasterTrace & trace, BendersData const & data);
-void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & _trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options);
+void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options);
+void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options);

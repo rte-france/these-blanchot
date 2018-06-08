@@ -18,6 +18,10 @@ public:
 
 	void load(CouplingMap const & problem_list, mpi::environment & env, mpi::communicator & world);
 	
+	WorkerMasterPtr _master;
+	SlavesMapPtr _map_slaves;
+
+	std::map< std::string, int> _problem_to_id;
 	DblVector _slave_weight_coeff;
 	BendersData _data;
 	BendersOptions _options;
@@ -25,14 +29,8 @@ public:
 	AllCutStorage _all_cuts_storage;
 	WorkerMasterTrace _trace;
 
-
-	SlavesMapPtr _map_slaves;
-	WorkerMasterPtr _master;
-	std::map< std::string, int> _problem_to_id;
-
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void free(mpi::environment & env, mpi::communicator & world);
-	void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
 	void print_csv();

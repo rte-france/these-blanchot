@@ -224,7 +224,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data) {
 */
 void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
 	for (auto & kvp : map_slaves) {
-		WorkerSlavePtr & ptr(map_slaves[kvp.first]);
+		WorkerSlavePtr & ptr(kvp.second);
 		IntVector intParam(SlaveCutInt::MAXINT);
 		DblVector dblParam(SlaveCutDbl::MAXDBL);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
@@ -244,6 +244,12 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 
 /*!
 *  \brief Update trace of the Benders for the current iteration
+*
+*  Fonction to store the current Benders data in the trace
+*
+*  \param trace : vector keeping data for each iteration
+*
+*  \param data : data to store
 */
 void update_trace(WorkerMasterTrace & trace, BendersData const & data) {
 	trace._master_trace[data.it - 1]->_lb = data.lb;
@@ -254,8 +260,9 @@ void update_trace(WorkerMasterTrace & trace, BendersData const & data) {
 }
 
 /*!
-*  \brief Initialize set of datas used in the loop
+*  \brief Initialize set of data used in the loop
 *
+*  \param data : Benders data 
 */
 void init(BendersData & data) {
 	data.lb = -1e20;
@@ -275,9 +282,24 @@ void init(BendersData & data) {
 *
 *  Method to add cut from a slave to the Master Problem and store this cut in a map linking each slave to its set of cuts.
 *
-*  \param slave_cut_package : cut information
+*  \param all_package : vector storing all cuts information for each slave problem
+*
+*  \param slave_weight_coeff : vector linking each slave id to its weight in the master problem
+*
+*  \param master : pointer to thte master problem
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param trace : vector keeping data for each iteration
+*
+*  \param all_cuts_storage : set to store every new cut
+*
+*  \param data : Benders data 
+*
+*  \param options : set of parameters
+*
 */
-void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & _trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -295,9 +317,62 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 			}
 
 			if (options.TRACE) {
-				_trace._master_trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+				trace._master_trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
 			}
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
 	}
+}
+
+/*!
+*  \brief Add aggregated cut to Master Problem and store it in a set
+*
+*  Method to add aggregated cut from slaves to Master Problem and store it in a map linking each slave to its set of non-aggregated cut
+*
+*  \param all_package : vector storing all cuts information for each slave problem
+*
+*  \param slave_weight_coeff : vector linking each slave id to its weight in the master problem
+*
+*  \param master : pointer to thte master problem
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param trace : vector keeping data for each iteration
+*
+*  \param all_cuts_storage : set to store every new cut
+*
+*  \param data : Benders data
+*
+*  \param options : set of parameters
+*/
+void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+	Point s;
+	double rhs(0);
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+
+			data.ub += handler->get_dbl(SLAVE_COST) * slave_weight_coeff[problem_to_id[itmap.first]];
+			rhs += handler->get_dbl(SLAVE_COST) * slave_weight_coeff[problem_to_id[itmap.first]];
+
+			for (auto & var : data.x0) {
+				s[var.first] += handler->get_subgradient()[var.first] * slave_weight_coeff[problem_to_id[itmap.first]];
+			}
+
+			SlaveCutTrimmer cut(handler, data.x0);
+
+			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
+				data.deletedcut++;
+			}
+			all_cuts_storage.find(itmap.first)->second.insert(cut);
+
+			if (options.TRACE) {
+				trace._master_trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+			}
+
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
+		}
+	}
+	master->add_cut(s, data.x0, rhs);
 }
