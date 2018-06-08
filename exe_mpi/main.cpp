@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 		CouplingMap input;
 		build_input(options, input);
 		world.barrier();
-
+		
 		BendersMpi bendersMpi(env, world, options);
 		bendersMpi.load(input, env, world);
 		world.barrier();

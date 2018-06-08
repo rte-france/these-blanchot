@@ -19,12 +19,11 @@ public:
 	BendersOptions _options;
 
 	std::stringstream _line_trace;
-	WorkerMasterTrace _trace;
+	std::vector<WorkerMasterDataPtr> _trace;
 	AllCutStorage _all_cuts_storage;
 
 	void free();
 	
 	void build_cut();
 	void run(std::ostream & stream);
-	void print_csv();
 };

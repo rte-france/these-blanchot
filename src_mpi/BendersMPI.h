@@ -27,11 +27,11 @@ public:
 	BendersOptions _options;
 
 	AllCutStorage _all_cuts_storage;
-	WorkerMasterTrace _trace;
+	std::vector<WorkerMasterDataPtr> _trace;
+
 
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void free(mpi::environment & env, mpi::communicator & world);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
-	void print_csv();
 };

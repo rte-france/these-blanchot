@@ -1,10 +1,5 @@
 #include "WorkerTrace.h"
 
-int WorkerMasterTrace::get_ite() {
-	return _master_trace.size();
-}
-
-
 double WorkerMasterData::get_ub() {
 	return _ub;
 }

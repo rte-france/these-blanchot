@@ -24,12 +24,4 @@ public:
 
 typedef std::shared_ptr<WorkerMasterData> WorkerMasterDataPtr;
 
-class WorkerMasterTrace {
-public:
-
-	std::vector<WorkerMasterDataPtr> _master_trace;
-
-	int get_ite();
-};
-
 

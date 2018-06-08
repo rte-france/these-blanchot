@@ -65,6 +65,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 
 	if (log_level > 2) {
 		stream << std::setw(15) << data.deletedcut;
+		stream << std::setw(20) << data.time_it.elapsed();
 	}
 	stream << std::endl;
 
@@ -134,6 +135,7 @@ void init_log(std::ostream&stream, int const log_level) {
 
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
+		stream << std::setw(20) << "TIME";
 	}
 	stream << std::endl;
 }
@@ -187,6 +189,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+	data.time_it.restart();
 	return(((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || (data.lb + options.GAP >= data.best_ub));
 }
 
@@ -251,12 +254,12 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 *
 *  \param data : data to store
 */
-void update_trace(WorkerMasterTrace & trace, BendersData const & data) {
-	trace._master_trace[data.it - 1]->_lb = data.lb;
-	trace._master_trace[data.it - 1]->_ub = data.ub;
-	trace._master_trace[data.it - 1]->_bestub = data.best_ub;
-	trace._master_trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
-	trace._master_trace[data.it - 1]->_deleted_cut = data.deletedcut;
+void update_trace(std::vector<WorkerMasterDataPtr> trace, BendersData const & data) {
+	trace[data.it - 1]->_lb = data.lb;
+	trace[data.it - 1]->_ub = data.ub;
+	trace[data.it - 1]->_bestub = data.best_ub;
+	trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
+	trace[data.it - 1]->_deleted_cut = data.deletedcut;
 }
 
 /*!
@@ -275,6 +278,7 @@ void init(BendersData & data) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+	data.time_it.restart();
 }
 
 /*!
@@ -299,7 +303,7 @@ void init(BendersData & data) {
 *  \param options : set of parameters
 *
 */
-void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, std::vector<WorkerMasterDataPtr> & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -317,7 +321,7 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 			}
 
 			if (options.TRACE) {
-				trace._master_trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+				trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
 			}
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
@@ -345,7 +349,7 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 *
 *  \param options : set of parameters
 */
-void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, WorkerMasterTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, std::vector<WorkerMasterDataPtr> & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
 	Point s;
 	double rhs(0);
 	for (int i(0); i < all_package.size(); i++) {
@@ -368,11 +372,69 @@ void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, 
 			all_cuts_storage.find(itmap.first)->second.insert(cut);
 
 			if (options.TRACE) {
-				trace._master_trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
+				trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
 			}
 
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
 	}
 	master->add_cut(s, data.x0, rhs);
+}
+
+/*!
+*  \brief Print the trace of the Benders algorithm in a csv file
+*
+*  Method to print trace of the Benders algorithm in a csv file
+*
+* \param stream : stream to print the output
+*/
+void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, int> & problem_to_id, BendersData const & data, BendersOptions const & options) {
+	 std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "benders_output.csv");
+	 if (options.AGGREGATION) {
+		 output = (options.OUTPUTROOT + PATH_SEPARATOR + "benders_output_aggregate.csv");
+	 }
+	 std::ofstream file(output, std::ios::out | std::ios::trunc);
+	 if (file)
+	 {
+		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut;time" << std::endl;
+		 Point xopt;
+		 int nite;
+		 nite = trace.size();
+		 xopt = trace[nite - 1]->get_point();
+		 for (int i(0); i < nite; i++) {
+			 file << i + 1 << ";";
+			 print_master_csv(file, trace[i], xopt, options.MASTER_NAME, data.nslaves);
+			 for (auto & kvp : trace[i]->_cut_trace) {
+				 SlaveCutDataHandler handler(kvp.second);
+				 file << i + 1 << ";";
+				 print_cut_csv(file, handler, kvp.first, problem_to_id[kvp.first]);
+			 }
+		 }
+		 file.close();
+	 }
+	 else {
+		 std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+	 }
+}
+
+void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point const & xopt, std::string const & name, int const nslaves) {
+	stream << "Master" << ";";
+	stream << name << ";";
+	stream << nslaves << ";";
+	stream << trace->get_ub() << ";";
+	stream << trace->get_lb() << ";";
+	stream << trace->get_bestub() << ";";
+	stream << norm_point(xopt, trace->get_point()) << ";";
+	stream << trace->get_deletedcut() << std::endl;
+}
+
+void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std::string const & name, int const islaves) {
+	stream << "Slave" << ";";
+	stream << name << ";";
+	stream << islaves << ";";
+	stream << handler.get_dbl(SLAVE_COST) << ";";
+	stream << handler.get_dbl(ALPHA_I) << ";";
+	stream << ";";
+	stream << handler.get_int(SIMPLEXITER) << ";";
+	stream << std::endl;
 }

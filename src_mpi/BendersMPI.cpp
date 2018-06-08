@@ -82,7 +82,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 	{
 		get_master_value(_master, _data);
 		if (_options.TRACE) {
-			_trace._master_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
 		}
 	}
 
@@ -131,59 +131,6 @@ void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 }
 
 /*!
-*  \brief Print the trace of the Benders algorithm in a csv file
-*
-*  Method to print trace of the Benders algorithm in a csv file
-*
-* \param stream : stream to print the output
-*/
-//void BendersMpi::print_csv() {
-//	 std::string output(_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output.csv");
-//	 if (_options.AGGREGATION) {
-//		 output = (_options.ROOTPATH + PATH_SEPARATOR + "bendersMpi_output_aggregate.csv");
-//	 }
-//	 std::ofstream file(output, std::ios::out | std::ios::trunc);
-//
-//	 if (file)
-//	 {
-//		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut" << std::endl;
-//		 Point xopt;
-//		 int nite;
-//		 nite = _trace.get_ite();
-//		 xopt = _trace._master_trace[nite - 1]->get_point();
-//		 std::size_t found = _options.MASTER_NAME.find_last_of(PATH_SEPARATOR);
-//		 for (int i(0); i < nite; i++) {
-//			 file << i + 1 << ";";
-//			 file << "Master" << ";";
-//			 file << _options.MASTER_NAME.substr(found+1) << ";";
-//			 file << _data.nslaves << ";";
-//			 file << _trace._master_trace[i]->get_ub() << ";";
-//			 file << _trace._master_trace[i]->get_lb() << ";";
-//			 file << _trace._master_trace[i]->get_bestub() << ";";
-//			 file << norm_point(xopt, _trace._master_trace[i]->get_point()) << ";";
-//			 file << _trace._master_trace[i]->get_deletedcut() << std::endl;
-//			 for (auto & kvp : _trace._master_trace[i]->_cut_trace) {
-//				 SlaveCutDataHandler handler(kvp.second);
-//				 file << i + 1 << ";";
-//				 file << "Slave" << ";";
-//				 file << kvp.first.substr(found + 1) << ";";
-//				 file << _problem_to_id[kvp.first] << ";";
-//				 file << handler.get_dbl(SLAVE_COST) << ";";
-//				 file << handler.get_dbl(ALPHA_I) << ";";
-//				 file << ";";
-//				 file << handler.get_int(SIMPLEXITER) << ";";
-//				 file << std::endl;
-//			 }
-//		 }
-//		 file.close();
-//	 }
-//	 else {
-//		 std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-//	 }
-//}
-//my test !!!!
-
-/*!
 *  \brief Run Benders algorithm in parallel
 *
 *  Method to run Benders algorithm in parallel
@@ -213,6 +160,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 		if (world.rank() == 0) {
 			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+			if (_options.TRACE) {
+				update_trace(_trace, _data);
+			}
 			print_log(stream, _data, _options.LOG_LEVEL);
 			_data.stop = stopping_criterion(_data,_options);
 		}
@@ -231,19 +181,12 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 #if __DEBUG_BENDERS_MPI__ 
 		std::cout << "step3 ended" << std::endl;
 #endif
-
-		if (world.rank() == 0) {
-			if (_options.TRACE) {
-				update_trace(_trace, _data);
-			}
-		}
-		world.barrier();
 	}
 
 	if (world.rank() == 0) {
 		print_solution(stream, _data.bestx, true);
 		if (_options.TRACE) {
-			//print_csv();
+			print_csv(_trace,_problem_to_id,_data,_options);
 		}
 	}
 }
