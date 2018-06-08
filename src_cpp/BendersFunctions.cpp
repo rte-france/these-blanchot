@@ -285,7 +285,6 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
 			data.ub += handler->get_dbl(SLAVE_COST)* slave_weight_coeff[problem_to_id[itmap.first]];
 
-			master->add_cut_slave(problem_to_id.find(itmap.first)->second, handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
 			SlaveCutTrimmer cut(handler, data.x0);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
