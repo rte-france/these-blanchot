@@ -25,6 +25,7 @@ void build_SlaveCutData(SlaveCutData &);
 
 enum SlaveCutInt {
 	SIMPLEXITER = 0,
+	LPSTATUS,
 	MAXINT
 };
 

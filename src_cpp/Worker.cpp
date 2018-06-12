@@ -110,9 +110,8 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 	}
 }
 
-void Worker::solve() {
+void Worker::solve(int & lp_status) {
 	int status = XPRSlpoptimize(_xprs, "");
-	int lp_status;
 	if (status) {
 		std::cout << "Worker::solve() status " << status << std::endl;
 		std::exit(0);
@@ -122,7 +121,6 @@ void Worker::solve() {
 		std::cout << "lp_status is : " << lp_status << std::endl;
 		std::exit(0);
 	}
-
 }
 
 /*!

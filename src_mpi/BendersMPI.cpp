@@ -102,6 +102,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		std::vector<SlaveCutPackage> all_package;
 		gather(world, slave_cut_package, all_package, 0);
 		all_package.erase(all_package.begin());
+		check_slaves_status(all_package);
 		if (!_options.AGGREGATION) {
 			sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 		}

@@ -204,7 +204,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 */
 void get_master_value(WorkerMasterPtr & master, BendersData & data) {
 	data.alpha_i.resize(data.nslaves);
-	master->solve();
+	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
@@ -234,7 +234,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
 		ptr->fix_to(data.x0);
-		ptr->solve();
+		ptr->solve(handler->get_int(LPSTATUS));
 		if (options.BASIS) {
 			ptr->get_basis();
 		}
@@ -417,6 +417,19 @@ void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, i
 	 }
 }
 
+/*!
+*  \brief Print in a file master's information
+*
+*  \param stream : output stream
+*
+*  \param trace : storage of problem data
+*
+*  \param xopt : final optimal value
+*
+*  \param name : master name
+*
+*  \param nslaves : number of slaves
+*/
 void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point const & xopt, std::string const & name, int const nslaves) {
 	stream << "Master" << ";";
 	stream << name << ";";
@@ -428,6 +441,17 @@ void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point co
 	stream << trace->get_deletedcut() << std::endl;
 }
 
+/*!
+*  \brief Print in a file slave's information
+*
+*  \param stream : output stream
+*
+*  \param handler : handler to manage slave data
+*
+*  \param name : problem name
+*
+*  \param islaves : problem id
+*/
 void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std::string const & name, int const islaves) {
 	stream << "Slave" << ";";
 	stream << name << ";";
@@ -437,4 +461,46 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 	stream << ";";
 	stream << handler.get_int(SIMPLEXITER) << ";";
 	stream << std::endl;
+}
+
+/*!
+*  \brief Check if every slave has been solved to optimality
+*
+*  \param all_package : storage of each slaves status
+*/
+void check_slaves_status(std::vector<SlaveCutPackage> const & all_package) {
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto & kvp : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			if (handler->get_int(LPSTATUS) != 1) {
+				std::cout << "Slave " << kvp.first << " status is " << handler->get_int(LPSTATUS) << std::endl;
+			}
+		}
+	}
+}
+
+/*!
+*  \brief Write every information needed to start back in a file
+*
+*	Function to print each cut, current lower bound and upper bound to start back from where the algorithm stopped
+*
+*  \param cut_storage : storage of all cuts to print
+*
+*  \param data : Benders data to print
+*/
+void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, BendersOptions const & options)
+{
+	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "benders_dump_output.txt");
+	std::ofstream file(output, std::ios::out | std::ios::trunc);
+	if (file) {
+		file << std::setw(20) << "AGGREGATION" << std::setw(20) << options.AGGREGATION << std::endl;
+		file << std::setw(20) << "UB" << std::setw(20) << data.ub << std::endl;
+		file << std::setw(20) << "LB" << std::setw(20) << data.lb << std::endl;
+		for (auto & kvp : cut_storage) {
+			for (auto & itset : kvp.second) {
+				file << std::setw(20) << kvp.first << itset << std::endl;
+			}
+		}
+	}
 }

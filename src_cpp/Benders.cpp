@@ -63,6 +63,7 @@ void Benders::build_cut() {
 	std::vector<SlaveCutPackage> all_package;
 	get_slave_cut(slave_cut_package, _slaves, _options, _data);
 	all_package.push_back(slave_cut_package);
+	check_slaves_status(all_package);
 	if (!_options.AGGREGATION) {
 		sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 	}

@@ -118,6 +118,7 @@ struct BendersData {
 	Point x0;
 	int nslaves;
 	double dnslaves;
+	int master_status;
 };
 
 double norm_point(Point const & x0, Point const & x1);
