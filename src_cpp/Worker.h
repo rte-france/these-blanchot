@@ -48,7 +48,7 @@ public:
 	void errormsg(const char *sSubName, int nLineNo, int nErrCode); 
 	std::list<std::ostream *> & stream();
 
-	void solve();
+	void solve(int & lp_status);
 
 
 public:

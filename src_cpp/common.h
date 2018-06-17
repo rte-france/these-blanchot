@@ -23,6 +23,7 @@
 #include <memory>
 #include <algorithm>
 #include <thread>
+#include "Timer.h"
 
 struct Predicate;
 typedef std::map<std::string, double> Point;
@@ -100,6 +101,7 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 }
 
 struct BendersData {
+	Timer time_it;
 	double lb;
 	double ub;
 	double best_ub;
@@ -116,6 +118,7 @@ struct BendersData {
 	Point x0;
 	int nslaves;
 	double dnslaves;
+	int master_status;
 };
 
 double norm_point(Point const & x0, Point const & x1);
