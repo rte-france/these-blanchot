@@ -4,6 +4,7 @@
 #include "xprs.h"
 
 
+void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 class Worker;
 typedef std::shared_ptr<Worker> WorkerPtr;
 /*! \class Worker
