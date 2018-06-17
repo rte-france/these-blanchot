@@ -134,11 +134,10 @@ void Worker::solve(int & lp_status) {
 		std::cout << "lp_status is : " << lp_status << std::endl;
 		std::cout << "written in " << buffer.str() << std::endl;
 		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
-		std::exit(0);
 	}
-	if (status) {
-		std::cout << "Worker::solve() status " << status << std::endl;
-		std::exit(0);
+	else if (status) {
+		std::cout << "Worker::solve() status " << status<<", "<<_path_to_mps << std::endl;
+		
 	}
 
 }
