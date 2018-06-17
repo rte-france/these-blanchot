@@ -34,6 +34,7 @@ public:
 
 	void free();
 public:
+	std::string _path_to_mps;
 	std::map< std::string, int> _name_to_id; /*!< Link between the variable name and its identifier */
 	std::map< int, std::string> _id_to_name; /*!< Link between the identifier of a variable and its name*/
 public:
