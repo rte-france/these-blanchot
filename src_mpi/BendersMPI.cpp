@@ -100,7 +100,9 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	SlaveCutPackage slave_cut_package;
 	if (world.rank() == 0) {
 		std::vector<SlaveCutPackage> all_package;
+		Timer timer_slaves;
 		gather(world, slave_cut_package, all_package, 0);
+		_data.timer_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
 		check_slaves_status(all_package);
 		if (!_options.AGGREGATION) {
@@ -150,6 +152,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	world.barrier();
 
 	while (!_data.stop) {
+		Timer timer_master;
 		++_data.it;
 		_data.deletedcut = 0;
 
@@ -164,6 +167,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 			if (_options.TRACE) {
 				update_trace(_trace, _data);
 			}
+			_data.timer_master = timer_master.elapsed();
 			print_log(stream, _data, _options.LOG_LEVEL);
 			_data.stop = stopping_criterion(_data,_options);
 		}

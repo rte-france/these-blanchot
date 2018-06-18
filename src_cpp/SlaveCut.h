@@ -32,6 +32,7 @@ enum SlaveCutInt {
 enum SlaveCutDbl {
 	SLAVE_COST = 0,
 	ALPHA_I,
+	SLAVE_TIMER,
 	MAXDBL 
 };
 

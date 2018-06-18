@@ -61,7 +61,9 @@ void Benders::free() {
 void Benders::build_cut() {
 	SlaveCutPackage slave_cut_package;
 	std::vector<SlaveCutPackage> all_package;
+	Timer timer_slaves;
 	get_slave_cut(slave_cut_package, _slaves, _options, _data);
+	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
 	check_slaves_status(all_package);
 	if (!_options.AGGREGATION) {
@@ -91,6 +93,7 @@ void Benders::run(std::ostream & stream) {
 	init(_data);
 	
 	while (!_data.stop) {
+		Timer timer_master;
 		++_data.it;
 		get_master_value(_master, _data);
 		if (_options.TRACE) {
@@ -103,6 +106,7 @@ void Benders::run(std::ostream & stream) {
 		if (_options.TRACE) {
 			update_trace(_trace, _data);
 		}
+		_data.timer_master = timer_master.elapsed();
 		print_log(stream, _data, _options.LOG_LEVEL);
 		_data.stop = stopping_criterion(_data, _options);
 	}

@@ -65,7 +65,9 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 
 	if (log_level > 2) {
 		stream << std::setw(15) << data.deletedcut;
-		stream << std::setw(20) << data.time_it.elapsed();
+		stream << std::setw(20) << data.timer_master;
+		stream << std::setw(20) << data.timer_master - data.timer_slaves;
+		stream << std::setw(20) << data.timer_slaves;
 	}
 	stream << std::endl;
 
@@ -136,6 +138,8 @@ void init_log(std::ostream&stream, int const log_level) {
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(20) << "TIME";
+		stream << std::setw(20) << "TIMEMASTER";
+		stream << std::setw(20) << "TIMESLAVES";
 	}
 	stream << std::endl;
 }
@@ -189,7 +193,6 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
-	data.time_it.restart();
 	return(((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || (data.lb + options.GAP >= data.best_ub));
 }
 
@@ -203,12 +206,14 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 *  \param data : benders data to update with master optimal solution
 */
 void get_master_value(WorkerMasterPtr & master, BendersData & data) {
+	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
 	data.ub = data.invest_cost;
+	data.timer_master = timer_master.elapsed();
 }
 
 
@@ -227,6 +232,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data) {
 */
 void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
 	for (auto & kvp : map_slaves) {
+		Timer timer_slave;
 		WorkerSlavePtr & ptr(kvp.second);
 		IntVector intParam(SlaveCutInt::MAXINT);
 		DblVector dblParam(SlaveCutDbl::MAXDBL);
@@ -241,6 +247,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
 	}
 }
@@ -260,7 +267,7 @@ void update_trace(std::vector<WorkerMasterDataPtr> trace, BendersData const & da
 	trace[data.it - 1]->_bestub = data.best_ub;
 	trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
 	trace[data.it - 1]->_deleted_cut = data.deletedcut;
-	trace[data.it - 1]->_time = data.time_it.elapsed();
+	trace[data.it - 1]->_time = data.timer_master;
 }
 
 /*!
@@ -279,7 +286,6 @@ void init(BendersData & data) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
-	data.time_it.restart();
 }
 
 /*!
@@ -311,7 +317,6 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
 			data.ub += handler->get_dbl(SLAVE_COST)* slave_weight_coeff[problem_to_id[itmap.first]];
-
 			SlaveCutTrimmer cut(handler, data.x0);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
@@ -462,6 +467,8 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 	stream << handler.get_dbl(ALPHA_I) << ";";
 	stream << ";";
 	stream << handler.get_int(SIMPLEXITER) << ";";
+	stream << ";";
+	stream << handler.get_dbl(SLAVE_TIMER) << ";";
 	stream << std::endl;
 }
 
