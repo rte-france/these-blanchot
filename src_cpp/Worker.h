@@ -4,6 +4,7 @@
 #include "xprs.h"
 
 
+void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 class Worker;
 typedef std::shared_ptr<Worker> WorkerPtr;
 /*! \class Worker
@@ -33,6 +34,7 @@ public:
 
 	void free();
 public:
+	std::string _path_to_mps;
 	std::map< std::string, int> _name_to_id; /*!< Link between the variable name and its identifier */
 	std::map< int, std::string> _id_to_name; /*!< Link between the identifier of a variable and its name*/
 public:

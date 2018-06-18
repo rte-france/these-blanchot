@@ -94,7 +94,7 @@ void Worker::get_value(double & lb) {
 *  \param problem_name : name of the problem
 */
 void Worker::init(std::map<std::string, int> const & variable_map, std::string const & path_to_mps) {
-
+	_path_to_mps = path_to_mps;
 	_stream.push_back(&std::cout);
 	XPRScreateprob(&_xprs);
 	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
@@ -110,17 +110,36 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 	}
 }
 
+StrVector XPRS_LP_STATUS = {
+	"XPRS_LP_UNSTARTED",
+	"XPRS_LP_OPTIMAL",
+	"XPRS_LP_INFEAS",
+	"XPRS_LP_CUTOFF",
+	"XPRS_LP_UNFINISHED",
+	"XPRS_LP_UNBOUNDED",
+	"XPRS_LP_CUTOFF_IN_DUAL",
+	"XPRS_LP_UNSOLVED",
+	"XPRS_LP_NONCONVEX"
+};
+
 void Worker::solve(int & lp_status) {
 	int status = XPRSlpoptimize(_xprs, "");
-	if (status) {
-		std::cout << "Worker::solve() status " << status << std::endl;
-		std::exit(0);
-	}
 	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);
 	if (lp_status != XPRS_LP_OPTIMAL) {
 		std::cout << "lp_status is : " << lp_status << std::endl;
-		std::exit(0);
+		std::stringstream buffer;
+		buffer << _path_to_mps << "_lp_status_";
+		buffer << XPRS_LP_STATUS[lp_status];
+		buffer<< ".mps";
+		std::cout << "lp_status is : " << lp_status << std::endl;
+		std::cout << "written in " << buffer.str() << std::endl;
+		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
 	}
+	else if (status) {
+		std::cout << "Worker::solve() status " << status<<", "<<_path_to_mps << std::endl;
+		
+	}
+
 }
 
 /*!
