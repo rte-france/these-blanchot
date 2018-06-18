@@ -242,7 +242,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		ptr->fix_to(data.x0);
 		ptr->solve(handler->get_int(LPSTATUS));
 		if (options.BASIS) {
-			ptr->get_basis();
+			ptr->get_basis(handler->get_int(NB_BASIS));
 		}
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
@@ -465,7 +465,7 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 	stream << islaves << ";";
 	stream << handler.get_dbl(SLAVE_COST) << ";";
 	stream << handler.get_dbl(ALPHA_I) << ";";
-	stream << ";";
+	stream << handler.get_int(NB_BASIS) << ";";
 	stream << handler.get_int(SIMPLEXITER) << ";";
 	stream << ";";
 	stream << handler.get_dbl(SLAVE_TIMER) << ";";

@@ -19,7 +19,7 @@ public:
 	WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps);
 	virtual ~WorkerSlave();
 	SlaveCutStorage _slave_storage;
-	std::vector<SimplexBasis> _basis;
+	std::set<SimplexBasisHandler> _basis;
 	std::vector<IntVector> _gap_row_basis;
 	std::vector<IntVector> _gap_col_basis;
 
@@ -32,7 +32,7 @@ public:
 
 	void get_subgradient(Point & s);
 
-	void get_basis();
+	void get_basis(int & nb_basis);
 
 };
 

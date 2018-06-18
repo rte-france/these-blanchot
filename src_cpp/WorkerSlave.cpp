@@ -119,7 +119,7 @@ void WorkerSlave::get_subgradient(Point & s) {
 *
 *  Method to store simplex basis of a problem, and build the distance matrix
 */
-void WorkerSlave::get_basis() {
+void WorkerSlave::get_basis(int & nb_basis) {
 	int ncols;
 	int nrows;
 	IntVector cstatus;
@@ -129,15 +129,19 @@ void WorkerSlave::get_basis() {
 	cstatus.resize(ncols);
 	rstatus.resize(nrows);
 	int status = XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
-	SimplexBasis basis(rstatus, cstatus);
-	_basis.push_back(basis);
-	IntVector distance_row(_basis.size(),0);
-	IntVector distance_col(_basis.size(), 0);
-	for (int i(0); i < _basis.size(); i++) {
-		distance_row[i] = norm_int(_basis[i].first, basis.first);
-		distance_col[i] = norm_int(_basis[i].second, basis.second);
-	}
-	_gap_col_basis.push_back(distance_col);
-	_gap_row_basis.push_back(distance_row);
+	SimplexBasisPtr basis(new SimplexBasis(rstatus, cstatus));
+	SimplexBasisHandler handler(basis);
+	_basis.insert(basis);
+	nb_basis = _basis.size();
+	//IntVector distance_row(_basis.size(),0);
+	//IntVector distance_col(_basis.size(), 0);
+	//int i(0);
+	//for (auto & kvp : _basis) {
+	//	distance_row[i] = norm_int(kvp.first, basis.first);
+	//	distance_col[i] = norm_int(kvp.second, basis.second);
+	//	i++;
+	//}
+	//_gap_col_basis.push_back(distance_col);
+	//_gap_row_basis.push_back(distance_row);
 }
 
