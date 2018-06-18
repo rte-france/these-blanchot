@@ -11,6 +11,7 @@ public:
 	double _ub;
 	double _bestub;
 	int _deleted_cut;
+	double _time;
 	PointPtr _x0;
 	std::map<std::string,SlaveCutDataPtr> _cut_trace;
 

@@ -14,9 +14,9 @@ typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
 
 class SlaveCutTrimmer;
 typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
+typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
 
 class SlaveCutDataHandler;
-typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
 typedef std::shared_ptr<SlaveCutDataHandler> SlaveCutDataHandlerPtr;
 
 typedef std::set<SlaveCutDataHandlerPtr, Predicate> SlaveCutDataHandlerPtrSet;

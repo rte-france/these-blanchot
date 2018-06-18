@@ -260,6 +260,7 @@ void update_trace(std::vector<WorkerMasterDataPtr> trace, BendersData const & da
 	trace[data.it - 1]->_bestub = data.best_ub;
 	trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
 	trace[data.it - 1]->_deleted_cut = data.deletedcut;
+	trace[data.it - 1]->_time = data.time_it.elapsed();
 }
 
 /*!
@@ -438,7 +439,8 @@ void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point co
 	stream << trace->get_lb() << ";";
 	stream << trace->get_bestub() << ";";
 	stream << norm_point(xopt, trace->get_point()) << ";";
-	stream << trace->get_deletedcut() << std::endl;
+	stream << trace->get_deletedcut() << ";";
+	stream << trace->_time << std::endl;
 }
 
 /*!
@@ -494,13 +496,17 @@ void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, Bende
 	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "benders_dump_output.txt");
 	std::ofstream file(output, std::ios::out | std::ios::trunc);
 	if (file) {
-		file << std::setw(20) << "AGGREGATION" << std::setw(20) << options.AGGREGATION << std::endl;
-		file << std::setw(20) << "UB" << std::setw(20) << data.ub << std::endl;
-		file << std::setw(20) << "LB" << std::setw(20) << data.lb << std::endl;
+		file << std::setw(15) << "AGGREGATION" << std::setw(20) << options.AGGREGATION << std::endl;
+		file << std::setw(15) << "UB" << std::setw(20) << data.ub << std::endl;
+		file << std::setw(15) << "LB" << std::setw(20) << data.lb << std::endl;
 		for (auto & kvp : cut_storage) {
 			for (auto & itset : kvp.second) {
-				file << std::setw(20) << kvp.first << itset << std::endl;
+				file << std::setw(15) << kvp.first;
+				file << std::setw(50) << itset._x0;
+				file << std::setw(15) << itset._data_cut->get_dbl(SLAVE_COST);
+				file << std::setw(50) << itset._data_cut->get_subgradient() << std::endl;
 			}
 		}
+		file.close();
 	}
 }
