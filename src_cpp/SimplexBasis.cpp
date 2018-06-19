@@ -1,5 +1,7 @@
 #include "SimplexBasis.h"
 
+SimplexBasisHandler::SimplexBasisHandler() {
+}
 
 SimplexBasisHandler::SimplexBasisHandler(SimplexBasisPtr & data) :_data(data) {
 }

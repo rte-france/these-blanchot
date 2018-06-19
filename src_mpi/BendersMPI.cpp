@@ -120,6 +120,21 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 	world.barrier();
 }
 
+void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
+	SimplexBasisPackage slave_basis_package;
+	if (world.rank() == 0) {
+		std::vector<SimplexBasisPackage> all_basis_package;
+		gather(world, slave_basis_package, all_basis_package, 0);
+		all_basis_package.erase(all_basis_package.begin());
+		sort_basis(all_basis_package, _problem_to_id, _basis, _data);
+	}
+	else {
+		get_slave_basis(slave_basis_package, _map_slaves);
+		gather(world, slave_basis_package, 0);
+	}
+	world.barrier();
+}
+
 /*!
 *  \brief Method to free the memory used by each problem
 */
@@ -161,6 +176,10 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 		/*Gather cut from each slave in master thread and add them to Master problem*/
 		step_2(env, world);
+
+		if (_options.BASIS) {
+			step_3(env, world);
+		}
 
 		if (world.rank() == 0) {
 			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);

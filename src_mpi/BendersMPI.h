@@ -20,6 +20,7 @@ public:
 	
 	WorkerMasterPtr _master;
 	SlavesMapPtr _map_slaves;
+	std::set<SimplexBasisHandler> _basis;
 
 	std::map< std::string, int> _problem_to_id;
 	DblVector _slave_weight_coeff;
@@ -34,4 +35,5 @@ public:
 	void free(mpi::environment & env, mpi::communicator & world);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
+	void step_3(mpi::environment & env, mpi::communicator & world);
 };

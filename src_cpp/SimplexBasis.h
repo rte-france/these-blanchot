@@ -4,6 +4,8 @@
 #include "Worker.h"
 
 typedef std::pair<IntVector, IntVector> SimplexBasis;
+typedef std::map<std::string, SimplexBasis> SimplexBasisPackage;
+
 
 typedef std::shared_ptr<SimplexBasis> SimplexBasisPtr;
 
@@ -19,6 +21,7 @@ public:
 
 public:
 
+	SimplexBasisHandler();
 	SimplexBasisHandler(SimplexBasisPtr const &data);
 	SimplexBasisHandler(SimplexBasisPtr & data);
 	virtual ~SimplexBasisHandler();

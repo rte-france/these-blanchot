@@ -101,6 +101,7 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 }
 
 struct BendersData {
+	int nbasis;
 	double timer_slaves;
 	double timer_master;
 	double lb;

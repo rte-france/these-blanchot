@@ -72,6 +72,13 @@ void Benders::build_cut() {
 	else {
 		sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 	}
+	if (_options.BASIS) {
+		SimplexBasisPackage slave_basis_package;
+		std::vector<SimplexBasisPackage> all_basis_package;
+		get_slave_basis(slave_basis_package, _slaves);
+		all_basis_package.push_back(slave_basis_package);
+		sort_basis(all_basis_package, _problem_to_id, _basis, _data);
+	}
 }
 
 /*!

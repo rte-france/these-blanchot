@@ -242,7 +242,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		ptr->fix_to(data.x0);
 		ptr->solve(handler->get_int(LPSTATUS));
 		if (options.BASIS) {
-			ptr->get_basis(handler->get_int(NB_BASIS));
+			ptr->get_basis();
 		}
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
@@ -250,6 +250,24 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
 	}
+}
+
+void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves) {
+	for (auto & kvp : map_slaves) {
+		WorkerSlavePtr & ptr(kvp.second);
+		simplex_basis_package[kvp.first] = ptr->get_basis();
+	}
+}
+
+void sort_basis(std::vector<SimplexBasisPackage> const & all_basis_package, std::map<std::string, int> & problem_to_id, std::set<SimplexBasisHandler> & basis_storage, BendersData & data) {
+	for (int i(0); i < all_basis_package.size(); i++) {
+		for (auto & itmap : all_basis_package[i]) {
+			SimplexBasisPtr basis(new SimplexBasis(itmap.second));
+			SimplexBasisHandler handler(basis);
+			basis_storage.insert(handler);
+		}
+	}
+	data.nbasis = basis_storage.size();
 }
 
 /*!
@@ -268,6 +286,8 @@ void update_trace(std::vector<WorkerMasterDataPtr> trace, BendersData const & da
 	trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
 	trace[data.it - 1]->_deleted_cut = data.deletedcut;
 	trace[data.it - 1]->_time = data.timer_master;
+	trace[data.it - 1]->_nbasis = data.nbasis;
+
 }
 
 /*!
@@ -402,7 +422,7 @@ void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, i
 	 std::ofstream file(output, std::ios::out | std::ios::trunc);
 	 if (file)
 	 {
-		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut;time" << std::endl;
+		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut;time;basis;" << std::endl;
 		 Point xopt;
 		 int nite;
 		 nite = trace.size();
@@ -445,7 +465,8 @@ void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point co
 	stream << trace->get_bestub() << ";";
 	stream << norm_point(xopt, trace->get_point()) << ";";
 	stream << trace->get_deletedcut() << ";";
-	stream << trace->_time << std::endl;
+	stream << trace->_time << ";";
+	stream << trace->_nbasis << ";" << std::endl;
 }
 
 /*!

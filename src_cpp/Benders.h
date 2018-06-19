@@ -4,6 +4,7 @@
 #include "WorkerTrace.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
+#include "SimplexBasis.h"
 
 class Benders {
 public:
@@ -17,6 +18,7 @@ public:
 	DblVector _slave_weight_coeff;
 	BendersData _data;
 	BendersOptions _options;
+	std::set<SimplexBasisHandler> _basis;
 
 	std::stringstream _line_trace;
 	std::vector<WorkerMasterDataPtr> _trace;
