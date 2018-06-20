@@ -57,6 +57,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(20) << "+INF";
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
+	stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub - data.lb;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -129,6 +130,7 @@ void init_log(std::ostream&stream, int const log_level) {
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "UB";
 	stream << std::setw(20) << "BESTUB";
+	stream << std::setw(20) << "GAP";
 
 	if (log_level > 1) {
 		stream << std::setw(15) << "MINSIMPLEXIT";
@@ -296,6 +298,7 @@ void update_trace(std::vector<WorkerMasterDataPtr> trace, BendersData const & da
 *  \param data : Benders data 
 */
 void init(BendersData & data) {
+	data.nbasis = 0;
 	data.lb = -1e20;
 	data.ub = +1e20;
 	data.best_ub = +1e20;
@@ -427,9 +430,16 @@ void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, i
 		 int nite;
 		 nite = trace.size();
 		 xopt = trace[nite - 1]->get_point();
-		 for (int i(0); i < nite; i++) {
+		 file << 1 << ";";
+		 print_master_csv(file, trace[0], xopt, options.MASTER_NAME, data.nslaves);
+		 for (auto & kvp : trace[0]->_cut_trace) {
+			 SlaveCutDataHandler handler(kvp.second);
+			 file << 1 << ";";
+			 print_cut_csv(file, handler, kvp.first, problem_to_id[kvp.first]);
+		 }
+		 for (int i(1); i < nite; i++) {
 			 file << i + 1 << ";";
-			 print_master_csv(file, trace[i], xopt, options.MASTER_NAME, data.nslaves);
+			 print_master_csv(file, trace[i], trace[i-1]->get_point(), options.MASTER_NAME, data.nslaves);
 			 for (auto & kvp : trace[i]->_cut_trace) {
 				 SlaveCutDataHandler handler(kvp.second);
 				 file << i + 1 << ";";
