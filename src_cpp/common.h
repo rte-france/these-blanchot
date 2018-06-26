@@ -40,6 +40,9 @@ typedef std::vector<double> DblVector;
 typedef std::vector<std::string> StrVector;
 typedef std::map < std::string, Str2Int> CouplingMap;
 
+typedef std::map <std::string, IntVector> SlaveCutId;
+typedef std::tuple <int, std::string, int, bool> ActiveCut;
+
 typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
 

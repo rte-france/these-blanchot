@@ -21,6 +21,8 @@ public:
 	WorkerMasterPtr _master;
 	SlavesMapPtr _map_slaves;
 	std::set<SimplexBasisHandler> _basis;
+	SlaveCutId _slave_cut_id;
+	std::vector<ActiveCut> _active_cuts;
 
 	std::map< std::string, int> _problem_to_id;
 	DblVector _slave_weight_coeff;

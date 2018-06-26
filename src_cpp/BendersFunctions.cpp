@@ -261,6 +261,16 @@ void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr &
 	}
 }
 
+void update_active_cuts(WorkerMasterPtr & master, std::vector<ActiveCut> & active_cuts, SlaveCutId & cut_id, int const it) {
+	std::vector<double> dual;
+	master->get_dual_values(dual);
+	for (auto & kvp : cut_id) {
+		for (int i(0); i < kvp.second.size(); i++) {
+			active_cuts.push_back(std::make_tuple(it, kvp.first, i+1, (dual[kvp.first[i]] != 0)));
+		}
+	}
+}
+
 void sort_basis(std::vector<SimplexBasisPackage> const & all_basis_package, std::map<std::string, int> & problem_to_id, std::set<SimplexBasisHandler> & basis_storage, BendersData & data) {
 	for (int i(0); i < all_basis_package.size(); i++) {
 		for (auto & itmap : all_basis_package[i]) {
@@ -333,7 +343,8 @@ void init(BendersData & data) {
 *  \param options : set of parameters
 *
 */
-void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, std::vector<WorkerMasterDataPtr> & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, std::vector<WorkerMasterDataPtr> & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
+	int nconstraint(master->get_number_constraint());
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -346,9 +357,12 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 			}
 			else {
 				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+				if (options.ACTIVECUTS) {
+					slave_cut_id[itmap.first].push_back(nconstraint);
+					nconstraint++;
+				}
 				all_cuts_storage[itmap.first].insert(cut);
 			}
-
 			if (options.TRACE) {
 				trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
 			}
@@ -546,5 +560,24 @@ void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, Bende
 			}
 		}
 		file.close();
+	}
+}
+
+void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions const & options) {
+	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "active_cut_output.csv");
+	std::ofstream file(output, std::ios::out | std::ios::trunc);
+	if (file)
+	{
+		file << "Ite;Slave;CutNumber;IsActive;" << std::endl;
+		for (int i(0); i < active_cuts.size(); i++) {
+			file << std::get<0>(active_cuts[i]) << ";";
+			file << std::get<1>(active_cuts[i]) << ";";
+			file << std::get<2>(active_cuts[i]) << ";";
+			file << std::get<3>(active_cuts[i]) << ";" << std::endl;
+		}
+		file.close();
+	}
+	else {
+		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
 	}
 }

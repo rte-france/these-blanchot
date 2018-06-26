@@ -40,3 +40,6 @@ BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
 //True if simplex bases need to be stored, false otherwise
 BENDERS_OPTIONS_MACRO(BASIS, bool, false)
 
+//True if a statement of active cuts need to be done, false otherwise
+BENDERS_OPTIONS_MACRO(ACTIVECUTS, bool, false)
+

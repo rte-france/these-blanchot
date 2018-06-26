@@ -28,7 +28,9 @@ public:
 	virtual ~WorkerMaster();
 
 	void get(Point & x0, double & alpha, std::vector<double> & alpha_i);
-	
+	void get_dual_values(std::vector<double> & dual);
+	int get_number_constraint();
+
 	void write(int it);
 
 	void add_cut(Point const & s, Point const & x0, double rhs);

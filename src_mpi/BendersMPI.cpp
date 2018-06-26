@@ -84,6 +84,9 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 		if (_options.TRACE) {
 			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
 		}
+		if (_options.ACTIVECUTS) {
+			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
+		}
 	}
 
 	broadcast(world, _data.x0, 0);
@@ -106,7 +109,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		all_package.erase(all_package.begin());
 		check_slaves_status(all_package);
 		if (!_options.AGGREGATION) {
-			sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
+			sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options, _slave_cut_id);
 		}
 		else {
 			sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
@@ -211,6 +214,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		print_solution(stream, _data.bestx, true);
 		if (_options.TRACE) {
 			print_csv(_trace,_problem_to_id,_data,_options);
+		}
+		if (_options.ACTIVECUTS) {
+			print_active_cut(_active_cuts, _options);
 		}
 	}
 }

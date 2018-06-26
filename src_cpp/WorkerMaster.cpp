@@ -29,6 +29,19 @@ void WorkerMaster::get(Point & x0, double & alpha, std::vector<double> & alpha_i
 	}
 }
 
+void WorkerMaster::get_dual_values(std::vector<double> & dual) {
+	int rows;
+	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
+	dual.resize(rows);
+	XPRSgetlpsol(_xprs, NULL, NULL, dual.data(), NULL);
+}
+
+int WorkerMaster::get_number_constraint() {
+	int rows;
+	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
+	return rows;
+}
+
 /*!
 *  \brief Write a problem in a lp file
 *

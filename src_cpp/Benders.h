@@ -18,8 +18,10 @@ public:
 	DblVector _slave_weight_coeff;
 	BendersData _data;
 	BendersOptions _options;
-	std::set<SimplexBasisHandler> _basis;
 
+	std::set<SimplexBasisHandler> _basis;
+	SlaveCutId _slave_cut_id;
+	std::vector<ActiveCut> _active_cuts;
 	std::stringstream _line_trace;
 	std::vector<WorkerMasterDataPtr> _trace;
 	AllCutStorage _all_cuts_storage;
