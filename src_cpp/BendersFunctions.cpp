@@ -656,9 +656,10 @@ void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vecto
 	dynamic_cuts.push_back(std::tuple<Point, Point, double>(s, x0, rhs));
 }
 
-void gather_cut(DynamicAggregateCuts const & dynamic_cuts, WorkerMasterPtr & master, int const it, BendersOptions const & options) {
+void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, int const it, BendersOptions const & options) {
 	master->delete_constraint(options.THRESHOLD_AGGREGATION);
 	for (int i(0); i < dynamic_cuts.size(); i++) {
 		master->add_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
 	}
+	dynamic_cuts.clear;
 }

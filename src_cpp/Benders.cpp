@@ -68,6 +68,10 @@ void Benders::build_cut() {
 	check_slaves_status(all_package);
 	if (!_options.AGGREGATION) {
 		sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options, _slave_cut_id);
+		store_current_aggregate_cut(_dynamic_aggregate_cuts, all_package, _slave_weight_coeff, _problem_to_id, _data.x0);
+	}
+	if (_data.it = _options.THRESHOLD_AGGREGATION) {
+		gather_cut(_dynamic_aggregate_cuts, _master, _data.it, _options);
 	}
 	else {
 		sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
