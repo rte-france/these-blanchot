@@ -14,6 +14,7 @@ WorkerMaster::~WorkerMaster() {
 *  Set optimal variables of a problem which has the form (min(x,alpha) : f(x) + alpha)
 *
 *  \param x0 : reference to an empty map list
+*
 *  \param alpha : reference to an empty double
 */
 void WorkerMaster::get(Point & x0, double & alpha, std::vector<double> & alpha_i) {
@@ -29,6 +30,11 @@ void WorkerMaster::get(Point & x0, double & alpha, std::vector<double> & alpha_i
 	}
 }
 
+/*!
+*  \brief Set dual values of a problem in a vector
+*
+*  \param dual : reference to a vector of double
+*/
 void WorkerMaster::get_dual_values(std::vector<double> & dual) {
 	int rows;
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
@@ -36,11 +42,29 @@ void WorkerMaster::get_dual_values(std::vector<double> & dual) {
 	XPRSgetlpsol(_xprs, NULL, NULL, dual.data(), NULL);
 }
 
+/*!
+*  \brief Return number of constraint in a problem
+*/
 int WorkerMaster::get_number_constraint() {
 	int rows;
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
 	return rows;
 }
+
+/*!
+*  \brief Delete nrows last rows of a problem
+*
+*  \param nrows : number of rows to delete
+*/
+void WorkerMaster::delete_constraint(int const nrows) {
+	std::vector<int> mindex(nrows, 0);
+	int const nconstraint(get_number_constraint());
+	for (int i(0); i < nrows; i++) {
+		mindex[i] = nconstraint - i;
+	}
+	XPRSdelrows(_xprs, nrows, mindex.data());
+}
+
 
 /*!
 *  \brief Write a problem in a lp file

@@ -196,18 +196,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 		broadcast(world, _data.stop, 0);
 		world.barrier();
-
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "step1 ended" << std::endl;
-#endif
-
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "step2 ended" << std::endl;
-#endif
-
-#if __DEBUG_BENDERS_MPI__ 
-		std::cout << "step3 ended" << std::endl;
-#endif
 	}
 
 	if (world.rank() == 0) {

@@ -25,6 +25,7 @@ public:
 	std::stringstream _line_trace;
 	std::vector<WorkerMasterDataPtr> _trace;
 	AllCutStorage _all_cuts_storage;
+	DynamicAggregateCuts _dynamic_aggregate_cuts;
 
 	void free();
 	

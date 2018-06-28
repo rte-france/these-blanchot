@@ -254,6 +254,15 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 	}
 }
 
+/*!
+*  \brief Get all slaves basis from a map
+*
+*  Fonction to get all slaves basis
+*
+*  \param simplex_basis_package : map linking each slave to its current simplex basis
+*
+*  \param map_slaves : map linking each slaves names to their problem
+*/
 void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves) {
 	for (auto & kvp : map_slaves) {
 		WorkerSlavePtr & ptr(kvp.second);
@@ -261,6 +270,19 @@ void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr &
 	}
 }
 
+/*!
+*  \brief Store all cuts status at each iteration
+*
+*  Fonction to store all cuts status from master problem at each iteration
+*
+*  \param master : pointer to master problem
+*
+*  \param active_cuts : vector of tuple storing each cut status
+*
+*  \param cut_id : map linking each cut from each slave to its id in master problem
+*
+*  \param it : current iteration
+*/
 void update_active_cuts(WorkerMasterPtr & master, std::vector<ActiveCut> & active_cuts, SlaveCutId & cut_id, int const it) {
 	std::vector<double> dual;
 	master->get_dual_values(dual);
@@ -271,6 +293,19 @@ void update_active_cuts(WorkerMasterPtr & master, std::vector<ActiveCut> & activ
 	}
 }
 
+/*!
+*  \brief Store all slaves' basis in a set
+*
+*  Fonction to store and sort all slaves' basis in a set
+*
+*  \param all_basis_package : vector of slaves basis
+*
+*  \param problem_to_id : map linking each problem name to its id
+*
+*  \param basis_storage : set storing every basis
+*
+*  \param data : set of Benders data
+*/
 void sort_basis(std::vector<SimplexBasisPackage> const & all_basis_package, std::map<std::string, int> & problem_to_id, std::set<SimplexBasisHandler> & basis_storage, BendersData & data) {
 	for (int i(0); i < all_basis_package.size(); i++) {
 		for (auto & itmap : all_basis_package[i]) {
@@ -337,6 +372,8 @@ void init(BendersData & data) {
 *  \param trace : vector keeping data for each iteration
 *
 *  \param all_cuts_storage : set to store every new cut
+*
+*  \param slave_cut_id : map linking each cut to its id in the master problem 
 *
 *  \param data : Benders data 
 *
@@ -430,6 +467,12 @@ void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, 
 *  Method to print trace of the Benders algorithm in a csv file
 *
 * \param stream : stream to print the output
+*
+* \param problem_to_id : map linking each problem name to its id
+*
+* \param data : set of Benders data
+*
+* \param options : set of parameters
 */
 void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, int> & problem_to_id, BendersData const & data, BendersOptions const & options) {
 	 std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "benders_output.csv");
@@ -439,7 +482,7 @@ void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, i
 	 std::ofstream file(output, std::ios::out | std::ios::trunc);
 	 if (file)
 	 {
-		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;deletedcut;time;basis;" << std::endl;
+		 file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;jump;alpha_i;deletedcut;time;basis;" << std::endl;
 		 Point xopt;
 		 int nite;
 		 nite = trace.size();
@@ -487,7 +530,9 @@ void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point co
 	stream << trace->get_ub() << ";";
 	stream << trace->get_lb() << ";";
 	stream << trace->get_bestub() << ";";
+	stream << ";";
 	stream << norm_point(xopt, trace->get_point()) << ";";
+	stream << ";";
 	stream << trace->get_deletedcut() << ";";
 	stream << trace->_time << ";";
 	stream << trace->_nbasis << ";" << std::endl;
@@ -509,9 +554,11 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 	stream << name << ";";
 	stream << islaves << ";";
 	stream << handler.get_dbl(SLAVE_COST) << ";";
-	stream << handler.get_dbl(ALPHA_I) << ";";
-	stream << handler.get_int(NB_BASIS) << ";";
+	stream << ";";
+	stream << ";";
 	stream << handler.get_int(SIMPLEXITER) << ";";
+	stream << ";";
+	stream << handler.get_dbl(ALPHA_I) << ";";
 	stream << ";";
 	stream << handler.get_dbl(SLAVE_TIMER) << ";";
 	stream << std::endl;
@@ -542,6 +589,8 @@ void check_slaves_status(std::vector<SlaveCutPackage> const & all_package) {
 *  \param cut_storage : storage of all cuts to print
 *
 *  \param data : Benders data to print
+*
+*  \param options : set of parameters
 */
 void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, BendersOptions const & options)
 {
@@ -563,6 +612,15 @@ void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, Bende
 	}
 }
 
+/*!
+*  \brief Write in a csv file every active cut at every iteration
+*
+*	Write in a csv file every active cut for every slave for all iterations
+*
+*  \param active_cuts : vector of tuple storing which cut is active or not 
+*
+*  \param options : set of parameters
+*/
 void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions const & options) {
 	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "active_cut_output.csv");
 	std::ofstream file(output, std::ios::out | std::ios::trunc);
@@ -579,5 +637,28 @@ void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions
 	}
 	else {
 		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+	}
+}
+
+void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> problem_to_id, Point const & x0) {
+	Point s;
+	double rhs(0);
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			for (auto & kvp : handler->get_subgradient()) {
+				s[kvp.first] += kvp.second * slave_weight_coeff[problem_to_id[itmap.first]];
+			}
+			rhs += handler->get_dbl(SLAVE_COST) * slave_weight_coeff[problem_to_id[itmap.first]];
+		}
+	}
+	dynamic_cuts.push_back(std::tuple<Point, Point, double>(s, x0, rhs));
+}
+
+void gather_cut(DynamicAggregateCuts const & dynamic_cuts, WorkerMasterPtr & master, int const it, BendersOptions const & options) {
+	master->delete_constraint(options.THRESHOLD_AGGREGATION);
+	for (int i(0); i < dynamic_cuts.size(); i++) {
+		master->add_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
 	}
 }

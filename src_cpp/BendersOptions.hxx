@@ -43,3 +43,6 @@ BENDERS_OPTIONS_MACRO(BASIS, bool, false)
 //True if a statement of active cuts need to be done, false otherwise
 BENDERS_OPTIONS_MACRO(ACTIVECUTS, bool, false)
 
+//Number of iterations before aggregation of all previous cuts 
+BENDERS_OPTIONS_MACRO(THRESHOLD_AGGREGATION, int, -1)
+

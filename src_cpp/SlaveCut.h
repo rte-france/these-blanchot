@@ -19,6 +19,8 @@ typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
 class SlaveCutDataHandler;
 typedef std::shared_ptr<SlaveCutDataHandler> SlaveCutDataHandlerPtr;
 
+typedef std::vector<std::tuple<Point, Point, double>> DynamicAggregateCuts;
+
 typedef std::set<SlaveCutDataHandlerPtr, Predicate> SlaveCutDataHandlerPtrSet;
 
 void build_SlaveCutData(SlaveCutData &);

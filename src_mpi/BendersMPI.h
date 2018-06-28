@@ -23,6 +23,8 @@ public:
 	std::set<SimplexBasisHandler> _basis;
 	SlaveCutId _slave_cut_id;
 	std::vector<ActiveCut> _active_cuts;
+	DynamicAggregateCuts _dynamic_aggregate_cuts;
+
 
 	std::map< std::string, int> _problem_to_id;
 	DblVector _slave_weight_coeff;
@@ -31,7 +33,6 @@ public:
 
 	AllCutStorage _all_cuts_storage;
 	std::vector<WorkerMasterDataPtr> _trace;
-
 
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 	void free(mpi::environment & env, mpi::communicator & world);

@@ -35,5 +35,6 @@ public:
 
 	void add_cut(Point const & s, Point const & x0, double rhs);
 	void add_cut_slave(int i, Point const & s, Point const & x0, double rhs);
+	void delete_constraint(int const nrows);
 
 };
