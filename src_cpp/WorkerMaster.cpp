@@ -60,7 +60,7 @@ void WorkerMaster::delete_constraint(int const nrows) {
 	std::vector<int> mindex(nrows, 0);
 	int const nconstraint(get_number_constraint());
 	for (int i(0); i < nrows; i++) {
-		mindex[i] = nconstraint - i;
+		mindex[i] = nconstraint - nrows + i;
 	}
 	XPRSdelrows(_xprs, nrows, mindex.data());
 }

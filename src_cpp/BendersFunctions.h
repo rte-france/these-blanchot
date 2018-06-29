@@ -31,4 +31,4 @@ void sort_basis(std::vector<SimplexBasisPackage> const & all_basis_package, std:
 void update_active_cuts(WorkerMasterPtr & master, std::vector<ActiveCut> & active_cuts, SlaveCutId & cut_id, int const it);
 void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions const & options);
 void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> problem_to_id, Point const & x0);
-void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, int const it, BendersOptions const & options);
+void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, int const it, int const nconstraints);

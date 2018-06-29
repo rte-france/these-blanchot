@@ -114,6 +114,12 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		else {
 			sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 		}
+		if (_options.THRESHOLD_AGGREGATION != 0) {
+			store_current_aggregate_cut(_dynamic_aggregate_cuts, all_package, _slave_weight_coeff, _problem_to_id, _data.x0);
+			if (_data.it % _options.THRESHOLD_AGGREGATION == 0) {
+				gather_cut(_dynamic_aggregate_cuts, _master, _data.it, _options.THRESHOLD_AGGREGATION * _data.nslaves);
+			}
+		}
 	}
 	else {
 		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
