@@ -210,6 +210,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 void get_master_value(WorkerMasterPtr & master, BendersData & data) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
+	//master->fix_alpha(data.best_ub);
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
@@ -662,4 +663,30 @@ void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, i
 		master->add_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
 	}
 	dynamic_cuts.clear();
+}
+
+void add_random_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> & problem_to_id, BendersOptions const & options, BendersData & data) {
+	StrVector slaves_names(problem_to_id.size());
+	for (auto & kvp : problem_to_id) slaves_names[kvp.second] = kvp.first;
+	std::random_shuffle(slaves_names.begin(), slaves_names.end());
+	slaves_names.resize(options.RAND_AGGREGATION);
+	for (int i(0); i < all_package.size(); i++) {
+		for (int k(0); k < slaves_names.size();) {
+			if (all_package[i].find(slaves_names[k]) != all_package[i].end()) {
+				SlaveCutDataPtr slave_cut_data(new SlaveCutData(all_package[i].find(slaves_names[k])->second));
+				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+				master->add_cut_slave(problem_to_id[slaves_names[k]], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+				slaves_names.erase(slaves_names.begin() + k);
+			}
+			else k++;
+		}
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
+			data.ub += handler->get_dbl(SLAVE_COST)* slave_weight_coeff[problem_to_id[itmap.first]];
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
+		}
+	}
+	
 }

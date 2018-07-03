@@ -43,6 +43,9 @@ BENDERS_OPTIONS_MACRO(BASIS, bool, false)
 //True if a statement of active cuts need to be done, false otherwise
 BENDERS_OPTIONS_MACRO(ACTIVECUTS, bool, false)
 
-//Number of iterations before aggregation of all previous cuts, set to -1 if no aggregation needed
-BENDERS_OPTIONS_MACRO(THRESHOLD_AGGREGATION, int, -1)
+//Number of iterations before aggregation of all previous cuts, set to 0 if no aggregation needed
+BENDERS_OPTIONS_MACRO(THRESHOLD_AGGREGATION, int, 0)
+
+//Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
+BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 

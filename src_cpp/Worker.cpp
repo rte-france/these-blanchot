@@ -139,7 +139,6 @@ void Worker::solve(int & lp_status) {
 		std::cout << "Worker::solve() status " << status<<", "<<_path_to_mps << std::endl;
 		
 	}
-
 }
 
 /*!

@@ -199,3 +199,7 @@ WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std:
 	}
 }
 
+void WorkerMaster::fix_alpha(double const & bestUB) {
+	std::vector<char> boundtype(1, 'U');
+	int status = XPRSchgbounds(_xprs, 1, &_id_alpha, boundtype.data(), &bestUB);
+}

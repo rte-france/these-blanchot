@@ -108,13 +108,16 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		_data.timer_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
 		check_slaves_status(all_package);
-		if (!_options.AGGREGATION) {
+		if (!_options.AGGREGATION && !_options.RAND_AGGREGATION) {
 			sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options, _slave_cut_id);
 		}
-		else {
+		else if (_options.AGGREGATION) {
 			sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 		}
-		if (_options.THRESHOLD_AGGREGATION != 0) {
+		else {
+			add_random_cuts(_master, all_package, _slave_weight_coeff, _problem_to_id, _options, _data);
+		}
+		if (_options.THRESHOLD_AGGREGATION > 1) {
 			store_current_aggregate_cut(_dynamic_aggregate_cuts, all_package, _slave_weight_coeff, _problem_to_id, _data.x0);
 			if (_data.it % _options.THRESHOLD_AGGREGATION == 0) {
 				gather_cut(_dynamic_aggregate_cuts, _master, _data.it, _options.THRESHOLD_AGGREGATION * _data.nslaves);

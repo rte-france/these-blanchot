@@ -32,3 +32,4 @@ void update_active_cuts(WorkerMasterPtr & master, std::vector<ActiveCut> & activ
 void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions const & options);
 void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> problem_to_id, Point const & x0);
 void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, int const it, int const nconstraints);
+void add_random_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> & problem_to_id, BendersOptions const & options, BendersData & data);
