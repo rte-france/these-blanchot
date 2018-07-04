@@ -85,7 +85,7 @@ void WorkerMaster::write(int it) {
 *  \param x0 : optimal Master variables
 *  \param rhs : optimal slave value
 */
-void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
+void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
@@ -119,7 +119,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double rhs) {
 *  \param x0 : optimal Master variables
 *  \param rhs : optimal slave value
 */
-void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double rhs) {
+void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double const & rhs) {
 	//std::cout << "adding " << i <<" | " << rhs << std::endl;
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
@@ -141,6 +141,34 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 	mstart.back() = (int)matval.size();
+
+	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
+}
+
+void WorkerMaster::add_random_cut(IntVector const & random_slaves, Point const & s, Point const & x0, double const & rhs) {
+	int ncols((int)_name_to_id.size());
+	// cut is -rhs >= alpha  + s^(x-x0)
+	int nrows(1);
+	int ncoeffs((int)_name_to_id.size());
+	std::vector<char> rowtype(1, 'L');
+	std::vector<double> rowrhs(1, 0);
+	std::vector<double> matval(ncoeffs, 1);
+	std::vector<int> mstart(nrows + 1, 0);
+	std::vector<int> mclind(ncoeffs);
+
+	rowrhs.front() -= rhs;
+	for (auto const & kvp : _name_to_id) {
+		rowrhs.front() += (s.find(kvp.first)->second * x0.find(kvp.first)->second);
+		mclind[kvp.second] = kvp.second;
+		matval[kvp.second] = s.find(kvp.first)->second;
+	}
+
+	for (int i(0); i < random_slaves.size(); i++) {
+		mclind.push_back(_id_alpha_i[i]);
+		matval.push_back(-1);
+		mstart.back() = (int)matval.size();
+		ncoeffs++;
+	}
 
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }

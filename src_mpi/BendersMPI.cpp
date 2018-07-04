@@ -111,11 +111,18 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		if (!_options.AGGREGATION && !_options.RAND_AGGREGATION) {
 			sort_cut_slave(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options, _slave_cut_id);
 		}
-		else if (_options.AGGREGATION) {
+		else if (_options.AGGREGATION && !_options.RAND_AGGREGATION) {
 			sort_cut_slave_aggregate(all_package, _slave_weight_coeff, _master, _problem_to_id, _trace, _all_cuts_storage, _data, _options);
 		}
-		else {
-			add_random_cuts(_master, all_package, _slave_weight_coeff, _problem_to_id, _options, _data);
+		else if (!_options.AGGREGATION && _options.RAND_AGGREGATION) {
+			std::set<std::string> random_slaves;
+			select_random_slaves(_problem_to_id, _options, random_slaves);
+			add_random_cuts(_master, all_package, _slave_weight_coeff, _problem_to_id, random_slaves, _options, _data);
+		}
+		else if (_options.AGGREGATION && _options.RAND_AGGREGATION) {
+			std::set<std::string> random_slaves;
+			select_random_slaves(_problem_to_id, _options, random_slaves);
+			add_random_cuts(_master, all_package, _slave_weight_coeff, _problem_to_id, random_slaves, _options, _data);
 		}
 		if (_options.THRESHOLD_AGGREGATION > 1) {
 			store_current_aggregate_cut(_dynamic_aggregate_cuts, all_package, _slave_weight_coeff, _problem_to_id, _data.x0);
