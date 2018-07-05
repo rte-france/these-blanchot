@@ -4,7 +4,7 @@ PROJECT(STAGE_ENZO)
 SET(EXECUTABLE_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 SET(   LIBRARY_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 
-SET(USE_MPI TRUE)
+SET(USE_MPI FALSE)
 
 IF( USE_MPI )
 	SET(CMAKE_CXX_COMPILER mpicxx)
@@ -76,6 +76,8 @@ ENDIF( USE_MPI )
 ADD_EXECUTABLE(test_sur_les_set ./src_enzo_test/test_sur_les_set.cpp)
 TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
 
+ADD_EXECUTABLE(merge_mps ./exe_cpp/merge_mps.cpp)
+TARGET_LINK_LIBRARIES(merge_mps sequentialcore xprs)
 
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)

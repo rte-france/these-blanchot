@@ -46,7 +46,6 @@ public:
 	*
 	*  \param sSubName : 
 	*/
-	void errormsg(const char *sSubName, int nLineNo, int nErrCode); 
 	std::list<std::ostream *> & stream();
 
 	void solve(int & lp_status);
@@ -57,3 +56,5 @@ public:
 	std::list<std::ostream * >_stream;
 };
 
+void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
+void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);

@@ -16,9 +16,8 @@ std::list<std::ostream *> & Worker::stream() {
 
 void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen,
 	int nMsglvl) {
-	Worker * ptr = (Worker*)worker;
-	if (!worker)
-		throw std::invalid_argument("optimizermsg data is not Worker");
+	Worker * ptr = NULL;
+	if (worker != NULL)ptr = (Worker*)worker;
 	switch (nMsglvl) {
 
 		/* Print Optimizer error messages and warnings */
@@ -26,8 +25,13 @@ void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLe
 	case 3: /* warning */
 	case 2: /* dialogue */
 	case 1: /* information */
-		for (auto const & stream : ptr->stream())
-			*stream << sMsg << std::endl;
+		if (ptr != NULL) {
+			for (auto const & stream : ptr->stream())
+				*stream << sMsg << std::endl;
+		}
+		else {
+			std::cout << sMsg << std::endl;
+		}
 		break;
 		/* Exit and flush buffers */
 	default:
@@ -45,7 +49,7 @@ void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLe
 * Return Value: None                                                                 *
 \************************************************************************************/
 
-void Worker::errormsg(const char *sSubName, int nLineNo, int nErrCode) {
+void errormsg(XPRSprob & _xprs, const char *sSubName, int nLineNo, int nErrCode) {
 	int nErrNo; /* Optimizer error number */
 				/* Print error message */
 	printf("The subroutine %s has failed on line %d\n", sSubName, nLineNo);

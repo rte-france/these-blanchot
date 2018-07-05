@@ -10,8 +10,6 @@ BendersOptions build_benders_options(int argc, char** argv);
 
 void sequential_launch(BendersOptions const &options);
 
-void merge_mps(BendersOptions const &options);
-
 void usage(int argc);
 
 

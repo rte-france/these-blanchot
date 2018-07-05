@@ -89,16 +89,6 @@ void sequential_launch(BendersOptions const & options) {
 
 
 
-void merge_mps(BendersOptions const &options) {
-	XPRSinit("");
-	CouplingMap input;
-	build_input(options, input);
-	XPRSprob full;
-	XPRScreateprob(&full);
-
-	XPRSfree();
-}
-
 void usage(int argc) {
 	if (argc < 2) {
 		std::cout << "usage is : <exe> <root_dir> <structure_file> <option_file> " << std::endl;
