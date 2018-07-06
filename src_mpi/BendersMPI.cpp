@@ -80,7 +80,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 	if (world.rank() == 0)
 	{
-		get_master_value(_master, _data);
+		get_master_value(_master, _data, _options);
 		if (_options.TRACE) {
 			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
 		}
@@ -88,8 +88,13 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
 	}
-
 	broadcast(world, _data.x0, 0);
+	if (_options.RAND_CUTS) {
+		if (world.rank() == 0) {
+			select_random_slaves(_problem_to_id, _options, _random_slaves);
+		}
+		broadcast(world, _random_slaves, 0);
+	}
 	world.barrier();
 
 }
@@ -107,13 +112,18 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		gather(world, slave_cut_package, all_package, 0);
 		_data.timer_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
-		build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+		build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	}
 	else {
-		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+		if (_options.RAND_CUTS) {
+			get_random_slave_cut(slave_cut_package, _map_slaves, _random_slaves, _options, _data);
+		}
+		else {
+			get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+		}
 		gather(world, slave_cut_package, 0);
 	}
-
+	broadcast(world, _options.RAND_CUTS, 0);
 	world.barrier();
 }
 

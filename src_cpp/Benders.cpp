@@ -62,10 +62,16 @@ void Benders::build_cut() {
 	SlaveCutPackage slave_cut_package;
 	std::vector<SlaveCutPackage> all_package;
 	Timer timer_slaves;
-	get_slave_cut(slave_cut_package, _slaves, _options, _data);
+	if (_options.RAND_CUTS) {
+		select_random_slaves(_problem_to_id, _options, _random_slaves);
+		get_random_slave_cut(slave_cut_package, _slaves, _random_slaves, _options, _data);
+	}
+	else {
+		get_slave_cut(slave_cut_package, _slaves, _options, _data);
+	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
-	build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+	build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	if (_options.BASIS) {
 		SimplexBasisPackage slave_basis_package;
 		std::vector<SimplexBasisPackage> all_basis_package;
@@ -96,7 +102,7 @@ void Benders::run(std::ostream & stream) {
 		Timer timer_master;
 		++_data.it;
 		_master->write(_data.it);
-		get_master_value(_master, _data);
+		get_master_value(_master, _data, _options);
 		if (_options.ACTIVECUTS) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}

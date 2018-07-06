@@ -145,7 +145,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
-void WorkerMaster::add_random_cut(IntVector const & random_slaves, Point const & s, Point const & x0, double const & rhs) {
+void WorkerMaster::add_random_cut(IntVector const & random_slaves, DblVector const & slave_weight_coeff, Point const & s, Point const & x0, double const & rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
@@ -165,7 +165,7 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, Point const &
 
 	for (int i(0); i < random_slaves.size(); i++) {
 		mclind.push_back(_id_alpha_i[random_slaves[i]]);
-		matval.push_back(-1);
+		matval.push_back(-slave_weight_coeff[random_slaves[i]]);
 		mstart.back() = (int)matval.size();
 		ncoeffs++;
 	}
