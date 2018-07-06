@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 		neles_reserve += kvp.second.size()*(kvp.second.size() - 1);
 		nrows_reserve += kvp.second.size()*(kvp.second.size() - 1) / 2;
 	}
-	std::cout << "About to add " << nrows_reserve << " couping constraints" << std::endl;
+	std::cout << "About to add " << nrows_reserve << " coupling constraints" << std::endl;
 	values.reserve(neles_reserve);
 	cindex.reserve(neles_reserve);
 	mstart.reserve(nrows_reserve + 1);
@@ -87,7 +87,6 @@ int main(int argc, char** argv)
 	}
 	DblVector rhs(nrows, 0);
 	CharVector sense(nrows, 'E');
-
 	XPRSaddrows(full, nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 	std::cout << "Writting mps file" << std::endl;
 	XPRSwriteprob(full, "full.mps", "");

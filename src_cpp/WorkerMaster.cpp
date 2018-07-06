@@ -164,7 +164,7 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, Point const &
 	}
 
 	for (int i(0); i < random_slaves.size(); i++) {
-		mclind.push_back(_id_alpha_i[i]);
+		mclind.push_back(_id_alpha_i[random_slaves[i]]);
 		matval.push_back(-1);
 		mstart.back() = (int)matval.size();
 		ncoeffs++;

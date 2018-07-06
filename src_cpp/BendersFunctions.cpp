@@ -210,13 +210,14 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 void get_master_value(WorkerMasterPtr & master, BendersData & data) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
-	//master->fix_alpha(data.best_ub);
+	master->fix_alpha(data.best_ub);
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
 	data.ub = data.invest_cost;
 	data.timer_master = timer_master.elapsed();
+	data.nconstraint = master->get_number_constraint();
 }
 
 
@@ -383,7 +384,6 @@ void init(BendersData & data) {
 *
 */
 void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, WorkerMasterPtr & master, std::map<std::string, int> & problem_to_id, std::vector<WorkerMasterDataPtr> & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
-	int nconstraint(master->get_number_constraint());
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -397,8 +397,8 @@ void sort_cut_slave(std::vector<SlaveCutPackage> const & all_package, DblVector 
 			else {
 				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
 				if (options.ACTIVECUTS) {
-					slave_cut_id[itmap.first].push_back(nconstraint);
-					nconstraint++;
+					slave_cut_id[itmap.first].push_back(data.nconstraint);
+					data.nconstraint++;
 				}
 				all_cuts_storage[itmap.first].insert(cut);
 			}
@@ -703,7 +703,6 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 			if (all_package[i].find(kvp) != all_package[i].end()) {
 				SlaveCutDataPtr slave_cut_data(new SlaveCutData(all_package[i].find(kvp)->second));
 				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-				master->add_cut_slave(problem_to_id[kvp], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
 				rhs += handler->get_dbl(SLAVE_COST) * slave_weight_coeff[problem_to_id[kvp]];
 				for (auto & var : data.x0) {
 					s[var.first] += handler->get_subgradient()[var.first] * slave_weight_coeff[problem_to_id[kvp]];
@@ -720,4 +719,30 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 		}
 	}
 	master->add_random_cut(slaves_id, s, data.x0, rhs);
+}
+
+void build_cut_full(WorkerMasterPtr & master, DblVector const & slave_weight_coeff, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions const & options) {
+	check_slaves_status(all_package);
+	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
+		sort_cut_slave(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
+	}
+	else if (options.AGGREGATION && !options.RAND_AGGREGATION) {
+		sort_cut_slave_aggregate(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options);
+	}
+	else if (!options.AGGREGATION && options.RAND_AGGREGATION) {
+		std::set<std::string> random_slaves;
+		select_random_slaves(problem_to_id, options, random_slaves);
+		add_random_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, options, data);
+	}
+	else if (options.AGGREGATION && options.RAND_AGGREGATION) {
+		std::set<std::string> random_slaves;
+		select_random_slaves(problem_to_id, options, random_slaves);
+		add_random_aggregate_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, options, data);
+	}
+	if (options.THRESHOLD_AGGREGATION > 1) {
+		store_current_aggregate_cut(dynamic_aggregate_cuts, all_package, slave_weight_coeff, problem_to_id, data.x0);
+		if (data.it % options.THRESHOLD_AGGREGATION == 0) {
+			gather_cut(dynamic_aggregate_cuts, master, data.it, options.THRESHOLD_AGGREGATION * data.nslaves);
+		}
+	}
 }
