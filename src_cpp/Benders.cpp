@@ -97,7 +97,6 @@ void Benders::run(std::ostream & stream) {
 		_all_cuts_storage[kvp.first] = SlaveCutStorage();
 	}
 	init(_data);
-	
 	while (!_data.stop) {
 		Timer timer_master;
 		++_data.it;

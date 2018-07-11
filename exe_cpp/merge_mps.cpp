@@ -33,7 +33,6 @@ int main(int argc, char** argv)
 		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 		XPRSreadprob(prob, kvp.first.c_str(), "");
 		StandardLp lpData(prob);
-		
 		lpData.append_in(full);
 
 		XPRSdestroyprob(prob);
@@ -59,7 +58,7 @@ int main(int argc, char** argv)
 	// adding coupling constraints
 	for (auto const & kvp : x_mps_id) {
 		std::string const name(kvp.first);
-		//std::cout << name << std::endl;
+		std::cout << name << std::endl;
 		bool is_first(true);
 		int id1(-1);
 		std::string first_mps;

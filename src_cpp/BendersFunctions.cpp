@@ -210,7 +210,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
-	if(options.BOUND_ALPHA) master->fix_alpha(data.best_ub);
+	master->fix_alpha(data.best_ub);
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
