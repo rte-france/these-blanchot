@@ -44,7 +44,7 @@ void BendersOptions::read(std::string const & file_name) {
 }
 
 void BendersOptions::print(std::ostream & stream)const {
-#define BENDERS_OPTIONS_MACRO(name__, type__, default__) stream<<std::setw(20)<<#name__<<std::setw(40)<<name__<<std::endl;
+#define BENDERS_OPTIONS_MACRO(name__, type__, default__) stream<<std::setw(30)<<#name__<<std::setw(50)<<name__<<std::endl;
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
 	stream << std::endl;

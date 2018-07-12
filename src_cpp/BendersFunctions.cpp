@@ -710,7 +710,7 @@ void add_random_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> cons
 				master->add_cut_slave(problem_to_id[kvp], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
 				handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp]];
 				bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
-				if (handler->get_dbl(SLAVE_COST) < 10*handler->get_dbl(ALPHA_I)) {
+				if (handler->get_dbl(SLAVE_COST) < 2*handler->get_dbl(ALPHA_I)) {
 					nboundslaves++;
 				}
 				random_slaves.erase(kvp);
@@ -738,7 +738,7 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 				for (auto & var : data.x0) {
 					s[var.first] += handler->get_subgradient()[var.first] * slave_weight_coeff[problem_to_id[kvp]];
 				}
-				if (handler->get_dbl(SLAVE_COST) < 10*handler->get_dbl(ALPHA_I)) {
+				if (handler->get_dbl(SLAVE_COST) < 1.05*handler->get_dbl(ALPHA_I)) {
 					nboundslaves++;
 				}
 				slaves_id.push_back(problem_to_id[kvp]);
