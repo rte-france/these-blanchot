@@ -215,7 +215,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
-	if (!options.RAND_CUTS) {
+	if (!options.RAND_AGGREGATION) {
 		data.ub = data.invest_cost;
 	}
 	data.timer_master = timer_master.elapsed();
@@ -693,7 +693,7 @@ void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, i
 }
 
 void select_random_slaves(std::map<std::string, int> & problem_to_id, BendersOptions const & options, std::set<std::string> & random_slaves) {
-	while (random_slaves.size() < options.RAND_CUTS) {
+	while (random_slaves.size() < options.RAND_AGGREGATION) {
 		auto it = problem_to_id.begin();
 		std::advance(it, std::rand() % problem_to_id.size());
 		random_slaves.insert(it->first);
@@ -717,8 +717,8 @@ void add_random_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> cons
 			}
 		}
 	}
-	if (nboundslaves == options.RAND_CUTS) {
-		options.RAND_CUTS = 0;
+	if (nboundslaves == options.RAND_AGGREGATION) {
+		options.RAND_AGGREGATION = 0;
 	}
 }
 
@@ -746,24 +746,24 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 			}
 		}
 	}
-	if (nboundslaves == options.RAND_CUTS) {
-		options.RAND_CUTS = 0;
+	if (nboundslaves == options.RAND_AGGREGATION) {
+		options.RAND_AGGREGATION = 0;
 	}
 	master->add_random_cut(slaves_id, slave_weight_coeff, s, data.x0, rhs);
 }
 
 void build_cut_full(WorkerMasterPtr & master, DblVector const & slave_weight_coeff, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
 	check_slaves_status(all_package);
-	if (!options.AGGREGATION && !options.RAND_CUTS) {
+	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
 	}
-	else if (options.AGGREGATION && !options.RAND_CUTS) {
+	else if (options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave_aggregate(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options);
 	}
-	else if (!options.AGGREGATION && options.RAND_CUTS) {
+	else if (!options.AGGREGATION && options.RAND_AGGREGATION) {
 		add_random_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, options, data);
 	}
-	else if (options.AGGREGATION && options.RAND_CUTS) {
+	else if (options.AGGREGATION && options.RAND_AGGREGATION) {
 		add_random_aggregate_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, options, data);
 	}
 	if (options.THRESHOLD_AGGREGATION > 1) {

@@ -62,7 +62,7 @@ void Benders::build_cut() {
 	SlaveCutPackage slave_cut_package;
 	std::vector<SlaveCutPackage> all_package;
 	Timer timer_slaves;
-	if (_options.RAND_CUTS) {
+	if (_options.RAND_AGGREGATION) {
 		select_random_slaves(_problem_to_id, _options, _random_slaves);
 		get_random_slave_cut(slave_cut_package, _slaves, _random_slaves, _options, _data);
 	}

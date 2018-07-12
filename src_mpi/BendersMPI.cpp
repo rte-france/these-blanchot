@@ -89,7 +89,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 		}
 	}
 	broadcast(world, _data.x0, 0);
-	if (_options.RAND_CUTS) {
+	if (_options.RAND_AGGREGATION) {
 		if (world.rank() == 0) {
 			select_random_slaves(_problem_to_id, _options, _random_slaves);
 		}
@@ -115,7 +115,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	}
 	else {
-		if (_options.RAND_CUTS) {
+		if (_options.RAND_AGGREGATION) {
 			get_random_slave_cut(slave_cut_package, _map_slaves, _random_slaves, _options, _data);
 		}
 		else {
@@ -123,7 +123,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		}
 		gather(world, slave_cut_package, 0);
 	}
-	broadcast(world, _options.RAND_CUTS, 0);
+	broadcast(world, _options.RAND_AGGREGATION, 0);
 	world.barrier();
 }
 
