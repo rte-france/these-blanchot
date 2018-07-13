@@ -20,11 +20,10 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		if (_data.nslaves < 0) {
 			_data.nslaves = problem_list.size() - 1;
 		}
-		bool stop = false;
+
 		auto it(problem_list.begin());
 		auto end(problem_list.end());
 		
-		int i(0);
 		auto it_master = problem_list.find(_options.MASTER_NAME);
 		std::string const & master_name(it_master->first);
 		std::map<std::string, int> const & master_variable(it_master->second);
@@ -89,8 +88,6 @@ void Benders::build_cut() {
 * \param stream : stream to print the output
 */
 void Benders::run(std::ostream & stream) {
-
-	WorkerMaster & master(*_master);
 	
 	init_log(stream, _options.LOG_LEVEL);
 	for (auto const & kvp : _problem_to_id) {

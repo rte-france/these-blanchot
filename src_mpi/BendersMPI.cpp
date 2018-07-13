@@ -164,7 +164,6 @@ void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 */
 void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ostream & stream) {
 	if (world.rank() == 0) {
-		WorkerMaster & master(*_master);
 		init_log(stream, _options.LOG_LEVEL);
 		for (auto const & kvp : _problem_to_id) {
 			_all_cuts_storage[kvp.first] = SlaveCutStorage();
