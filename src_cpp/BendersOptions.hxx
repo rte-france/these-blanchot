@@ -49,7 +49,5 @@ BENDERS_OPTIONS_MACRO(THRESHOLD_AGGREGATION, int, 0)
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 
-BENDERS_OPTIONS_MACRO(RAND_THRESHOLD, double, 2)
-
 
 
