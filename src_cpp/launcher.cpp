@@ -8,19 +8,7 @@
 
 BendersOptions build_benders_options(int argc, char** argv) {
 	BendersOptions result;
-	if (argc == 4) {
-		result.read(argv[3]);
-		result.INPUTROOT = argv[1];
-		std::string const summary_name(argv[2]);
-		result.STRUCTURE_FILE = summary_name;
-	}
-	else if (argc == 2){
-		result.read(argv[1]);
-	}
-	else if (argc == 3) {
-		result.read(argv[2]);
-		result.INPUTROOT = argv[1];
-	}
+	result.read(argv[1]);
 	return result;
 }
 /*!
