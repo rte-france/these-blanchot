@@ -57,7 +57,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(20) << "+INF";
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
-	stream << std::setw(15) << std::scientific << std::setprecision(3) << data.best_ub - data.lb;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -66,8 +66,8 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 
 	if (log_level > 2) {
 		stream << std::setw(15) << data.deletedcut;
-		stream << std::setw(15) << std::setprecision(3) << data.timer_master - data.timer_slaves;
-		stream << std::setw(15) << std::setprecision(3) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
 	}
 	stream << std::endl;
 
@@ -94,7 +94,7 @@ void init_slave_weight(BendersData const & data, BendersOptions const & options,
 	else if (options.SLAVE_WEIGHT == "CONSTANT") {
 		double weight(options.SLAVE_WEIGHT_VALUE);
 		for (int i(0); i < data.nslaves; i++) {
-			slave_weight_coeff[i] = weight;
+			slave_weight_coeff[i] = 1 / weight;
 		}
 	}
 	else {

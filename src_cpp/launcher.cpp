@@ -78,8 +78,8 @@ void sequential_launch(BendersOptions const & options) {
 
 
 void usage(int argc) {
-	if (argc < 2) {
-		std::cout << "usage is : <exe> <root_dir> <structure_file> <option_file> " << std::endl;
+	if (argc < 1) {
+		std::cout << "usage is : <exe> <option_file> " << std::endl;
 		BendersOptions input;
 		input.write_default();
 		std::exit(0);

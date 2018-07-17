@@ -23,6 +23,7 @@ int main(int argc, char** argv)
 	int ncols(0);
 	CouplingMap x_mps_id;
 	for (auto const & kvp : input) {
+		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
 		std::cout << kvp.first << std::endl;
 		XPRSgetintattrib(full, XPRS_COLS, &ncols);
 		_decalage[kvp.first] = ncols;
@@ -31,7 +32,7 @@ int main(int argc, char** argv)
 		XPRScreateprob(&prob);
 		XPRSsetcbmessage(prob, optimizermsg, NULL);
 		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
-		XPRSreadprob(prob, kvp.first.c_str(), "");
+		XPRSreadprob(prob, problem_name.c_str(), "");
 		StandardLp lpData(prob);
 		lpData.append_in(full);
 

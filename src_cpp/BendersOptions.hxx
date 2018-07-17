@@ -25,7 +25,7 @@ BENDERS_OPTIONS_MACRO(LOG_OUTPUT, std::string, "COMMAND")
 //UNIFORM (1/n), CONSTANT (to set in SLAVE_WEIGHT_VALUE), or a txt file linking each slave to its weight
 BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT, std::string, "CONSTANT")
 
-//If SLAVE_WEIGHT is CONSTANT, set here the value required
+//If SLAVE_WEIGHT is CONSTANT, set here the divisor required
 BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT_VALUE, double, 1)
 
 //Name of the master problem file, if different from 'master'
