@@ -57,7 +57,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(20) << "+INF";
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
-	stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub - data.lb;
+	stream << std::setw(15) << std::scientific << std::setprecision(3) << data.best_ub - data.lb;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -66,9 +66,8 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 
 	if (log_level > 2) {
 		stream << std::setw(15) << data.deletedcut;
-		stream << std::setw(20) << data.timer_master;
-		stream << std::setw(20) << data.timer_master - data.timer_slaves;
-		stream << std::setw(20) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(3) << data.timer_master - data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(3) << data.timer_slaves;
 	}
 	stream << std::endl;
 
@@ -96,11 +95,6 @@ void init_slave_weight(BendersData const & data, BendersOptions const & options,
 		double weight(options.SLAVE_WEIGHT_VALUE);
 		for (int i(0); i < data.nslaves; i++) {
 			slave_weight_coeff[i] = weight;
-		}
-	}
-	else if (options.SLAVE_WEIGHT == "THREE") {
-		for (int i(0); i < data.nslaves; i++) {
-			slave_weight_coeff[i] = 1/3.0;
 		}
 	}
 	else {
@@ -136,18 +130,17 @@ void init_log(std::ostream&stream, int const log_level) {
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "UB";
 	stream << std::setw(20) << "BESTUB";
-	stream << std::setw(20) << "GAP";
+	stream << std::setw(15) << "GAP";
 
 	if (log_level > 1) {
-		stream << std::setw(15) << "MINSIMPLEXIT";
-		stream << std::setw(15) << "MAXSIMPLEXIT";
+		stream << std::setw(15) << "MINSIMPLEX";
+		stream << std::setw(15) << "MAXSIMPLEX";
 	}
 
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
-		stream << std::setw(20) << "TIME";
-		stream << std::setw(20) << "TIMEMASTER";
-		stream << std::setw(20) << "TIMESLAVES";
+		stream << std::setw(15) << "TIMEMASTER";
+		stream << std::setw(15) << "TIMESLAVES";
 	}
 	stream << std::endl;
 }
