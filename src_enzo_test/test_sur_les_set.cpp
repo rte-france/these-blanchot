@@ -8,8 +8,8 @@
 int main(int argc, char** argv)
 {
 	std::string const root(argv[1]);
-	std::string const summary_name(root + PATH_SEPARATOR + argv[2]);
-	std::ofstream output(root + PATH_SEPARATOR + "coupling_variables.txt");
+	std::string const summary_name(root + PATH_SEPARATOR + argv[2] + PATH_SEPARATOR + "problem_list.txt");
+	std::ofstream output(root + PATH_SEPARATOR + argv[2] + PATH_SEPARATOR + "structure.txt");
 	if (output.good()) {
 		std::ifstream file(summary_name);
 		if (file.good()) {
@@ -19,15 +19,17 @@ int main(int argc, char** argv)
 			{
 				std::stringstream buffer(line);
 				buffer >> name;
-				std::string coupling(root + "\\" + name + "_coupling_variables.txt");
+				std::string coupling(root + PATH_SEPARATOR + "structure.txt");
 				std::ifstream couplingfile(coupling);
 				if (couplingfile.good()) {
 					std::string coupling_line;
-					std::getline(couplingfile, coupling_line);
 					while (std::getline(couplingfile, coupling_line)) {
-
-						output << name << "\t" << coupling_line << std::endl;
-
+						std::stringstream buffer2(coupling_line);
+						std::string name_problem_id;
+						buffer2 >> name_problem_id;
+						if (name == name_problem_id) {
+							output << coupling_line << std::endl;
+						}
 					}
 				}
 				else { std::cout << "Can't open coupling file" << std::endl; }

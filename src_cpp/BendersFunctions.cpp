@@ -92,9 +92,10 @@ void init_slave_weight(BendersData const & data, BendersOptions const & options,
 			slave_weight_coeff[i] = 1 / static_cast<double>(data.nslaves);
 		}
 	}
-	else if (options.SLAVE_WEIGHT == "ONES") {
+	else if (options.SLAVE_WEIGHT == "CONSTANT") {
+		double weight(options.SLAVE_WEIGHT_VALUE);
 		for (int i(0); i < data.nslaves; i++) {
-			slave_weight_coeff[i] = 1;
+			slave_weight_coeff[i] = weight;
 		}
 	}
 	else {
@@ -668,6 +669,21 @@ void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions
 	}
 }
 
+/*!
+*  \brief Store the current aggregate cuts for further aggregation
+*
+*	Store the current aggregate cuts in case of partial aggregation
+*
+*  \param dynamic_cuts : vector of tuple storing cut information (rhs, x0, subgradient)
+*
+*  \param all_package : storage of every slave information
+*
+*  \param slave_weight_coeff : vector linking each slave id to its weight in the master problem
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param x0 : trial values fixed in each slave
+*/
 void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> problem_to_id, Point const & x0) {
 	Point s;
 	double rhs(0);
@@ -682,8 +698,22 @@ void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vecto
 		}
 	}
 	dynamic_cuts.push_back(std::tuple<Point, Point, double>(s, x0, rhs));
+
 }
 
+/*!
+*  \brief Add all the stored cuts in case of partial aggregation
+*
+*	Delete every previous simple cut and replace them with the aggregated ones
+*
+*  \param dynamic_cuts : vector of tuple storing cut information (rhs, x0, subgradient)
+*
+*  \param master : pointer to master problem
+*
+*  \param it : number of iteration
+*
+*  \param nconstraints : number of previous added constraints to delete
+*/
 void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, int const it, int const nconstraints) {
 	master->delete_constraint(nconstraints);
 	for (int i(0); i < dynamic_cuts.size(); i++) {
@@ -692,6 +722,17 @@ void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, i
 	dynamic_cuts.clear();
 }
 
+/*!
+*  \brief Select a set of random slaves
+*
+*	Select a set of random slaves in the map of problem
+*
+*  \param problem_to_id : map linking each slaves to its id
+*
+*  \param options : set of benders options
+*
+*  \param random_slaves : set of random slaves selected
+*/
 void select_random_slaves(std::map<std::string, int> & problem_to_id, BendersOptions const & options, std::set<std::string> & random_slaves) {
 	while (random_slaves.size() < options.RAND_AGGREGATION) {
 		auto it = problem_to_id.begin();
@@ -700,6 +741,27 @@ void select_random_slaves(std::map<std::string, int> & problem_to_id, BendersOpt
 	}
 }
 
+/*!
+*  \brief Add the random cuts in master problem
+*
+*	Add the random cuts in master problem
+*
+*  \param master : pointer to master problem
+*
+*  \param all_package : storage of every slave information
+*
+*  \param slave_weight_coeff : vector linking each slave id to its weight in the master problem
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param random_slaves : set of random slaves selected
+*
+*  \param trace : vector keeping data for each iteration
+*
+*  \param options : set of benders options
+*
+*  \param data : set of benders data
+*/
 void add_random_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, BendersOptions & options, BendersData & data) {
 	int nboundslaves(0);
 	for (int i(0); i < all_package.size(); i++) {
@@ -725,6 +787,27 @@ void add_random_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> cons
 	}
 }
 
+/*!
+*  \brief Add the random aggregated cuts in master problem
+*
+*	Add the random aggregated cuts in master problem
+*
+*  \param master : pointer to master problem
+*
+*  \param all_package : storage of every slave information
+*
+*  \param slave_weight_coeff : vector linking each slave id to its weight in the master problem
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param random_slaves : set of random slaves selected
+*
+*  \param trace : vector keeping data for each iteration
+*
+*  \param options : set of benders options
+*
+*  \param data : set of benders data
+*/
 void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, DblVector const & slave_weight_coeff, std::map<std::string, int> & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, BendersOptions & options, BendersData & data) {
 	Point s;
 	double rhs(0);
@@ -758,6 +841,33 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 	master->add_random_cut(slaves_id, slave_weight_coeff, s, data.x0, rhs);
 }
 
+/*!
+*  \brief Add cuts in master problem
+*
+*	Add cuts in master problem according to the selected option
+*
+*  \param master : pointer to master problem
+*
+*  \param all_package : storage of every slave information
+*
+*  \param slave_weight_coeff : vector linking each slave id to its weight in the master problem
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param random_slaves : set of random slaves selected
+*
+*  \param trace : vector keeping data for each iteration
+*
+*  \param slave_cut_id : map linking each slaves to their cuts ids in the master problem
+*
+*  \param all_cuts_storage : set to store every new cut
+*
+*  \param dynamic_aggregate_cuts : vector of tuple storing cut information (rhs, x0, subgradient)
+*
+*  \param options : set of benders options
+*
+*  \param data : set of benders data
+*/
 void build_cut_full(WorkerMasterPtr & master, DblVector const & slave_weight_coeff, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
 	check_slaves_status(all_package);
 	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {

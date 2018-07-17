@@ -22,8 +22,11 @@ BENDERS_OPTIONS_MACRO(DELETE_CUT, bool, false)
 //Either "COMMAND" to print the log in the command prompt, or a file name to print in
 BENDERS_OPTIONS_MACRO(LOG_OUTPUT, std::string, "COMMAND")
 
+//UNIFORM (1/n), CONSTANT (to set in SLAVE_WEIGHT_VALUE), or a txt file linking each slave to its weight
+BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT, std::string, "CONSTANT")
+
 //UNIFORM (1/n), NULL (1), or a txt file linking each slave to its weight
-BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT, std::string, "ONES")
+BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT_VALUE, double, 1)
 
 //Name of the master problem file, if different from 'master'
 BENDERS_OPTIONS_MACRO(MASTER_NAME, std::string, "master")

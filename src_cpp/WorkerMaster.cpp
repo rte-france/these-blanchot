@@ -184,7 +184,9 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, DblVector con
 */
 WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, DblVector const & slave_weight, int nslaves) :Worker() {
 	init(variable_map, path_to_mps);
-
+	// 4 barrier
+	// 2 dual
+	XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
 	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	// add the variable alpha
 	std::string const alpha("alpha");

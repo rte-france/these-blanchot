@@ -15,6 +15,8 @@ WorkerSlave::WorkerSlave() {
 */
 WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps) {
 	init(variable_map, path_to_mps);
+	XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
+
 	//IntVector scols;
 	//for (auto const & x : _id_to_name) {
 	//	scols.push_back(x.first);
