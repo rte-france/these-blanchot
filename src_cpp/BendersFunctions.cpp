@@ -97,6 +97,11 @@ void init_slave_weight(BendersData const & data, BendersOptions const & options,
 			slave_weight_coeff[i] = 1;
 		}
 	}
+	else if (options.SLAVE_WEIGHT == "THREE") {
+		for (int i(0); i < data.nslaves; i++) {
+			slave_weight_coeff[i] = 1/3.0;
+		}
+	}
 	else {
 		std::string line;
 		std::string filename = options.INPUTROOT + PATH_SEPARATOR + options.SLAVE_WEIGHT;
