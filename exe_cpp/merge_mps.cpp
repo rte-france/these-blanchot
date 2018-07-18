@@ -105,11 +105,14 @@ int main(int argc, char** argv)
 	DblVector rhs(nrows, 0);
 	CharVector sense(nrows, 'E');
 	XPRSaddrows(full, nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
-	std::cout << "Writting mps file" << std::endl;
-	XPRSwriteprob(full, "full.mps", "");
-	std::cout << "Writting lp file" << std::endl; 
-	XPRSwriteprob(full, "full.lp", "l");
+
+	//std::cout << "Writting mps file" << std::endl;
+	//XPRSwriteprob(full, "full.mps", "");
+	//std::cout << "Writting lp file" << std::endl; 
+	//XPRSwriteprob(full, "full.lp", "l");
 	std::cout << "Solving" << std::endl;
+	XPRSsetintcontrol(full, XPRS_BARTHREADS, 16);
+	XPRSsetintcontrol(full, XPRS_BARCORES, 16);
 	XPRSlpoptimize(full, "-b");
 	XPRSdestroyprob(full);
 	XPRSfree();
