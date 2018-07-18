@@ -182,11 +182,20 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, DblVector con
 *  \param mapping : path to mapping
 *  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, DblVector const & slave_weight, int nslaves) :Worker() {
+WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, DblVector const & slave_weight, BendersOptions const & options, int nslaves) :Worker() {
 	init(variable_map, path_to_mps);
 	// 4 barrier
 	// 2 dual
-	XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
+	if (options.MASTER_METHOD == "BARRIER") {
+		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
+	}
+	else if (options.MASTER_METHOD == "BARRIER_WO_CROSSOVER") {
+		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
+		XPRSsetintcontrol(_xprs, XPRS_CROSSOVER, 0);
+	}
+	else {
+		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
+	}
 	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	// add the variable alpha
 	std::string const alpha("alpha");

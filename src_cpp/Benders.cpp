@@ -36,7 +36,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		}
 		init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
-		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _slave_weight_coeff, _data.nslaves));
+		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _slave_weight_coeff, _options, _data.nslaves));
 	}
 
 }

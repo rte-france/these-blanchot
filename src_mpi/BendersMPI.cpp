@@ -47,7 +47,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 				}
 			}
 			init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
-			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _slave_weight_coeff, _data.nslaves));
+			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _slave_weight_coeff, _options, _data.nslaves));
 			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
 		}
 		mpi::broadcast(world, _data.nslaves, 0);

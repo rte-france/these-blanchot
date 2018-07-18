@@ -596,7 +596,10 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 *
 *  \param all_package : storage of each slaves status
 */
-void check_slaves_status(std::vector<SlaveCutPackage> const & all_package) {
+void check_status(std::vector<SlaveCutPackage> const & all_package, BendersData const & data) {
+	if (data.master_status != 1) {
+		std::cout << "Master status is " << data.master_status << std::endl;
+	}
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
@@ -867,7 +870,7 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 *  \param data : set of benders data
 */
 void build_cut_full(WorkerMasterPtr & master, DblVector const & slave_weight_coeff, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
-	check_slaves_status(all_package);
+	check_status(all_package, data);
 	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
 	}

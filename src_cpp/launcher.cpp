@@ -11,6 +11,7 @@ BendersOptions build_benders_options(int argc, char** argv) {
 	result.read(argv[1]);
 	return result;
 }
+
 /*!
 *  \brief Build the input from the structure file
 *
@@ -76,9 +77,8 @@ void sequential_launch(BendersOptions const & options) {
 }
 
 
-
 void usage(int argc) {
-	if (argc < 1) {
+	if (argc < 2) {
 		std::cout << "usage is : <exe> <option_file> " << std::endl;
 		BendersOptions input;
 		input.write_default();
