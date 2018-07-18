@@ -47,7 +47,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 				}
 			}
 			init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
-			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _slave_weight_coeff, _options, _data.nslaves));
+			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _options, _data.nslaves));
 			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
 		}
 		mpi::broadcast(world, _data.nslaves, 0);
@@ -65,7 +65,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 				CouplingMap::value_type kvp;
 				world.recv(0, islave, kvp);
 				//std::cout << "#" << world.rank() << " recv " << kvp.first << " | " << islave << std::endl;
-				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first)));
+				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first), _options.slave_weight(_data.nslaves, kvp.first)));
 			}
 		}
 	}

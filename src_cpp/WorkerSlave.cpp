@@ -14,8 +14,20 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps) {
+WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, double const & slave_weight) {
 	init(variable_map, path_to_mps);
+	int mps_ncols;
+	XPRSgetintattrib(_xprs, XPRS_COLS, &mps_ncols);
+	DblVector o(mps_ncols, 0);
+	IntVector sequence(mps_ncols);
+	for (int i(0); i < mps_ncols; ++i) {
+		sequence[i] = i;
+	}
+	XPRSgetobj(_xprs, o.data(), 0, mps_ncols - 1);
+	for (auto & c : o) {
+		c *= slave_weight;
+	}
+	XPRSchgobj(_xprs, mps_ncols, sequence.data(), o.data());
 	XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
 
 	//IntVector scols;

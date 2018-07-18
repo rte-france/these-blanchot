@@ -182,7 +182,7 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, DblVector con
 *  \param mapping : path to mapping
 *  \param nslaves : number of Slaves problem
 */
-WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, DblVector const & slave_weight, BendersOptions const & options, int nslaves) :Worker() {
+WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
 	init(variable_map, path_to_mps);
 	// 4 barrier
 	// 2 dual
@@ -228,7 +228,7 @@ WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std:
 
 			for (int i(0); i < nslaves; ++i) {
 				mclind[i + 1] = _id_alpha_i[i];
-				matval[i + 1] = -slave_weight[i];
+				matval[i + 1] = -1;
 			}
 			XPRSaddrows(_xprs, 1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 		}

@@ -16,7 +16,7 @@ class WorkerSlave : public Worker {
 public:
 
 	WorkerSlave();
-	WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps);
+	WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, double const & slave_weight);
 	virtual ~WorkerSlave();
 	SlaveCutStorage _slave_storage;
 

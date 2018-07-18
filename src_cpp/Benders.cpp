@@ -30,13 +30,13 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
 				_problem_to_id[it->first] = i;
-				_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first)));
+				_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first)));
 				i++;
 			}
 		}
 		init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
-		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _slave_weight_coeff, _options, _data.nslaves));
+		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
 	}
 
 }
