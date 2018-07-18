@@ -19,6 +19,10 @@ public:
 	std::string get_master_path() const;
 	std::string get_structure_path() const;
 	std::string get_slave_path(std::string const & slave_name) const;
+
+	double slave_weight(int nslaves, std::string const &)const;
+
+	std::map<std::string, double> _weights;
 };
 
 

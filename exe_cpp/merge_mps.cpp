@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 	XPRSloadlp(full, "full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 	Str2Int _decalage;
 	int ncols(0);
+	int nslaves(input.size());
 	CouplingMap x_mps_id;
 	for (auto const & kvp : input) {
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
@@ -34,6 +35,19 @@ int main(int argc, char** argv)
 		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 		XPRSreadprob(prob, problem_name.c_str(), "");
 		StandardLp lpData(prob);
+		int mps_ncols(0);
+		XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
+		DblVector o(mps_ncols, 0);
+		IntVector sequence(mps_ncols);
+		for (int i(0); i < mps_ncols; ++i) {
+			sequence[i] = i;
+		}
+		XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
+		double const weigth = options.slave_weight(nslaves, problem_name);
+		XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
+		for (auto & c : o) {
+			c *= weigth;
+		}
 		lpData.append_in(full);
 
 		XPRSdestroyprob(prob);
