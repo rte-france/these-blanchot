@@ -32,22 +32,25 @@ int main(int argc, char** argv)
 		XPRSprob prob;
 		XPRScreateprob(&prob);
 		XPRSsetcbmessage(prob, optimizermsg, NULL);
-		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 		XPRSreadprob(prob, problem_name.c_str(), "");
+		if (problem_name != options.MASTER_NAME) {
+			int mps_ncols(0);
+			XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
+			DblVector o(mps_ncols, 0);
+			IntVector sequence(mps_ncols);
+			for (int i(0); i < mps_ncols; ++i) {
+				sequence[i] = i;
+			}
+			XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
+			double const weigth = options.slave_weight(nslaves, problem_name);
+			std::cout << "weigth : " << weigth << std::endl;		
+			for (auto & c : o) {
+				c *= weigth;
+			}
+			XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
+		}
 		StandardLp lpData(prob);
-		int mps_ncols(0);
-		XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
-		DblVector o(mps_ncols, 0);
-		IntVector sequence(mps_ncols);
-		for (int i(0); i < mps_ncols; ++i) {
-			sequence[i] = i;
-		}
-		XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
-		double const weigth = options.slave_weight(nslaves, problem_name);
-		XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
-		for (auto & c : o) {
-			c *= weigth;
-		}
 		lpData.append_in(full);
 
 		XPRSdestroyprob(prob);
