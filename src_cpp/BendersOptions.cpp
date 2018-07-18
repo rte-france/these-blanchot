@@ -37,6 +37,24 @@ void BendersOptions::read(std::string const & file_name) {
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
 		}
+
+
+		if (SLAVE_WEIGHT != "UNIFORM" && SLAVE_WEIGHT != "CONSTANT") {
+			std::string line;
+			std::string filename = INPUTROOT + PATH_SEPARATOR + SLAVE_WEIGHT;
+			std::ifstream file(filename);
+			if (!file) {
+				std::cout << "Cannot open file " << filename << std::endl;
+			}
+			while (std::getline(file, line))
+			{
+				std::stringstream buffer(line);
+				std::string problem_name;
+				buffer >> problem_name;
+				buffer >> _weights[problem_name];
+			}
+		}
+
 	}
 	else {
 		write_default();
@@ -48,4 +66,18 @@ void BendersOptions::print(std::ostream & stream)const {
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
 	stream << std::endl;
+}
+
+double BendersOptions::slave_weight(int nslaves, std::string const & name)const
+{
+	if (SLAVE_WEIGHT == "UNIFORM") {
+		return 1 / static_cast<double>(nslaves);
+	}
+	else if (SLAVE_WEIGHT == "CONSTANT") {
+		double weight(SLAVE_WEIGHT_VALUE);
+		return 1 / weight;
+	}
+	else {
+		return _weights.find(name)->second;
+	}
 }

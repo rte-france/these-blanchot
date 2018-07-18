@@ -86,33 +86,8 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 */
 void init_slave_weight(BendersData const & data, BendersOptions const & options, DblVector & slave_weight_coeff, std::map< std::string, int> & problem_to_id) {
 	slave_weight_coeff.resize(data.nslaves);
-	if (options.SLAVE_WEIGHT == "UNIFORM") {
-		for (int i(0); i < data.nslaves; i++) {
-			slave_weight_coeff[i] = 1 / static_cast<double>(data.nslaves);
-		}
-	}
-	else if (options.SLAVE_WEIGHT == "CONSTANT") {
-		double weight(options.SLAVE_WEIGHT_VALUE);
-		for (int i(0); i < data.nslaves; i++) {
-			slave_weight_coeff[i] = 1 / weight;
-		}
-	}
-	else {
-		std::string line;
-		std::string filename = options.INPUTROOT + PATH_SEPARATOR + options.SLAVE_WEIGHT;
-		std::ifstream file(filename);
-		if (!file) {
-			std::cout << "Cannot open file " << filename << std::endl;
-		}
-		while (std::getline(file, line))
-		{
-			std::stringstream buffer(line);
-			std::string problem_name;
-			buffer >> problem_name;
-			
-			buffer >> slave_weight_coeff[problem_to_id[problem_name]];
-			std::cout << problem_name << " : " << problem_to_id[problem_name] << "  :  " << slave_weight_coeff[problem_to_id[problem_name]] << std::endl;
-		}
+	for (auto const & kvp : problem_to_id) {
+		slave_weight_coeff[kvp.second] = options.slave_weight(data.nslaves, kvp.first);
 	}
 }
 
