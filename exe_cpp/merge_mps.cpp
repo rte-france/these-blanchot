@@ -3,6 +3,7 @@
 #include "launcher.h"
 #include "Worker.h"
 #include "BendersOptions.h"
+#include "BendersFunctions.h"
 
 
 int main(int argc, char** argv)
@@ -114,6 +115,15 @@ int main(int argc, char** argv)
 	XPRSsetintcontrol(full, XPRS_BARTHREADS, 16);
 	XPRSsetintcontrol(full, XPRS_BARCORES, 16);
 	XPRSlpoptimize(full, "-b");
+
+	Point x0;
+	std::vector<double> ptr(ncols, 0);
+	XPRSgetsol(full, ptr.data(), NULL, NULL, NULL);
+	for (auto const & kvp : input[options.MASTER_NAME]) {
+		x0[kvp.first] = ptr[kvp.second];
+	}
+	print_solution(std::cout, x0, true);
+
 	XPRSdestroyprob(full);
 	XPRSfree();
 

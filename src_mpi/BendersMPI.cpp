@@ -46,7 +46,6 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 					++i;
 				}
 			}
-			init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
 			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _options, _data.nslaves));
 			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
 		}
@@ -112,7 +111,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		gather(world, slave_cut_package, all_package, 0);
 		_data.timer_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
-		build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+		build_cut_full(_master, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	}
 	else {
 		if (_options.RAND_AGGREGATION) {
