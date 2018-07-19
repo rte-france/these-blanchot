@@ -112,7 +112,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 
 
 /*!
-*  \brief Add several benders cut to a problem
+*  \brief Add one benders cut to a problem
 *
 *  \param i : identifier of a slave problem
 *  \param s : optimal slave variables
@@ -145,6 +145,15 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
+/*!
+*  \brief Add an aggregated cut from several random slaves to the problem
+*
+*  \param random_slaves : set of random_slaves constituting the cut
+*  \param options : Benders options
+*  \param s : optimal slaves variables
+*  \param rhs : optimal slaves value
+*  \param x0 : optimal master variables
+*/
 void WorkerMaster::add_random_cut(IntVector const & random_slaves, BendersOptions const & options, Point const & s, Point const & x0, double const & rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
@@ -238,6 +247,11 @@ WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std:
 	}
 }
 
+/*!
+*  \brief Fix an upper bound and the variable alpha of a problem
+*
+*  \param bestUB : bound to fix
+*/
 void WorkerMaster::fix_alpha(double const & bestUB) {
 	std::vector<char> boundtype(1, 'U');
 	int status = XPRSchgbounds(_xprs, 1, &_id_alpha, boundtype.data(), &bestUB);

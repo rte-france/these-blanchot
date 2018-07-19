@@ -97,7 +97,6 @@ void Benders::run(std::ostream & stream) {
 		Timer timer_master;
 		++_data.it;
 		get_master_value(_master, _data, _options);
-		_master->write(_data.it);
 		if (_options.ACTIVECUTS) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
