@@ -26,7 +26,6 @@ int main(int argc, char** argv)
 	CouplingMap x_mps_id;
 	for (auto const & kvp : input) {
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
-		//std::cout << kvp.first << std::endl;
 		XPRSgetintattrib(full, XPRS_COLS, &ncols);
 		_decalage[kvp.first] = ncols;
 
@@ -117,8 +116,9 @@ int main(int argc, char** argv)
 	XPRSlpoptimize(full, "-b");
 
 	Point x0;
+	XPRSgetintattrib(full, XPRS_COLS, &ncols);
 	std::vector<double> ptr(ncols, 0);
-	XPRSgetsol(full, ptr.data(), NULL, NULL, NULL);
+	XPRSgetlpsol(full, ptr.data(), NULL, NULL, NULL);
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];
 	}
