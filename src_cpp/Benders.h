@@ -12,7 +12,7 @@ public:
 	virtual ~Benders();
 
 	WorkerMasterPtr _master;
-	SlavesMapPtr _slaves;
+	SlavesMapPtr _map_slaves;
 
 	std::map< std::string, int > _problem_to_id;
 	BendersData _data;

@@ -439,11 +439,11 @@ void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, 
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
-			data.ub += handler->get_dbl(SLAVE_COST) * options.slave_weight(data.nslaves, itmap.first);
-			rhs += handler->get_dbl(SLAVE_COST) * options.slave_weight(data.nslaves, itmap.first);
+			data.ub += handler->get_dbl(SLAVE_COST);
+			rhs += handler->get_dbl(SLAVE_COST);
 
 			for (auto & var : data.x0) {
-				s[var.first] += handler->get_subgradient()[var.first] * options.slave_weight(data.nslaves, itmap.first);
+				s[var.first] += handler->get_subgradient()[var.first];
 			}
 
 			SlaveCutTrimmer cut(handler, data.x0);
@@ -477,10 +477,7 @@ void sort_cut_slave_aggregate(std::vector<SlaveCutPackage> const & all_package, 
 * \param options : set of parameters
 */
 void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, int> & problem_to_id, BendersData const & data, BendersOptions const & options) {
-	 std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "benders_output.csv");
-	 if (options.AGGREGATION) {
-		 output = (options.OUTPUTROOT + PATH_SEPARATOR + "benders_output_aggregate.csv");
-	 }
+	 std::string output(options.OUTPUTROOT + PATH_SEPARATOR + options.CSV_NAME + ".csv");
 	 std::ofstream file(output, std::ios::out | std::ios::trunc);
 	 if (file)
 	 {
@@ -795,10 +792,10 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 				SlaveCutDataPtr slave_cut_data(new SlaveCutData(all_package[i].find(kvp)->second));
 				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 				handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp]];
-				rhs += handler->get_dbl(SLAVE_COST) * options.slave_weight(data.nslaves, kvp);
+				rhs += handler->get_dbl(SLAVE_COST);
 				bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 				for (auto & var : data.x0) {
-					s[var.first] += handler->get_subgradient()[var.first] * options.slave_weight(data.nslaves, kvp);
+					s[var.first] += handler->get_subgradient()[var.first];
 				}
 				if (handler->get_dbl(SLAVE_COST) <= options.GAP + handler->get_dbl(ALPHA_I)) {
 					nboundslaves++;

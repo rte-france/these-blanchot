@@ -30,7 +30,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
 				_problem_to_id[it->first] = i;
-				_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first)));
+				_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first)));
 				i++;
 			}
 		}
@@ -46,7 +46,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 */
 void Benders::free() {
 	_master->free();
-	for (auto & ptr : _slaves)
+	for (auto & ptr : _map_slaves)
 		ptr.second->free();
 }
 
@@ -62,10 +62,10 @@ void Benders::build_cut() {
 	Timer timer_slaves;
 	if (_options.RAND_AGGREGATION) {
 		select_random_slaves(_problem_to_id, _options, _random_slaves);
-		get_random_slave_cut(slave_cut_package, _slaves, _random_slaves, _options, _data);
+		get_random_slave_cut(slave_cut_package, _map_slaves, _random_slaves, _options, _data);
 	}
 	else {
-		get_slave_cut(slave_cut_package, _slaves, _options, _data);
+		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
@@ -73,7 +73,7 @@ void Benders::build_cut() {
 	if (_options.BASIS) {
 		SimplexBasisPackage slave_basis_package;
 		std::vector<SimplexBasisPackage> all_basis_package;
-		get_slave_basis(slave_basis_package, _slaves);
+		get_slave_basis(slave_basis_package, _map_slaves);
 		all_basis_package.push_back(slave_basis_package);
 		sort_basis(all_basis_package, _problem_to_id, _basis, _data);
 	}

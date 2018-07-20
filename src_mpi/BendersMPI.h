@@ -20,12 +20,11 @@ public:
 	
 	WorkerMasterPtr _master;
 	SlavesMapPtr _map_slaves;
+	std::set<std::string> _random_slaves;
 	std::set<SimplexBasisHandler> _basis;
 	SlaveCutId _slave_cut_id;
 	std::vector<ActiveCut> _active_cuts;
 	DynamicAggregateCuts _dynamic_aggregate_cuts;
-	std::set<std::string> _random_slaves;
-
 
 	std::map< std::string, int> _problem_to_id;
 	BendersData _data;
