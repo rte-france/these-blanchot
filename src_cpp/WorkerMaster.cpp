@@ -110,6 +110,57 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
+void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double const & rhs) {
+	int ncols((int)_name_to_id.size());
+	// cut is -rhs >= alpha  + s^(x-x0)
+	int nrows(1);
+	int ncoeffs(1 + (int)_name_to_id.size());
+	std::vector<char> rowtype(1, 'L');
+	std::vector<double> rowrhs(1, 0);
+	std::vector<double> matval(ncoeffs, 1);
+	std::vector<int> mstart(nrows + 1, 0);
+	std::vector<int> mclind(ncoeffs);
+
+	rowrhs.front() -= rhs;
+	rowrhs.front() += sx0;
+
+	for (auto const & kvp : _name_to_id) {
+		mclind[kvp.second] = kvp.second;
+		matval[kvp.second] = s.find(kvp.first)->second;
+	}
+
+	mclind.back() = _id_alpha;
+	matval.back() = -1;
+	mstart.back() = (int)matval.size();
+
+	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
+}
+
+void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs, int const niter) {
+	int ncols((int)_name_to_id.size());
+	// cut is -rhs >= alpha  + s^(x-x0)
+	int nrows(1);
+	int ncoeffs(1 + (int)_name_to_id.size());
+	std::vector<char> rowtype(1, 'L');
+	std::vector<double> rowrhs(1, 0);
+	std::vector<double> matval(ncoeffs, 1);
+	std::vector<int> mstart(nrows + 1, 0);
+	std::vector<int> mclind(ncoeffs);
+
+	rowrhs.front() -= rhs;
+	rowrhs.front() += sx0;
+
+	for (auto const & kvp : _name_to_id) {
+		mclind[kvp.second] = kvp.second;
+		matval[kvp.second] = s.find(kvp.first)->second;
+	}
+	mclind.back() = _id_alpha_i[i];
+	matval.back() = -niter;
+	mstart.back() = (int)matval.size();
+
+	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
+}
+
 
 /*!
 *  \brief Add one benders cut to a problem
@@ -181,6 +232,7 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, BendersOption
 
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
+
 
 /*!
 *  \brief Constructor of a Master Problem

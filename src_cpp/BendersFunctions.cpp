@@ -657,8 +657,9 @@ void print_active_cut(std::vector<ActiveCut> const & active_cuts, BendersOptions
 *
 *  \param x0 : trial values fixed in each slave
 */
-void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, std::map<std::string, int> problem_to_id, Point const & x0) {
+void store_current_aggregate_cut(IterAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, std::map<std::string, int> problem_to_id, Point const & x0) {
 	Point s;
+	double sx0(0);
 	double rhs(0);
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & itmap : all_package[i]) {
@@ -666,12 +667,35 @@ void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vecto
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			for (auto & kvp : handler->get_subgradient()) {
 				s[kvp.first] += kvp.second;
+				sx0 += kvp.second * x0.find(kvp.first)->second;
 			}
 			rhs += handler->get_dbl(SLAVE_COST);
 		}
 	}
-	dynamic_cuts.push_back(std::tuple<Point, Point, double>(s, x0, rhs));
+	dynamic_cuts.push_back(std::tuple<Point, double, double>(s, sx0, rhs));
+}
 
+void store_iter_aggregate_cut(WorkerMasterPtr & master, IterAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, std::map<std::string, int> problem_to_id, Point const & x0, BendersData const & data, BendersOptions const & options) {
+	if ((data.it % options.THRESHOLD_ITERATION == 0) || (data.it == 1)) {
+		for (auto & kvp : problem_to_id) {
+			Point s;
+			double sx0(0);
+			double rhs(0);
+			dynamic_cuts.push_back(std::tuple<Point, double, double>(s, sx0, rhs));
+		}
+	}
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto & itmap : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			for (auto & kvp : handler->get_subgradient()) {
+				std::get<0>(dynamic_cuts[problem_to_id[itmap.first]])[kvp.first] += kvp.second;
+				std::get<1>(dynamic_cuts[problem_to_id[itmap.first]]) += kvp.second * x0.find(kvp.first)->second;
+			}
+			std::get<2>(dynamic_cuts[problem_to_id[itmap.first]]) += handler->get_dbl(SLAVE_COST);
+		}
+	}
+	
 }
 
 /*!
@@ -687,10 +711,17 @@ void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, std::vecto
 *
 *  \param nconstraints : number of previous added constraints to delete
 */
-void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, int const it, int const nconstraints) {
+void gather_cut(IterAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, BendersOptions const & options, int const nconstraints, Str2Int & problem_to_id) {
 	master->delete_constraint(nconstraints);
-	for (int i(0); i < dynamic_cuts.size(); i++) {
-		master->add_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
+	if (options.THRESHOLD_AGGREGATION > 1) {
+		for (int i(0); i < dynamic_cuts.size(); i++) {
+			master->add_dynamic_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
+		}
+	}
+	else if (options.THRESHOLD_ITERATION > 1) {
+		for (auto & kvp : problem_to_id) {
+			master->add_cut_by_iter(kvp.second, std::get<0>(dynamic_cuts[kvp.second]), std::get<1>(dynamic_cuts[kvp.second]), std::get<2>(dynamic_cuts[kvp.second]), options.THRESHOLD_ITERATION);
+		}
 	}
 	dynamic_cuts.clear();
 }
@@ -841,7 +872,7 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 *
 *  \param data : set of benders data
 */
-void build_cut_full(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
+void build_cut_full(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, IterAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
 	check_status(all_package, data);
 	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave(all_package, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
@@ -858,7 +889,13 @@ void build_cut_full(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const
 	if (options.THRESHOLD_AGGREGATION > 1) {
 		store_current_aggregate_cut(dynamic_aggregate_cuts, all_package, problem_to_id, data.x0);
 		if (data.it % options.THRESHOLD_AGGREGATION == 0) {
-			gather_cut(dynamic_aggregate_cuts, master, data.it, options.THRESHOLD_AGGREGATION * data.nslaves);
+			gather_cut(dynamic_aggregate_cuts, master, options, options.THRESHOLD_AGGREGATION * data.nslaves, problem_to_id);
 		}
+	}
+	if (options.THRESHOLD_ITERATION > 1) {
+		if (data.it % options.THRESHOLD_ITERATION == 0) {
+			gather_cut(dynamic_aggregate_cuts, master, options, options.THRESHOLD_ITERATION * data.nslaves, problem_to_id);
+		}
+		store_iter_aggregate_cut(master, dynamic_aggregate_cuts, all_package, problem_to_id, data.x0, data, options);
 	}
 }

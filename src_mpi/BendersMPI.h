@@ -24,7 +24,7 @@ public:
 	std::set<SimplexBasisHandler> _basis;
 	SlaveCutId _slave_cut_id;
 	std::vector<ActiveCut> _active_cuts;
-	DynamicAggregateCuts _dynamic_aggregate_cuts;
+	IterAggregateCuts _dynamic_aggregate_cuts;
 
 	std::map< std::string, int> _problem_to_id;
 	BendersData _data;
