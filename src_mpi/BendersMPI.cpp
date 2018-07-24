@@ -202,6 +202,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 	if (world.rank() == 0) {
 		print_solution(stream, _data.bestx, true);
+		_master->write(_data.it);
 		if (_options.TRACE) {
 			print_csv(_trace,_problem_to_id,_data,_options);
 		}

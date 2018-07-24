@@ -186,7 +186,9 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
-	master->fix_alpha(data.best_ub);
+	if (options.BOUND_ALPHA) {
+		master->fix_alpha(data.best_ub);
+	}
 	master->solve(data.master_status, data.master_presolved);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
@@ -591,37 +593,6 @@ void check_status(std::vector<SlaveCutPackage> const & all_package, BendersData 
 }
 
 /*!
-*  \brief Write every information needed to start back in a file
-*
-*	Function to print each cut, current lower bound and upper bound to start back from where the algorithm stopped
-*
-*  \param cut_storage : storage of all cuts to print
-*
-*  \param data : Benders data to print
-*
-*  \param options : set of parameters
-*/
-void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, BendersOptions const & options)
-{
-	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "benders_dump_output.txt");
-	std::ofstream file(output, std::ios::out | std::ios::trunc);
-	if (file) {
-		file << std::setw(15) << "AGGREGATION" << std::setw(20) << options.AGGREGATION << std::endl;
-		file << std::setw(15) << "UB" << std::setw(20) << data.ub << std::endl;
-		file << std::setw(15) << "LB" << std::setw(20) << data.lb << std::endl;
-		for (auto & kvp : cut_storage) {
-			for (auto & itset : kvp.second) {
-				file << std::setw(15) << kvp.first;
-				file << std::setw(50) << itset._x0;
-				file << std::setw(15) << itset._data_cut->get_dbl(SLAVE_COST);
-				file << std::setw(50) << itset._data_cut->get_subgradient() << std::endl;
-			}
-		}
-		file.close();
-	}
-}
-
-/*!
 *  \brief Write in a csv file every active cut at every iteration
 *
 *	Write in a csv file every active cut for every slave for all iterations
@@ -683,12 +654,19 @@ void store_current_aggregate_cut(IterAggregateCuts & dynamic_cuts, std::vector<S
 }
 
 void store_iter_aggregate_cut(WorkerMasterPtr & master, IterAggregateCuts & dynamic_cuts, std::vector<SlaveCutPackage> const & all_package, std::map<std::string, int> problem_to_id, Point const & x0, BendersData const & data, BendersOptions const & options) {
-	if ((data.it % options.THRESHOLD_ITERATION == 0) || (data.it == 1)) {
-		for (auto & kvp : problem_to_id) {
+	if (data.it == 1) {
+		for (int i(0); i < data.nslaves; i++) {
 			Point s;
 			double sx0(0);
 			double rhs(0);
 			dynamic_cuts.push_back(std::tuple<Point, double, double>(s, sx0, rhs));
+		}
+	}
+	else if (data.it % options.THRESHOLD_ITERATION == 0) {
+		for (int i(0); i < data.nslaves; i++) {
+			std::get<0>(dynamic_cuts[i]).clear();
+			std::get<1>(dynamic_cuts[i]) = 0;
+			std::get<2>(dynamic_cuts[i]) = 0;
 		}
 	}
 	for (int i(0); i < all_package.size(); i++) {
@@ -702,7 +680,6 @@ void store_iter_aggregate_cut(WorkerMasterPtr & master, IterAggregateCuts & dyna
 			std::get<2>(dynamic_cuts[problem_to_id[itmap.first]]) += handler->get_dbl(SLAVE_COST);
 		}
 	}
-	
 }
 
 /*!

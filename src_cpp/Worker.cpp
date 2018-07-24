@@ -152,10 +152,11 @@ void Worker::solve(int & lp_status, int & presolved_cut) {
 	if (lp_status != XPRS_LP_OPTIMAL) {
 		std::cout << "lp_status is : " << lp_status << std::endl;
 		std::stringstream buffer;
+		
 		buffer << _path_to_mps << "_lp_status_";
 		buffer << XPRS_LP_STATUS[lp_status];
 		buffer<< ".mps";
-		std::cout << "lp_status is : " << lp_status << std::endl;
+		std::cout << "lp_status is : " << XPRS_LP_STATUS[lp_status] << std::endl;
 		std::cout << "written in " << buffer.str() << std::endl;
 		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
 	}
@@ -166,7 +167,7 @@ void Worker::solve(int & lp_status, int & presolved_cut) {
 }
 
 /*!
-*  \brief Get the number of needed iteration to solve a problem
+*  \brief Get the number of iteration needed to solve a problem
 *
 *  \param result : result
 */

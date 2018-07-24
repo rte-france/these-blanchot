@@ -26,7 +26,6 @@ void print_csv(std::vector<WorkerMasterDataPtr> & trace, std::map<std::string, i
 void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std::string const & name, int const islaves);
 void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point const & xopt, std::string const & name, int const nslaves);
 void check_status(std::vector<SlaveCutPackage> const & all_package, BendersData const & data);
-void dump_cut(AllCutStorage const & cut_storage, BendersData const & data, BendersOptions const & options);
 void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves);
 void sort_basis(std::vector<SimplexBasisPackage> const & all_basis_package, std::map<std::string, int> & problem_to_id, std::set<SimplexBasisHandler> & basis_storage, BendersData & data);
 void update_active_cuts(WorkerMasterPtr & master, std::vector<ActiveCut> & active_cuts, SlaveCutId & cut_id, int const it);

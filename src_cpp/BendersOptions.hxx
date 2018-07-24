@@ -61,5 +61,8 @@ BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
 //Name of the csv output file
 BENDERS_OPTIONS_MACRO(CSV_NAME, std::string, "SIMPLEX")
 
+//True if alpha needs to be bounded by best upper bound, false otherwise
+BENDERS_OPTIONS_MACRO(BOUND_ALPHA, bool, true)
+
 
 
