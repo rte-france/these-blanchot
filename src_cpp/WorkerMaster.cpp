@@ -245,6 +245,8 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, BendersOption
 */
 WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
 	init(variable_map, path_to_mps);
+	_is_master = true;
+	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	// 4 barrier
 	// 2 dual
 	if (options.MASTER_METHOD == "BARRIER") {

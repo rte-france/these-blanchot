@@ -124,6 +124,7 @@ struct BendersData {
 	int nslaves;
 	double dnslaves;
 	int master_status;
+	int master_presolved;
 	int nconstraint;
 };
 

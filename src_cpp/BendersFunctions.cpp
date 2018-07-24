@@ -68,6 +68,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << data.deletedcut;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << data.master_presolved;
 	}
 	stream << std::endl;
 
@@ -116,6 +117,7 @@ void init_log(std::ostream&stream, int const log_level) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "PRESOLVEDCUTS";
 	}
 	stream << std::endl;
 }
@@ -185,7 +187,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
 	master->fix_alpha(data.best_ub);
-	master->solve(data.master_status);
+	master->solve(data.master_status, data.master_presolved);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
@@ -212,6 +214,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 */
 void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
 	for (auto & kvp : map_slaves) {
+		int presolved_slaves;
 		Timer timer_slave;
 		WorkerSlavePtr & ptr(kvp.second);
 		IntVector intParam(SlaveCutInt::MAXINT);
@@ -220,7 +223,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
 		ptr->fix_to(data.x0);
-		ptr->solve(handler->get_int(LPSTATUS));
+		ptr->solve(handler->get_int(LPSTATUS), presolved_slaves);
 		if (options.BASIS) {
 			ptr->get_basis();
 		}
@@ -235,6 +238,8 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, std::set<std::string> const & random_slaves, BendersOptions const & options, BendersData const & data) {
 	for (auto & kvp : random_slaves) {
 		if (map_slaves.find(kvp) != map_slaves.end()) {
+			int presolved_slaves;
+
 			Timer timer_slave;
 			WorkerSlavePtr & ptr(map_slaves[kvp]);
 			IntVector intParam(SlaveCutInt::MAXINT);
@@ -243,7 +248,7 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
 			ptr->fix_to(data.x0);
-			ptr->solve(handler->get_int(LPSTATUS));
+			ptr->solve(handler->get_int(LPSTATUS), presolved_slaves);
 			if (options.BASIS) {
 				ptr->get_basis();
 			}
@@ -571,6 +576,7 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 void check_status(std::vector<SlaveCutPackage> const & all_package, BendersData const & data) {
 	if (data.master_status != 1) {
 		std::cout << "Master status is " << data.master_status << std::endl;
+		exit(0);
 	}
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto & kvp : all_package[i]) {
@@ -578,6 +584,7 @@ void check_status(std::vector<SlaveCutPackage> const & all_package, BendersData 
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			if (handler->get_int(LPSTATUS) != 1) {
 				std::cout << "Slave " << kvp.first << " status is " << handler->get_int(LPSTATUS) << std::endl;
+				exit(0);
 			}
 		}
 	}

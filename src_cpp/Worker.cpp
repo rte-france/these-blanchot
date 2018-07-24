@@ -112,6 +112,7 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 	for(auto & kvp : variable_map) {
 		_id_to_name[kvp.second] = kvp.first;
 	}
+	_is_master = false;
 }
 
 StrVector XPRS_LP_STATUS = {
@@ -126,8 +127,27 @@ StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_NONCONVEX"
 };
 
-void Worker::solve(int & lp_status) {
-	int status = XPRSlpoptimize(_xprs, "");
+void Worker::solve(int & lp_status, int & presolved_cut) {
+
+	int initial_rows(0);
+	int presolved_rows(0);
+	int status(0);
+	if (_is_master) {
+		XPRSgetintattrib(_xprs, XPRS_ROWS, &initial_rows);
+
+		XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 0);
+		XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 0);
+
+		status = XPRSlpoptimize(_xprs, "");
+
+		XPRSgetintattrib(_xprs, XPRS_ROWS, &presolved_rows);
+
+		XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
+		XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 500);
+		presolved_cut = initial_rows - presolved_rows;
+	}
+	status = XPRSlpoptimize(_xprs, "");
+	
 	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);
 	if (lp_status != XPRS_LP_OPTIMAL) {
 		std::cout << "lp_status is : " << lp_status << std::endl;

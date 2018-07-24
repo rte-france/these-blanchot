@@ -49,12 +49,13 @@ public:
 	*/
 	std::list<std::ostream *> & stream();
 
-	void solve(int & lp_status);
+	void solve(int & lp_status, int & presolved_cut);
 
 
 public:
 	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
 	std::list<std::ostream * >_stream;
+	bool _is_master;
 };
 
 void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
