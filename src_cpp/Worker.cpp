@@ -77,6 +77,9 @@ Worker::~Worker() {
 	
 }
 
+/*!
+*  \brief Free the problem
+*/
 void Worker::free() {
 	XPRSdestroyprob(_xprs);
 }
@@ -93,11 +96,11 @@ void Worker::get_value(double & lb) {
 /*!
 *  \brief Initialization of a problem 
 *
-*
 *  \param variable_map : map linking each problem name to its variables and their ids
+*
 *  \param problem_name : name of the problem
 */
-void Worker::init(std::map<std::string, int> const & variable_map, std::string const & path_to_mps) {
+void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps) {
 	_path_to_mps = path_to_mps;
 	_stream.push_back(&std::cout);
 	XPRScreateprob(&_xprs);
@@ -109,7 +112,7 @@ void Worker::init(std::map<std::string, int> const & variable_map, std::string c
 
 	//std::ifstream file(_path_to_mapping.c_str());
 	_name_to_id = variable_map;
-	for(auto & kvp : variable_map) {
+	for(auto const & kvp : variable_map) {
 		_id_to_name[kvp.second] = kvp.first;
 	}
 	_is_master = false;
@@ -127,25 +130,30 @@ StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_NONCONVEX"
 };
 
-void Worker::solve(int & lp_status, int & presolved_cut) {
+/*!
+*  \brief Method to solve a problem
+*
+*  \param lp_status : problem status after optimization
+*/
+void Worker::solve(int & lp_status) {
 
-	int initial_rows(0);
-	int presolved_rows(0);
 	int status(0);
-	if (_is_master) {
-		XPRSgetintattrib(_xprs, XPRS_ROWS, &initial_rows);
 
-		XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 0);
-		XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 0);
+	//int initial_rows(0);
+	//int presolved_rows(0);
+	//if (_is_master) {
+	//	XPRSgetintattrib(_xprs, XPRS_ROWS, &initial_rows);
 
-		status = XPRSlpoptimize(_xprs, "");
+	//	XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 0);
+	//	XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 0);
 
-		XPRSgetintattrib(_xprs, XPRS_ROWS, &presolved_rows);
+	//	status = XPRSlpoptimize(_xprs, "");
 
-		XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
-		XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 500);
-		presolved_cut = initial_rows - presolved_rows;
-	}
+	//	XPRSgetintattrib(_xprs, XPRS_ROWS, &presolved_rows);
+
+	//	XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
+	//	XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 500);
+	//}
 	status = XPRSlpoptimize(_xprs, "");
 	
 	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);

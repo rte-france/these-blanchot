@@ -9,6 +9,10 @@
 #include "WorkerTrace.h"
 #include "BendersFunctions.h"
 
+/*!
+* \class BendersMpi
+* \brief Class use run the benders algorithm in parallel 
+*/
 class BendersMpi {
 
 public:
@@ -20,22 +24,25 @@ public:
 	
 	WorkerMasterPtr _master;
 	SlavesMapPtr _map_slaves;
-	std::set<std::string> _random_slaves;
-	std::set<SimplexBasisHandler> _basis;
-	SlaveCutId _slave_cut_id;
-	std::vector<ActiveCut> _active_cuts;
-	IterAggregateCuts _dynamic_aggregate_cuts;
-
-	std::map< std::string, int> _problem_to_id;
+	
+	Str2Int _problem_to_id;
 	BendersData _data;
 	BendersOptions _options;
+	StrVector _slaves;
 
 	AllCutStorage _all_cuts_storage;
-	std::vector<WorkerMasterDataPtr> _trace;
+	BendersTrace _trace;
+	DynamicAggregateCuts _dynamic_aggregate_cuts;
 
-	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
+	SimplexBasisStorage _basis;
+	SlaveCutId _slave_cut_id;
+	ActiveCutStorage _active_cuts;
+
 	void free(mpi::environment & env, mpi::communicator & world);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
 	void step_3(mpi::environment & env, mpi::communicator & world);
+	void update_random_option(mpi::environment & env, mpi::communicator & world, BendersOptions const & options, BendersData & data);
+	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
+
 };

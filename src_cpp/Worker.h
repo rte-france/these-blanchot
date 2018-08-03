@@ -8,25 +8,19 @@
 void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 class Worker;
 typedef std::shared_ptr<Worker> WorkerPtr;
-/*! \class Worker
+
+/*!
+* \class Worker
 * \brief Mother-class Worker 
 *
-*  This class opens and sets a problem from a mps and a mapping files
+*  This class opens and sets a problem from a mps and a mapping variable map
 */
 
 class Worker
 {
 public:
-	/*!
-	*  \brief Constructor
-	*
-	*  Constructor of class Worker
-	*
-	*  \param mps : path to mps file
-	*  \param mapping : path to the relevant mapping file 
-	*/
 	Worker();
-	void init(std::map<std::string, int> const & variable_map, std::string const & path_to_mps);
+	void init(Str2Int const & variable_map, std::string const & path_to_mps);
 	virtual ~Worker();
 
 	void get_value(double & lb);
@@ -36,8 +30,9 @@ public:
 	void free();
 public:
 	std::string _path_to_mps;
-	std::map< std::string, int> _name_to_id; /*!< Link between the variable name and its identifier */
-	std::map< int, std::string> _id_to_name; /*!< Link between the identifier of a variable and its name*/
+	Str2Int _name_to_id; /*!< Link between the variable name and its identifier */
+	Int2Str _id_to_name; /*!< Link between the identifier of a variable and its name*/
+	
 public:
 
 	/*!
@@ -49,7 +44,7 @@ public:
 	*/
 	std::list<std::ostream *> & stream();
 
-	void solve(int & lp_status, int & presolved_cut);
+	void solve(int & lp_status);
 
 
 public:

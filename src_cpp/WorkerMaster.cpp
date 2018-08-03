@@ -17,7 +17,7 @@ WorkerMaster::~WorkerMaster() {
 *
 *  \param alpha : reference to an empty double
 */
-void WorkerMaster::get(Point & x0, double & alpha, std::vector<double> & alpha_i) {
+void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 	x0.clear();
 	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
 	int status = XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
@@ -110,6 +110,13 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
+/*!
+*  \brief Add benders cut to a problem
+*
+*  \param s : optimal slave variables
+*  \param sx0 : subgradient times x0
+*  \param rhs : optimal slave value
+*/
 void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double const & rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
@@ -136,7 +143,15 @@ void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double c
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
-void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs, int const niter) {
+/*!
+*  \brief Add benders cut to a problem
+*
+*  \param i : identifier of a slave problem
+*  \param s : optimal slave variables
+*  \param sx0 : subgradient times x0
+*  \param rhs : optimal slave value
+*/
+void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs) {
 	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
@@ -155,7 +170,7 @@ void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & 
 		matval[kvp.second] = s.find(kvp.first)->second;
 	}
 	mclind.back() = _id_alpha_i[i];
-	matval.back() = -niter;
+	matval.back() = -1;
 	mstart.back() = (int)matval.size();
 
 	XPRSaddrows(_xprs, nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
@@ -239,11 +254,12 @@ void WorkerMaster::add_random_cut(IntVector const & random_slaves, BendersOption
 *
 *  Construct a Master Problem by loading mps and mapping files and adding the variable alpha
 *
-*  \param mps : path to mps file
-*  \param mapping : path to mapping
-*  \param nslaves : number of Slaves problem
+*  \param variable_map : map linking each variable to its id in the problem
+*  \param path_to_mps : path to the problem mps file
+*  \param options : set of benders options
+*  \param nslaves : number of slaves
 */
-WorkerMaster::WorkerMaster(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
+WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
 	init(variable_map, path_to_mps);
 	_is_master = true;
 	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);

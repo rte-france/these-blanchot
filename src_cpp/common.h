@@ -34,6 +34,8 @@ double const EPSILON_PREDICATE = 1e-8;
 
 typedef std::set<std::string> problem_names;
 typedef std::map<std::string, int> Str2Int;
+typedef std::map<int, std::string> Int2Str;
+typedef std::map<std::string, double> Str2Dbl;
 typedef std::vector<int> IntVector;
 typedef std::vector<char> CharVector;
 typedef std::vector<double> DblVector;
@@ -42,6 +44,7 @@ typedef std::map < std::string, Str2Int> CouplingMap;
 
 typedef std::map <std::string, IntVector> SlaveCutId;
 typedef std::tuple <int, std::string, int, bool> ActiveCut;
+typedef std::vector<ActiveCut> ActiveCutStorage;
 
 typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
@@ -81,7 +84,13 @@ struct Predicate {
 	}
 };
 
-
+/*!
+*  \brief Stream output overloading for point
+*
+*  \param stream : stream output
+*
+*  \param rhs : point
+*/
 inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 	for (auto const & kvp : rhs) {
 		if (kvp.second > 0) {
@@ -103,6 +112,10 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 	return stream;
 }
 
+/*!
+* \struct BendersData
+* \brief Structure used to manage every benders data
+*/
 struct BendersData {
 	int nbasis;
 	double timer_slaves;
@@ -124,8 +137,8 @@ struct BendersData {
 	int nslaves;
 	double dnslaves;
 	int master_status;
-	int master_presolved;
 	int nconstraint;
+	int nrandom;
 };
 
 double norm_point(Point const & x0, Point const & x1);

@@ -22,7 +22,7 @@ public:
 
 	double slave_weight(int nslaves, std::string const &)const;
 
-	std::map<std::string, double> _weights;
+	Str2Dbl _weights;
 };
 
 

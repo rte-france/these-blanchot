@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 
 	Point x0;
 	XPRSgetintattrib(full, XPRS_COLS, &ncols);
-	std::vector<double> ptr(ncols, 0);
+	DblVector ptr(ncols, 0);
 	XPRSgetlpsol(full, ptr.data(), NULL, NULL, NULL);
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];

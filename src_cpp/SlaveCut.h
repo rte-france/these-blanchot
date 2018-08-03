@@ -11,6 +11,7 @@ typedef SlaveCutData3 SlaveCutData;
 typedef std::shared_ptr<SlaveCutData> SlaveCutDataPtr;
 
 typedef std::map<std::string, SlaveCutData> SlaveCutPackage;
+typedef std::vector<SlaveCutPackage> AllCutPackage;
 
 class SlaveCutTrimmer;
 typedef std::set<SlaveCutTrimmer> SlaveCutStorage;
@@ -19,7 +20,7 @@ typedef std::map<std::string, SlaveCutStorage> AllCutStorage;
 class SlaveCutDataHandler;
 typedef std::shared_ptr<SlaveCutDataHandler> SlaveCutDataHandlerPtr;
 
-typedef std::vector<std::tuple<Point, double, double>> IterAggregateCuts;
+typedef std::vector<std::tuple<Point, double, double>> DynamicAggregateCuts;
 
 typedef std::set<SlaveCutDataHandlerPtr, Predicate> SlaveCutDataHandlerPtrSet;
 
@@ -28,7 +29,6 @@ void build_SlaveCutData(SlaveCutData &);
 enum SlaveCutInt {
 	SIMPLEXITER = 0,
 	LPSTATUS,
-	NB_BASIS,
 	MAXINT
 };
 
@@ -42,8 +42,6 @@ enum SlaveCutDbl {
 enum SlaveCutStr {
 	MAXSTR = 0
 };
-
-// alpha_i >= rhs+s(x-x0) = (rhs-s.x0)+s.x
 
 class SlaveCutDataHandler {
 public:
@@ -80,9 +78,9 @@ class SlaveCutTrimmer {
 public:
 	SlaveCutDataHandlerPtr _data_cut;
 	Point _x0;
+	double _const_cut;
 
 	SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, Point & x0);
-	double get_const_cut()const;
 	Point const & get_subgradient()const;
 
 	bool operator<(SlaveCutTrimmer const &  other)const;

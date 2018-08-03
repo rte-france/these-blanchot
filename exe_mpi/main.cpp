@@ -15,6 +15,10 @@ int main(int argc, char** argv)
 		usage(argc);
 
 	BendersOptions options(build_benders_options(argc, argv));
+	if (world.rank() > options.SLAVE_NUMBER + 1 && options.SLAVE_NUMBER != -1) {
+		std::cout << "You need to have at least one slave by thread" << std::endl;
+		exit(0);
+	}
 	if (world.rank() == 0) {
 		options.print(std::cout);
 	}

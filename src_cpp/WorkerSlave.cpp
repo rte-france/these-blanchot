@@ -14,7 +14,7 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, double const & slave_weight) {
+WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight) {
 	init(variable_map, path_to_mps);
 	int mps_ncols;
 	XPRSgetintattrib(_xprs, XPRS_COLS, &mps_ncols);
