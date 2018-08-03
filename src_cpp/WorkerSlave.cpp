@@ -14,8 +14,11 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight) {
+WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options) {
 	init(variable_map, path_to_mps);
+	if (options.XPRESS_TRACE == 2 || options.XPRESS_TRACE == 3) {
+		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	}
 	int mps_ncols;
 	XPRSgetintattrib(_xprs, XPRS_COLS, &mps_ncols);
 	DblVector o(mps_ncols, 0);

@@ -21,7 +21,7 @@ class WorkerSlave : public Worker {
 public:
 
 	WorkerSlave();
-	WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight);
+	WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options);
 	virtual ~WorkerSlave();
 
 public:

@@ -68,7 +68,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 				CouplingMap::value_type kvp;
 				world.recv(0, islave, kvp);
 				//std::cout << "#" << world.rank() << " recv " << kvp.first << " | " << islave << std::endl;
-				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first), _options.slave_weight(_data.nslaves, kvp.first)));
+				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first), _options.slave_weight(_data.nslaves, kvp.first), _options));
 				_slaves.push_back(kvp.first);
 			}
 		}
