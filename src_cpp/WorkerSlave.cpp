@@ -109,7 +109,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 		++i;
 	}
 
-	int status = XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
+	XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
 /*!
@@ -122,7 +122,7 @@ void WorkerSlave::get_subgradient(Point & s) {
 	int ncols;
 	XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
 	std::vector<double> ptr(ncols, 0);
-	int status = XPRSgetlpsol(_xprs, NULL, NULL, NULL, ptr.data());
+	XPRSgetlpsol(_xprs, NULL, NULL, NULL, ptr.data());
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
@@ -143,7 +143,7 @@ SimplexBasis WorkerSlave::get_basis() {
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &nrows);
 	cstatus.resize(ncols);
 	rstatus.resize(nrows);
-	int status = XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
+	XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
 	return std::make_pair(rstatus, cstatus);
 }
 

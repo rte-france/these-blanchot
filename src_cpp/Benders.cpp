@@ -23,7 +23,6 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		auto it(problem_list.begin());
 		
 		auto const it_master = problem_list.find(_options.MASTER_NAME);
-		std::string const & master_name(it_master->first);
 		Str2Int const & master_variable(it_master->second);
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {

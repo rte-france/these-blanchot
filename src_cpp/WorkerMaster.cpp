@@ -20,7 +20,7 @@ WorkerMaster::~WorkerMaster() {
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 	x0.clear();
 	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
-	int status = XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
+	XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
 	for (auto const & kvp : _id_to_name) {
 		x0[kvp.second] = ptr[kvp.first];
 	}
@@ -86,7 +86,6 @@ void WorkerMaster::write(int it) {
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs) {
-	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -118,7 +117,6 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double const & rhs) {
-	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -152,7 +150,6 @@ void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double c
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs) {
-	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -186,8 +183,6 @@ void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & 
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double const & rhs) {
-	//std::cout << "adding " << i <<" | " << rhs << std::endl;
-	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -221,7 +216,6 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param x0 : optimal master variables
 */
 void WorkerMaster::add_random_cut(IntVector const & random_slaves, BendersOptions const & options, Point const & s, Point const & x0, double const & rhs) {
-	int ncols((int)_name_to_id.size());
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int nrows(1);
 	int ncoeffs((int)_name_to_id.size());
@@ -324,5 +318,5 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 */
 void WorkerMaster::fix_alpha(double const & bestUB) {
 	std::vector<char> boundtype(1, 'U');
-	int status = XPRSchgbounds(_xprs, 1, &_id_alpha, boundtype.data(), &bestUB);
+	XPRSchgbounds(_xprs, 1, &_id_alpha, boundtype.data(), &bestUB);
 }
