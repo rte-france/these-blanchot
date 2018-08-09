@@ -259,6 +259,9 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	if (options.XPRESS_TRACE == 1 || options.XPRESS_TRACE == 3) {
 		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	}
+	else {
+		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	}
 	// 4 barrier
 	// 2 dual
 	if (options.MASTER_METHOD == "BARRIER") {
@@ -271,7 +274,6 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	else {
 		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
 	}
-	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	// add the variable alpha
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));
