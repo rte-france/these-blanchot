@@ -5,7 +5,13 @@
 
 #include "BendersOptions.h"
 
-
+/*!
+*  \brief Get Benders Options from command line
+*
+*  \param argc : number of elements
+*
+*  \param argv : elements on command line
+*/
 BendersOptions build_benders_options(int argc, char** argv) {
 	BendersOptions result;
 	result.read(argv[1]);
@@ -63,6 +69,8 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 
 /*!
 *  \brief Execute the Benders algorithm in sequential
+*
+*  \param options : set of Benders options
 */
 void sequential_launch(BendersOptions const & options) {
 	Timer timer;
@@ -76,7 +84,11 @@ void sequential_launch(BendersOptions const & options) {
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 }
 
-
+/*!
+*  \brief How to call for the algorithm
+*
+*  \param argc : number of arguments in command line
+*/
 void usage(int argc) {
 	if (argc < 2) {
 		std::cout << "usage is : <exe> <option_file> " << std::endl;

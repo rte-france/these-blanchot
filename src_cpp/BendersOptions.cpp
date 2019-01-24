@@ -1,5 +1,9 @@
 #include "BendersOptions.h"
 
+/*!
+*  \brief Constructor of Benders Options
+*
+*/
 BendersOptions::BendersOptions() {
 
 #define BENDERS_OPTIONS_MACRO(name__, type__, default__) name__ = default__;
@@ -7,23 +11,42 @@ BendersOptions::BendersOptions() {
 #undef BENDERS_OPTIONS_MACRO
 
 }
+
+/*!
+*  \brief Write default options in "options_default" txt file
+*/
 void BendersOptions::write_default(){
 std::ofstream file("options_default.txt");
 print(file);
 file.close();
-
 }
+
+/*!
+*  \brief Get path to master problem mps file from options
+*/
 std::string BendersOptions::get_master_path() const {
 	return INPUTROOT + PATH_SEPARATOR + MASTER_NAME;
 }
 
+/*!
+*  \brief Get path to structure txt file from options
+*/
 std::string BendersOptions::get_structure_path() const {
 	return INPUTROOT + PATH_SEPARATOR + STRUCTURE_FILE;
 }
+
+/*!
+*  \brief Get path to slave problem mps file from options
+*/
 std::string BendersOptions::get_slave_path(std::string const & slave_name) const {
 	return INPUTROOT + PATH_SEPARATOR + slave_name;
 }
 
+/*!
+*  \brief Read Benders options from file path
+*  
+*  \param file_name : path to options txt file
+*/
 void BendersOptions::read(std::string const & file_name) {
 	std::ifstream file(file_name.c_str());
 	if (file.good()) {
@@ -37,7 +60,6 @@ void BendersOptions::read(std::string const & file_name) {
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
 		}
-
 
 		if (SLAVE_WEIGHT != "UNIFORM" && SLAVE_WEIGHT != "CONSTANT") {
 			std::string line;
@@ -54,27 +76,43 @@ void BendersOptions::read(std::string const & file_name) {
 				buffer >> _weights[problem_name];
 			}
 		}
-
 	}
 	else {
 		write_default();
 	}
 }
 
+/*!
+*  \brief Print all Benders options
+*
+*  \param stream : output stream
+*/
 void BendersOptions::print(std::ostream & stream)const {
 #define BENDERS_OPTIONS_MACRO(name__, type__, default__) stream<<std::setw(30)<<#name__<<std::setw(50)<<name__<<std::endl;
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
 	stream << std::endl;
+
+	if (SLAVE_NUMBER == 1) {
+		stream << "Sequential launch (only one slave problem)" << std::endl;
+	}
+
 }
 
+/*!
+*  \brief Return slave weight value
+*
+*  \param nslaves : total number of slaves
+*
+*  \param name : slave name
+*/
 double BendersOptions::slave_weight(int nslaves, std::string const & name)const
 {
 	if (SLAVE_WEIGHT == "UNIFORM") {
 		return 1 / static_cast<double>(nslaves);
 	}
 	else if (SLAVE_WEIGHT == "CONSTANT") {
-		double weight(SLAVE_WEIGHT_VALUE);
+		double const weight(SLAVE_WEIGHT_VALUE);
 		return 1 / weight;
 	}
 	else {

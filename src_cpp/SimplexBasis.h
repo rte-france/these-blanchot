@@ -5,7 +5,7 @@
 
 typedef std::pair<IntVector, IntVector> SimplexBasis;
 typedef std::map<std::string, SimplexBasis> SimplexBasisPackage;
-
+typedef std::vector<SimplexBasisPackage> AllBasisPackage;
 
 typedef std::shared_ptr<SimplexBasis> SimplexBasisPtr;
 
@@ -17,7 +17,6 @@ public:
 
 	IntVector const & get_col()const;
 	IntVector const & get_row()const;
-	//void print(std::ostream & stream)const;
 
 public:
 
@@ -33,5 +32,7 @@ public:
 };
 
 std::ostream & operator<<(std::ostream & stream, SimplexBasisHandler const & rhs);
+
+typedef std::set<SimplexBasisHandler> SimplexBasisStorage;
 
 

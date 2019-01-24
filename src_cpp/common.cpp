@@ -1,9 +1,12 @@
 #include "common.h"
 
 
-
 /*!
 *  \brief Return the distance between two point using 2-norm
+*
+*  \param x0 : first point
+*
+*  \param x1 : second point
 */
 double norm_point(Point const & x0, Point const & x1) {
 	double result(0);
@@ -16,6 +19,10 @@ double norm_point(Point const & x0, Point const & x1) {
 
 /*!
 *  \brief Return the absolute distance between two vector of int
+*
+*  \param x0 : first vector of int
+*
+*  \param x1 : second vector of int
 */
 int norm_int(IntVector const & x0, IntVector const & x1) {
 	int result(0);
@@ -30,6 +37,13 @@ int norm_int(IntVector const & x0, IntVector const & x1) {
 	}
 }
 
+/*!
+*  \brief Stream output overloading for vector of IntVector
+*
+*  \param stream : stream output
+*
+*  \param rhs : vector of IntVector
+*/
 std::ostream & operator<<(std::ostream & stream, std::vector<IntVector> const & rhs) {
 	int n(rhs.size());
 	for (int i(0); i < n; i++) {

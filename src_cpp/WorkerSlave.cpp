@@ -14,8 +14,14 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::string const & path_to_mps, double const & slave_weight) {
+WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options) {
 	init(variable_map, path_to_mps);
+	if (options.XPRESS_TRACE == 2 || options.XPRESS_TRACE == 3) {
+		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	}
+	else {
+		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	}
 	int mps_ncols;
 	XPRSgetintattrib(_xprs, XPRS_COLS, &mps_ncols);
 	DblVector o(mps_ncols, 0);
@@ -110,7 +116,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 		++i;
 	}
 
-	int status = XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
+	XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
 /*!
@@ -123,7 +129,7 @@ void WorkerSlave::get_subgradient(Point & s) {
 	int ncols;
 	XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
 	std::vector<double> ptr(ncols, 0);
-	int status = XPRSgetlpsol(_xprs, NULL, NULL, NULL, ptr.data());
+	XPRSgetlpsol(_xprs, NULL, NULL, NULL, ptr.data());
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
@@ -144,7 +150,7 @@ SimplexBasis WorkerSlave::get_basis() {
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &nrows);
 	cstatus.resize(ncols);
 	rstatus.resize(nrows);
-	int status = XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
+	XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
 	return std::make_pair(rstatus, cstatus);
 }
 

@@ -4,6 +4,10 @@
 #include "Worker.h"
 #include "SlaveCut.h"
 
+/*!
+* \class WorkerMasterData
+* \brief Class use to store trace information during the algorithm run
+*/
 class WorkerMasterData {
 public:
 
@@ -16,14 +20,10 @@ public:
 	PointPtr _x0;
 	std::map<std::string,SlaveCutDataPtr> _cut_trace;
 
-	double get_ub();
-	double get_lb();
-	double get_bestub();
-	int get_simplexiter(std::string & slave_name);
-	int get_deletedcut();
 	Point get_point();
 };
 
 typedef std::shared_ptr<WorkerMasterData> WorkerMasterDataPtr;
+typedef std::vector<WorkerMasterDataPtr> BendersTrace;
 
 

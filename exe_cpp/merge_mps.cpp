@@ -3,6 +3,7 @@
 #include "launcher.h"
 #include "Worker.h"
 #include "BendersOptions.h"
+#include "BendersFunctions.h"
 
 
 int main(int argc, char** argv)
@@ -25,16 +26,16 @@ int main(int argc, char** argv)
 	CouplingMap x_mps_id;
 	for (auto const & kvp : input) {
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
-		std::cout << kvp.first << std::endl;
 		XPRSgetintattrib(full, XPRS_COLS, &ncols);
 		_decalage[kvp.first] = ncols;
 
 		XPRSprob prob;
 		XPRScreateprob(&prob);
 		XPRSsetcbmessage(prob, optimizermsg, NULL);
-		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 		XPRSreadprob(prob, problem_name.c_str(), "");
-		if (problem_name != options.MASTER_NAME) {
+		if (kvp.first != options.MASTER_NAME) {
+
 			int mps_ncols(0);
 			XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
 			DblVector o(mps_ncols, 0);
@@ -44,7 +45,6 @@ int main(int argc, char** argv)
 			}
 			XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
 			double const weigth = options.slave_weight(nslaves, problem_name);
-			std::cout << "weigth : " << weigth << std::endl;		
 			for (auto & c : o) {
 				c *= weigth;
 			}
@@ -114,6 +114,16 @@ int main(int argc, char** argv)
 	XPRSsetintcontrol(full, XPRS_BARTHREADS, 16);
 	XPRSsetintcontrol(full, XPRS_BARCORES, 16);
 	XPRSlpoptimize(full, "-b");
+
+	Point x0;
+	XPRSgetintattrib(full, XPRS_COLS, &ncols);
+	DblVector ptr(ncols, 0);
+	XPRSgetlpsol(full, ptr.data(), NULL, NULL, NULL);
+	for (auto const & kvp : input[options.MASTER_NAME]) {
+		x0[kvp.first] = ptr[kvp.second];
+	}
+	print_solution(std::cout, x0, true);
+
 	XPRSdestroyprob(full);
 	XPRSfree();
 

@@ -16,5 +16,3 @@
 namespace mpi = boost::mpi;
 
 typedef std::pair<int, std::string> mps_order;
-
-void warning(mpi::environment & env, mpi::communicator & world, int const nslaves);

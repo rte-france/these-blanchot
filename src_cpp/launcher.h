@@ -50,7 +50,7 @@ enum DblVectorAttribute {
 	UB,
 	MAX_DBL_VECTOR_ATTRIBUTE
 };
-typedef std::tuple<std::vector<int>, std::vector<IntVector>, std::vector<CharVector>, std::vector<DblVector> > raw_standard_lp_data;
+typedef std::tuple<IntVector, std::vector<IntVector>, std::vector<CharVector>, std::vector<DblVector> > raw_standard_lp_data;
 
 class StandardLp {
 private:
