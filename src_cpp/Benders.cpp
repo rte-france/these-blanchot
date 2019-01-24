@@ -34,7 +34,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				i++;
 			}
 		}
-		init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
+		//init_slave_weight(_data, _options, _slave_weight_coeff, _problem_to_id);
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
 	}
@@ -70,7 +70,7 @@ void Benders::build_cut() {
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
-	build_cut_full(_master, _slave_weight_coeff, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+	build_cut_full(_master, all_package, _problem_to_id, _random_slaves, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	if (_options.BASIS) {
 		SimplexBasisPackage slave_basis_package;
 		std::vector<SimplexBasisPackage> all_basis_package;

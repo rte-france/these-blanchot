@@ -15,7 +15,7 @@ public:
 	SlavesMapPtr _slaves;
 
 	std::map< std::string, int > _problem_to_id;
-	DblVector _slave_weight_coeff;
+	//DblVector _slave_weight_coeff;
 	BendersData _data;
 	BendersOptions _options;
 

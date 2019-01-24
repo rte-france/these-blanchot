@@ -844,24 +844,24 @@ void add_random_aggregate_cuts(WorkerMasterPtr & master, std::vector<SlaveCutPac
 *
 *  \param data : set of benders data
 */
-void build_cut_full(WorkerMasterPtr & master, DblVector const & slave_weight_coeff, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
-	check_status(all_package, data);
-	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
-		sort_cut_slave(all_package, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
-	}
-	else if (options.AGGREGATION && !options.RAND_AGGREGATION) {
-		sort_cut_slave_aggregate(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options);
-	}
-	else if (!options.AGGREGATION && options.RAND_AGGREGATION) {
-		add_random_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, trace, options, data);
-	}
-	else if (options.AGGREGATION && options.RAND_AGGREGATION) {
-		add_random_aggregate_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, trace, options, data);
-	}
-	if (options.THRESHOLD_AGGREGATION > 1) {
-		store_current_aggregate_cut(dynamic_aggregate_cuts, all_package, slave_weight_coeff, problem_to_id, data.x0);
-		if (data.it % options.THRESHOLD_AGGREGATION == 0) {
-			gather_cut(dynamic_aggregate_cuts, master, data.it, options.THRESHOLD_AGGREGATION * data.nslaves);
-		}
-	}
+void build_cut_full(WorkerMasterPtr & master, std::vector<SlaveCutPackage> const & all_package, Str2Int & problem_to_id, std::set<std::string> & random_slaves, std::vector<WorkerMasterDataPtr> & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
+	//check_status(all_package, data);
+	//if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
+	//	sort_cut_slave(all_package, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
+	//}
+	//else if (options.AGGREGATION && !options.RAND_AGGREGATION) {
+	//	sort_cut_slave_aggregate(all_package, slave_weight_coeff, master, problem_to_id, trace, all_cuts_storage, data, options);
+	//}
+	//else if (!options.AGGREGATION && options.RAND_AGGREGATION) {
+	//	add_random_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, trace, options, data);
+	//}
+	//else if (options.AGGREGATION && options.RAND_AGGREGATION) {
+	//	add_random_aggregate_cuts(master, all_package, slave_weight_coeff, problem_to_id, random_slaves, trace, options, data);
+	//}
+	//if (options.THRESHOLD_AGGREGATION > 1) {
+	//	store_current_aggregate_cut(dynamic_aggregate_cuts, all_package, slave_weight_coeff, problem_to_id, data.x0);
+	//	if (data.it % options.THRESHOLD_AGGREGATION == 0) {
+	//		gather_cut(dynamic_aggregate_cuts, master, data.it, options.THRESHOLD_AGGREGATION * data.nslaves);
+	//	}
+	//}
 }

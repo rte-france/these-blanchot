@@ -24,6 +24,7 @@ WorkerSlave::WorkerSlave(std::map<std::string, int> const & variable_map, std::s
 		sequence[i] = i;
 	}
 	XPRSgetobj(_xprs, o.data(), 0, mps_ncols - 1);
+	std::cout << "slave_weight : " << slave_weight << std::endl;
 	for (auto & c : o) {
 		c *= slave_weight;
 	}
