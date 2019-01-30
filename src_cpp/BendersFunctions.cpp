@@ -834,7 +834,9 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 	for (auto & kvp : cut_id) {
 		for (int i(0); i < kvp.second.size(); i++) {
 			active_cuts.push_back(std::make_tuple(it, kvp.first, i + 1, (dual[kvp.first[i]] != 0)));
-	//	}
-	//}
+			//	}
+			//}
+		}
+	}
 }
 

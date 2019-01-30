@@ -78,6 +78,7 @@ void BendersOptions::read(std::string const & file_name) {
 		}
 	}
 	else {
+		std::cout << "setting option to default" << std::endl;
 		write_default();
 	}
 }
