@@ -25,6 +25,8 @@
 #include <thread>
 #include "Timer.h"
 
+#include <cmath>
+
 struct Predicate;
 typedef std::map<std::string, double> Point;
 
@@ -134,6 +136,16 @@ struct BendersData {
 	double invest_cost;
 	Point bestx;
 	Point x0;
+
+	// x_simplex est la solution courante du master
+	Point x_simplex;
+	// eta est le coefficient de convexite pour calculte eta.x + (1-eta).best_x
+	double eta;
+	// on stocke les bornes sur les variables de premier niveau
+	std::vector<double> global_ub;
+	std::vector<double> global_lb;
+	
+
 	int nslaves;
 	double dnslaves;
 	int master_status;

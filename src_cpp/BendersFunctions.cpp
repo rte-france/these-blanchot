@@ -88,6 +88,10 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
 	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << std::setprecision(6) << data.eta;
+	}
 	stream << std::endl;
 
 }
@@ -263,10 +267,17 @@ void print_active_cut(ActiveCutStorage const & active_cuts, BendersOptions const
 *
 *  \param x0 : current optimal variables
 */
-void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0) {
+void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0, double & eta, bool const DYNAMIC_STABILIZATION) {
 	if (best_ub > ub) {
+		if(DYNAMIC_STABILIZATION){
+			eta = std::min(1.0, 1.2*eta);
+		}
 		best_ub = ub;
 		bestx = x0;
+	}else{
+		if(DYNAMIC_STABILIZATION){
+			eta = std::max(0.1, 0.8*eta);
+		}
 	}
 }
 
@@ -344,6 +355,7 @@ void check_status(AllCutPackage const & all_package, BendersData const & data) {
 	}
 }
 
+
 /*!
 *  \brief Solve and get optimal variables of the Master Problem
 *
@@ -367,6 +379,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 		data.ub = data.invest_cost;
 	}
 	data.timer_master = timer_master.elapsed();
+
 }
 
 
@@ -840,3 +853,77 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 	}
 }
 
+
+
+void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
+	data.x_simplex = data.x0;
+
+	// Pas la premiere fois car on ne connait pas encore bestx peut etre
+	if(data.it > 1){
+		// Si trick==0 ou (trick!=0 et it%trick!=0) alors on y va
+		if(options.TRICK_FISCHETTI == 0 || (options.TRICK_FISCHETTI != 0 && data.it%options.TRICK_FISCHETTI != 0)){
+			// composante par composante
+			for(auto const & kvp : data.x_simplex){
+				data.x0[kvp.first] = data.eta * kvp.second + (1 - data.eta) * data.bestx[kvp.first];
+			}
+		}
+	}
+
+	
+	int n_vars = data.x0.size();
+	std::vector<double> current_point;
+	
+	std::vector<char> ub_type;
+	std::vector<char> lb_type;
+	std::vector<char> both_type;
+	std::vector<int> index_vars;
+
+	current_point.resize(n_vars);
+	ub_type.resize(n_vars);
+	lb_type.resize(n_vars);
+	both_type.resize(n_vars);
+	index_vars.resize(n_vars);
+
+	for(int i(0); i<n_vars; i++){
+		current_point[i] = data.x0[master->_id_to_name[i]];
+		ub_type[i] = 'U';
+		lb_type[i] = 'L';
+		both_type[i] = 'B';
+		index_vars[i] = i;
+	}
+
+	//XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), both_type.data(), current_point.data());
+	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), lb_type.data(), current_point.data());
+	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), ub_type.data(), current_point.data());
+
+	int local_status;
+	double local_lb;
+	data.alpha_i.resize(data.nslaves);
+	if (options.BOUND_ALPHA) {
+		master->fix_alpha(data.best_ub);
+	}
+	master->solve(local_status);
+	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
+	master->get_value(local_lb); /*Get the optimal value of the Master Problem*/
+	data.invest_cost = local_lb - data.alpha;
+	if (!options.RAND_AGGREGATION) {
+		data.ub = data.invest_cost;
+	}
+
+	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), lb_type.data(), data.global_lb.data());
+	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), ub_type.data(), data.global_ub.data());
+
+}
+
+
+void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options){
+	// nombre de variables d'investissement
+	int ncols = 0;
+	XPRSgetintattrib(master->_xprs, XPRS_COLS, &ncols);
+	int n_vars =  ncols - data.alpha_i.size() - 1 ;
+	data.global_ub.resize(n_vars);
+	data.global_lb.resize(n_vars);
+
+	XPRSgetlb(master->_xprs , data.global_lb.data(), 0, n_vars - 1);
+	XPRSgetub(master->_xprs , data.global_ub.data(), 0, n_vars - 1);
+}

@@ -67,6 +67,12 @@ BENDERS_OPTIONS_MACRO(BOUND_ALPHA, bool, true)
 //Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
 BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 
+//Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
+BENDERS_OPTIONS_MACRO(ETA_IN_OUT, float, 1)
 
+//Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
+BENDERS_OPTIONS_MACRO(TRICK_FISCHETTI, int, 1)
 
+//Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
+BENDERS_OPTIONS_MACRO(DYNAMIC_STABILIZATION, bool, true)
 

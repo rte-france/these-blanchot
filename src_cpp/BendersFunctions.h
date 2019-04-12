@@ -20,7 +20,7 @@ void print_solution(std::ostream&stream, Point const & point, bool const filter_
 void print_active_cut(ActiveCutStorage const & active_cuts, BendersOptions const & options);
 
 
-void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0);
+void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0, double & eta, bool const DYNAMIC_STABILIZATION);
 void bound_simplex_iter(int simplexiter, BendersData & data);
 bool stopping_criterion(BendersData & data, BendersOptions const & options);
 void update_trace(BendersTrace & trace, BendersData const & data);
@@ -47,3 +47,9 @@ void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, B
 void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves);
 void sort_basis(AllBasisPackage const & all_basis_package, Str2Int & problem_to_id, SimplexBasisStorage & basis_storage, BendersData & data);
 void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts, SlaveCutId & cut_id, int const it);
+
+
+// Nouvelle fonction pour calculer le x central sur lequel couper
+void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
+// Recuperation des bornes sur les variables de premier niveau
+void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);

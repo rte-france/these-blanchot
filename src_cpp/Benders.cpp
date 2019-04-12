@@ -36,6 +36,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
 	}
 
+	_data.eta = _options.ETA_IN_OUT;
+
 }
 
 
@@ -92,10 +94,20 @@ void Benders::run(std::ostream & stream) {
 	}
 	init(_data);
 	_data.nrandom = _options.RAND_AGGREGATION;
+
 	while (!_data.stop) {
 		Timer timer_master;
 		++_data.it;
 		get_master_value(_master, _data, _options);
+
+		// on recupere les bornes initiales sur les variables d'investissement
+		if(_data.it == 1){
+			save_bounds(_master, _data, _options);
+		}
+
+		// Calcul du point de coupe xcut et on evalue l'obj en ce nouveau point
+		compute_x_cut(_master, _data, _options);
+
 		if (_options.ACTIVECUTS) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
@@ -105,7 +117,7 @@ void Benders::run(std::ostream & stream) {
 		}
 		build_cut();
 
-		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
 
 		if (_options.TRACE) {
 			update_trace(_trace, _data);
@@ -115,6 +127,13 @@ void Benders::run(std::ostream & stream) {
 		_data.stop = stopping_criterion(_data, _options);
 	}
 	
+	// on ecrit les iterations dans un fichier
+	std::ofstream fichier("Inout_iterations.txt", std::ios::out | std::ios::app);
+	if(fichier){
+		fichier << _options.ETA_IN_OUT << "     " << _data.it << std::endl;
+		fichier.close();
+	}
+
 	print_solution(stream, _data.bestx, true);
 	if (_options.TRACE) {
 		print_csv(_trace, _problem_to_id, _data, _options);
