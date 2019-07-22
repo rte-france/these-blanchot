@@ -137,14 +137,14 @@ struct BendersData {
 	Point bestx;
 	Point x0;
 
-	// x_simplex est la solution courante du master
+	// this is the LP solution of the optimization of the master problem
 	Point x_simplex;
-	// eta est le coefficient de convexite pour calculte eta.x + (1-eta).best_x
+
+	// Convexity coefficient to compute x_sep = eta.x + (1-eta).best_x
 	double eta;
-	// on stocke les bornes sur les variables de premier niveau
+	// The bounds of the first stage variables
 	std::vector<double> global_ub;
 	std::vector<double> global_lb;
-	
 
 	int nslaves;
 	double dnslaves;

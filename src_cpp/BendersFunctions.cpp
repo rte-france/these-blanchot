@@ -46,6 +46,7 @@ void init_log(std::ostream&stream, int const log_level) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "ALPHAVALUE";
 	}
 	stream << std::endl;
 }
@@ -87,13 +88,9 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << data.deletedcut;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
-	}
-
-	if (log_level > 2) {
-		stream << std::setw(15) << std::setprecision(6) << data.eta;
+		stream << std::setw(15) << std::setprecision(2) << data.eta;
 	}
 	stream << std::endl;
-
 }
 
 /*!
@@ -854,11 +851,21 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 }
 
 
-
+/*!
+*  \brief Compute the separation point, from which a cut is derived
+*
+*  Fonction to compute the separation point, from which a cut is derived, in a in-out stabilization setting
+*
+*  \param master : pointer to master problem
+*
+*  \param data : set of Benders data
+*
+*  \param options : set of parameters
+*/
 void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	data.x_simplex = data.x0;
 
-	// Pas la premiere fois car on ne connait pas encore bestx peut etre
+	// Pas la premiere fois car on ne connait pas encore bestx (le point IN)
 	if(data.it > 1){
 		// Si trick==0 ou (trick!=0 et it%trick!=0) alors on y va
 		if(options.TRICK_FISCHETTI == 0 || (options.TRICK_FISCHETTI != 0 && data.it%options.TRICK_FISCHETTI != 0)){
@@ -869,7 +876,6 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 		}
 	}
 
-	
 	int n_vars = data.x0.size();
 	std::vector<double> current_point;
 	
@@ -892,10 +898,12 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 		index_vars[i] = i;
 	}
 
+	// To compute UB, we have to evaluate the obj on the separation point.
+	// We fix the master variables to this values, solve the master, then restore the bounds to continue the otpimization
+
 	//XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), both_type.data(), current_point.data());
 	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), lb_type.data(), current_point.data());
 	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), ub_type.data(), current_point.data());
-
 	int local_status;
 	double local_lb;
 	data.alpha_i.resize(data.nslaves);
@@ -909,13 +917,23 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 	if (!options.RAND_AGGREGATION) {
 		data.ub = data.invest_cost;
 	}
-
+	// restoration of the bounds
 	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), lb_type.data(), data.global_lb.data());
 	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), ub_type.data(), data.global_ub.data());
 
 }
 
-
+/*!
+*  \brief Store the initial bounds of variables in the problem
+*
+*  Fonction to store the initial bounds of the variables of the problem. They're used when we fix some variables, to restore the bounds after and continue the optimization.
+*
+*  \param master : pointer to master problem
+*
+*  \param data : set of Benders data
+*
+*  \param options : set of parameters
+*/
 void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options){
 	// nombre de variables d'investissement
 	int ncols = 0;

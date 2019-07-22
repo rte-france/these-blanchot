@@ -49,7 +49,5 @@ void sort_basis(AllBasisPackage const & all_basis_package, Str2Int & problem_to_
 void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts, SlaveCutId & cut_id, int const it);
 
 
-// Nouvelle fonction pour calculer le x central sur lequel couper
 void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
-// Recuperation des bornes sur les variables de premier niveau
 void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
