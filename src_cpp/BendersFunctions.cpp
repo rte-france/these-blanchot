@@ -376,7 +376,6 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 		data.ub = data.invest_cost;
 	}
 	data.timer_master = timer_master.elapsed();
-
 }
 
 
