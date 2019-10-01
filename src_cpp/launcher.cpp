@@ -82,7 +82,6 @@ void sequential_launch(BendersOptions const & options) {
 		std::exit(0);
 	}
 
-
 	//XPRSinit("");
 	CouplingMap input;
 	build_input(options, input);

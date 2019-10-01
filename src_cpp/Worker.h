@@ -56,7 +56,7 @@ public:
 void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
 void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 
-StrVector XPRS_LP_STATUS = {
+/*StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_UNSTARTED",
 	"XPRS_LP_OPTIMAL",
 	"XPRS_LP_INFEAS",
@@ -66,4 +66,4 @@ StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_CUTOFF_IN_DUAL",
 	"XPRS_LP_UNSOLVED",
 	"XPRS_LP_NONCONVEX"
-};
+};*/
