@@ -32,8 +32,8 @@ public:
 	virtual void fix_alpha(double const & bestUB) = 0;
 
 public :
-	virtual void getlb_variables(BendersData & data, BendersOptions const & options) = 0;
-	virtual void getub_variables(BendersData & data, BendersOptions const & options) = 0;
+	virtual void getlb_variables(BendersData & data, BendersOptions const & options, int nvars) = 0;
+	virtual void getub_variables(BendersData & data, BendersOptions const & options, int nvars) = 0;
 
 	virtual void chgbounds(int nvars, std::vector<int> index_vars, std::vector<char> bnd_types, std::vector<double> values) = 0;
 

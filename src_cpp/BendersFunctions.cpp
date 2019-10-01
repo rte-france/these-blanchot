@@ -941,6 +941,6 @@ void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions co
 	data.global_ub.resize(n_vars);
 	data.global_lb.resize(n_vars);
 
-	master->getlb_variables(data, options);
-	master->getub_variables(data, options);
+	master->getlb_variables(data, options, n_vars);
+	master->getub_variables(data, options, n_vars);
 }
