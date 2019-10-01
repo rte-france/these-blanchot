@@ -15,26 +15,21 @@ typedef std::shared_ptr<Worker> WorkerPtr;
 *
 *  This class opens and sets a problem from a mps and a mapping variable map
 */
-
 class Worker
 {
 public:
 	Worker();
-	void init(Str2Int const & variable_map, std::string const & path_to_mps);
+	virtual void init(Str2Int const & variable_map, std::string const & path_to_mps) = 0;
 	virtual ~Worker();
-
-	void get_value(double & lb);
-
-	void get_simplex_ite(int & result);
-
-	void free();
+	virtual void get_value(double & lb) = 0;
+	virtual void get_simplex_ite(int & result) = 0;
+	virtual void free() = 0;
 public:
 	std::string _path_to_mps;
 	Str2Int _name_to_id; /*!< Link between the variable name and its identifier */
 	Int2Str _id_to_name; /*!< Link between the identifier of a variable and its name*/
 	
 public:
-
 	/*!
 	*  \brief Generate an error message
 	*
@@ -43,16 +38,16 @@ public:
 	*  \param sSubName : 
 	*/
 	std::list<std::ostream *> & stream();
-
-	void solve(int & lp_status);
-
+	virtual void solve(int & lp_status) = 0;
 
 public:
 	AbstractSolver* solver;
-	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
 	std::list<std::ostream * >_stream;
 	bool _is_master;
 };
+
+
+
 
 void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
 void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
