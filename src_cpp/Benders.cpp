@@ -86,7 +86,7 @@ void Benders::build_cut() {
 *
 * \param stream : stream to print the output
 */
-void Benders::run(std::ostream & stream) {
+void Benders::run(std::ostream & stream, AbstractSolver* solver) {
 	
 	init_log(stream, _options.LOG_LEVEL);
 	for (auto const & kvp : _problem_to_id) {
@@ -98,7 +98,7 @@ void Benders::run(std::ostream & stream) {
 	while (!_data.stop) {
 		Timer timer_master;
 		++_data.it;
-		get_master_value(_master, _data, _options);
+		get_master_value(_master, _data, _options, solver);
 
 		// on recupere les bornes initiales sur les variables d'investissement
 		if(_data.it == 1){

@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "BendersOptions.h"
-#include "xprs.h"
+#include "Solver.h"
 
 
 void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
@@ -48,6 +48,7 @@ public:
 
 
 public:
+	AbstractSolver* solver;
 	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
 	std::list<std::ostream * >_stream;
 	bool _is_master;

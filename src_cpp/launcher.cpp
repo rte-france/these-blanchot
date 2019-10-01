@@ -1,5 +1,4 @@
 #include "launcher.h"
-#include "xprs.h"
 #include "Benders.h"
 #include "Timer.h"
 
@@ -74,13 +73,23 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 */
 void sequential_launch(BendersOptions const & options) {
 	Timer timer;
-	XPRSinit("");
+	
+	AbstractSolver* solver(0);
+	if(options.SOLVER == "XPRESS"){
+		solver = new XPRESS_Solver();
+	}else{
+		std::cout << "SOLVER NON RECONUU" << std::endl;
+		std::exit(0);
+	}
+
+
+	//XPRSinit("");
 	CouplingMap input;
 	build_input(options, input);
 	Benders benders(input, options);
-	benders.run(std::cout);
+	benders.run(std::cout, solver);
 	benders.free();
-	XPRSfree();
+	delete solver;
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 }
 

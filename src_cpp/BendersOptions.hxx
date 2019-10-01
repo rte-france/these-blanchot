@@ -76,3 +76,5 @@ BENDERS_OPTIONS_MACRO(TRICK_FISCHETTI, int, 0)
 //True if the in-out parameter is updated dynamically, false if constant
 BENDERS_OPTIONS_MACRO(DYNAMIC_STABILIZATION, bool, true)
 
+//True if the in-out parameter is updated dynamically, false if constant
+BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")

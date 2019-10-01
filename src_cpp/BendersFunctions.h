@@ -27,7 +27,7 @@ void update_trace(BendersTrace & trace, BendersData const & data);
 void check_status(AllCutPackage const & all_package, BendersData const & data);
 
 
-void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
+void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options, AbstractSolver* solver);
 void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data);
 void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData const & data);
 
