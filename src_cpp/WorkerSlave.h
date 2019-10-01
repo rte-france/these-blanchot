@@ -2,7 +2,6 @@
 
 
 #include "Worker.h"
-#include "xprs.h"
 #include "SlaveCut.h"
 #include "SimplexBasis.h"
 
@@ -21,7 +20,6 @@ class WorkerSlave : public Worker {
 public:
 
 	WorkerSlave();
-	WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options);
 	virtual ~WorkerSlave();
 
 public:

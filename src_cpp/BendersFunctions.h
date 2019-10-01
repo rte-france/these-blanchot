@@ -2,8 +2,8 @@
 
 #include "SlaveCut.h"
 #include "Worker.h"
-#include "WorkerSlave.h"
-#include "WorkerMaster.h"
+#include "WorkerSlaveXPRS.h"
+#include "WorkerMasterXPRS.h"
 #include "WorkerTrace.h"
 #include "BendersOptions.h"
 

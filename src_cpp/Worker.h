@@ -24,6 +24,10 @@ public:
 	virtual void get_value(double & lb) = 0;
 	virtual void get_simplex_ite(int & result) = 0;
 	virtual void free() = 0;
+
+	virtual void get_ncols(int & ncols) = 0;
+	virtual void get_nrows(int & nrows) = 0;
+
 public:
 	std::string _path_to_mps;
 	Str2Int _name_to_id; /*!< Link between the variable name and its identifier */

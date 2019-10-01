@@ -27,7 +27,12 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
 				_problem_to_id[it->first] = i;
-				_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
+				if(options.SOLVER == "XPRESS"){
+					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveXPRS(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
+				}else{
+					std::cout << "SOLVEUR NON RECONNU" << std::endl;
+					std::exit(1);
+				}
 				_slaves.push_back(it->first);
 				i++;
 			}

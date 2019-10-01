@@ -901,8 +901,8 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 	// We fix the master variables to this values, solve the master, then restore the bounds to continue the otpimization
 
 	//XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), both_type.data(), current_point.data());
-	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), lb_type.data(), current_point.data());
-	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), ub_type.data(), current_point.data());
+	master->chgbounds(n_vars, index_vars, lb_type, current_point);
+	master->chgbounds(n_vars, index_vars, ub_type, current_point);
 	int local_status;
 	double local_lb;
 	data.alpha_i.resize(data.nslaves);
@@ -917,8 +917,8 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 		data.ub = data.invest_cost;
 	}
 	// restoration of the bounds
-	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), lb_type.data(), data.global_lb.data());
-	XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), ub_type.data(), data.global_ub.data());
+	master->chgbounds(n_vars, index_vars, lb_type, data.global_lb);
+	master->chgbounds(n_vars, index_vars, ub_type, data.global_ub);
 
 }
 
@@ -936,11 +936,11 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options){
 	// nombre de variables d'investissement
 	int ncols = 0;
-	XPRSgetintattrib(master->_xprs, XPRS_COLS, &ncols);
+	master->get_ncols(ncols);
 	int n_vars =  ncols - data.alpha_i.size() - 1 ;
 	data.global_ub.resize(n_vars);
 	data.global_lb.resize(n_vars);
 
-	XPRSgetlb(master->_xprs , data.global_lb.data(), 0, n_vars - 1);
-	XPRSgetub(master->_xprs , data.global_ub.data(), 0, n_vars - 1);
+	master->getlb_variables(data, options);
+	master->getub_variables(data, options);
 }
