@@ -33,7 +33,12 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
-		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
+		if(options.SOLVER == "XPRESS"){
+			_master.reset(new WorkerMasterXPRS(master_variable, _options.get_master_path(), _options, _data.nslaves));
+		}else{
+			std::cout << "SOLVEUR NON RECONNU" << std::endl;
+			std::exit(1);
+		}
 	}
 
 	_data.eta = _options.ETA_IN_OUT;

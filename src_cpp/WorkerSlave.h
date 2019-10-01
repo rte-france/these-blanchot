@@ -26,13 +26,10 @@ public:
 
 public:
 
-	void write(int it);
-
-	void fix_to(Point const & x0);
-
-	void get_subgradient(Point & s);
-
-	SimplexBasis get_basis();
+	virtual void write(int it) = 0;
+	virtual void fix_to(Point const & x0) = 0;
+	virtual void get_subgradient(Point & s) = 0;
+	virtual SimplexBasis get_basis() = 0;
 
 };
 

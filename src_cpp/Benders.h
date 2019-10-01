@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WorkerMaster.h"
+#include "WorkerMasterXPRS.h"
 #include "WorkerTrace.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
