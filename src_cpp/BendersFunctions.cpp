@@ -77,7 +77,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(20) << "+INF";
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
-		stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -369,7 +369,6 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 		master->fix_alpha(data.best_ub);
 	}
 	master->solve(data.master_status);
-	std::cout << "RESOLUTION CLASSIQUE " << data.master_status << std::endl;
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
@@ -865,63 +864,62 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	data.x_simplex = data.x0;
 
-	// // Pas la premiere fois car on ne connait pas encore bestx (le point IN)
-	// if(data.it > 1){
-	// 	// Si trick==0 ou (trick!=0 et it%trick!=0) alors on y va
-	// 	if(options.TRICK_FISCHETTI == 0 || (options.TRICK_FISCHETTI != 0 && data.it%options.TRICK_FISCHETTI != 0)){
-	// 		// composante par composante
-	// 		for(auto const & kvp : data.x_simplex){
-	// 			data.x0[kvp.first] = data.eta * kvp.second + (1 - data.eta) * data.bestx[kvp.first];
-	// 		}
-	// 	}
-	// }
+	// Pas la premiere fois car on ne connait pas encore bestx (le point IN)
+	if(data.it > 1){
+		// Si trick==0 ou (trick!=0 et it%trick!=0) alors on y va
+		if(options.TRICK_FISCHETTI == 0 || (options.TRICK_FISCHETTI != 0 && data.it%options.TRICK_FISCHETTI != 0)){
+			// composante par composante
+			for(auto const & kvp : data.x_simplex){
+				data.x0[kvp.first] = data.eta * kvp.second + (1 - data.eta) * data.bestx[kvp.first];
+			}
+		}
+	}
 
-	// int n_vars = data.x0.size();
-	// std::vector<double> current_point;
+	int n_vars = data.x0.size();
+	std::vector<double> current_point;
 	
-	// std::vector<char> ub_type;
-	// std::vector<char> lb_type;
-	// std::vector<char> both_type;
-	// std::vector<int> index_vars;
+	std::vector<char> ub_type;
+	std::vector<char> lb_type;
+	std::vector<char> both_type;
+	std::vector<int> index_vars;
 
-	// current_point.resize(n_vars);
-	// ub_type.resize(n_vars);
-	// lb_type.resize(n_vars);
-	// both_type.resize(n_vars);
-	// index_vars.resize(n_vars);
+	current_point.resize(n_vars);
+	ub_type.resize(n_vars);
+	lb_type.resize(n_vars);
+	both_type.resize(n_vars);
+	index_vars.resize(n_vars);
 
-	// for(int i(0); i<n_vars; i++){
-	// 	current_point[i] = data.x0[master->_id_to_name[i]];
-	// 	ub_type[i] = 'U';
-	// 	lb_type[i] = 'L';
-	// 	both_type[i] = 'B';
-	// 	index_vars[i] = i;
-	// }
+	for(int i(0); i<n_vars; i++){
+		current_point[i] = data.x0[master->_id_to_name[i]];
+		ub_type[i] = 'U';
+		lb_type[i] = 'L';
+		both_type[i] = 'B';
+		index_vars[i] = i;
+	}
 
-	// // To compute UB, we have to evaluate the obj on the separation point.
-	// // We fix the master variables to this values, solve the master, then restore the bounds to continue the otpimization
+	// To compute UB, we have to evaluate the obj on the separation point.
+	// We fix the master variables to this values, solve the master, then restore the bounds to continue the otpimization
 
-	// //XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), both_type.data(), current_point.data());
-	// master->chgbounds(n_vars, index_vars, lb_type, current_point);
-	// master->chgbounds(n_vars, index_vars, ub_type, current_point);
-	// int local_status;
-	// double local_lb;
-	// data.alpha_i.resize(data.nslaves);
-	// if (options.BOUND_ALPHA) {
-	// 	master->fix_alpha(data.best_ub);
-	// }
-	// master->solve(local_status);
+	//XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), both_type.data(), current_point.data());
+	master->chgbounds(n_vars, index_vars, lb_type, current_point);
+	master->chgbounds(n_vars, index_vars, ub_type, current_point);
+	int local_status;
+	double local_lb;
+	data.alpha_i.resize(data.nslaves);
+	if (options.BOUND_ALPHA) {
+		master->fix_alpha(data.best_ub);
+	}
+	master->solve(local_status);
 
-	// std::cout << "RESOLUTION FIXE " << local_status << std::endl;
-	// master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
-	// master->get_value(local_lb); /*Get the optimal value of the Master Problem*/
-	// data.invest_cost = local_lb - data.alpha;
-	// if (!options.RAND_AGGREGATION) {
-	// 	data.ub = data.invest_cost;
-	// }
-	// // restoration of the bounds
-	// master->chgbounds(n_vars, index_vars, lb_type, data.global_lb);
-	// master->chgbounds(n_vars, index_vars, ub_type, data.global_ub);
+	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
+	master->get_value(local_lb); /*Get the optimal value of the Master Problem*/
+	data.invest_cost = local_lb - data.alpha;
+	if (!options.RAND_AGGREGATION) {
+		data.ub = data.invest_cost;
+	}
+	// restoration of the bounds
+	master->chgbounds(n_vars, index_vars, lb_type, data.global_lb);
+	master->chgbounds(n_vars, index_vars, ub_type, data.global_ub);
 
 }
 

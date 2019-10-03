@@ -1,6 +1,13 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(STAGE_ENZO)
 
+set(CMAKE_MODULE_PATH               "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_CXX_FLAGS                 "${CMAKE_CXX_FLAGS} -std=c++14 -DIL_STD -m64 -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG           "${CMAKE_CXX_FLAGS_DEBUG} -Og -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE         "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -O3 -flto")
+set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX   "-isystem ")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  "${CMAKE_CURRENT_SOURCE_DIR}/build")
+
 SET(EXECUTABLE_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 SET(   LIBRARY_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 
@@ -42,7 +49,7 @@ INCLUDE_DIRECTORIES(
 IF( USE_MPI )
 	IF(WIN32)
 		INCLUDE_DIRECTORIES($ENV{BOOSTDIR} ./src_mpi $ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64)
-		LINK_DIRECTORIES($ENV{XPRESSDIR}/lib $ENV{BOOSTDIR}/stage/lib $ENV{MSMPI_LIB64})
+		LINK_DIRECTORIES($ENV{XPRESSDIR}/lib $ENV{BOOSTDIR}/stage/lib $ENV{MSMPI_LIB64} )
 	ELSE(WIN32)
 		INCLUDE_DIRECTORIES($ENV{BOOSTDIR} ./src_mpi)
 		LINK_DIRECTORIES($ENV{XPRESSDIR}/lib $ENV{BOOSTDIR}/stage/lib)
@@ -51,6 +58,8 @@ ENDIF( USE_MPI )
 
 LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
 
+find_package(Cplex)
+include_directories(SYSTEM ${CPLEX_INCLUDE_DIRS})
 
 FILE(
 	GLOB
@@ -74,20 +83,20 @@ IF( USE_MPI )
 ENDIF( USE_MPI )
 
 ADD_EXECUTABLE(test_sur_les_set ./src_enzo_test/test_sur_les_set.cpp)
-TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
+TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore ${CPLEX_LIBRARIES})
 
 ADD_EXECUTABLE(merge_mps ./exe_cpp/merge_mps.cpp)
-TARGET_LINK_LIBRARIES(merge_mps sequentialcore xprs)
+TARGET_LINK_LIBRARIES(merge_mps sequentialcore xprs ${CPLEX_LIBRARIES})
 
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
 	IF(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67)
+		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi libboost_serialization-vc141-mt-x64-1_67 ${CPLEX_LIBRARIES})
 	ELSE(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs boost_serialization boost_mpi-mt.so)
+		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs boost_serialization boost_mpi-mt.so ${CPLEX_LIBRARIES})
 	ENDIF(WIN32)
 	
 ELSE( USE_MPI )
 	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
-	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs )
+	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs ${CPLEX_LIBRARIES})
 ENDIF( USE_MPI )
