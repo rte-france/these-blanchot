@@ -862,6 +862,7 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 *  \param options : set of parameters
 */
 void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
+
 	data.x_simplex = data.x0;
 
 	// Pas la premiere fois car on ne connait pas encore bestx (le point IN)
@@ -920,7 +921,6 @@ void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions 
 	// restoration of the bounds
 	master->chgbounds(n_vars, index_vars, lb_type, data.global_lb);
 	master->chgbounds(n_vars, index_vars, ub_type, data.global_ub);
-
 }
 
 /*!
