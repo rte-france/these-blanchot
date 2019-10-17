@@ -55,6 +55,9 @@ BENDERS_OPTIONS_MACRO(THRESHOLD_ITERATION, int, 0)
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 
+//Seed to use random process
+BENDERS_OPTIONS_MACRO(RAND_SEED, int, -1)
+
 //Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER) 
 BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
 

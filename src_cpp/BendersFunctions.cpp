@@ -76,7 +76,7 @@ void init_log(std::ostream&stream, int const log_level, BendersOptions const & o
 *
 * \param log_level : level of log precision (from 1 to 3)
 */
-void print_log(std::ostream&stream, BendersData const & data, int const log_level) {
+void print_log(std::ostream&stream, BendersData const & data, int const log_level, BendersOptions const & options) {
 
 	stream << std::setw(10) << data.it;
 	if (data.lb == -1e20)
@@ -447,7 +447,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 *
 *  \param options : set of parameters
 */
-void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData & data) {
+void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData & data, Str2Int & _problem_to_id) {
 	int begin = data.nbr_sp_no_cut; 
 	for (int i(begin); i < begin + data.nbr_sp_to_solve; i++){
 		Timer timer_slave;

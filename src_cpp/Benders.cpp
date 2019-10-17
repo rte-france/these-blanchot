@@ -126,18 +126,18 @@ void Benders::build_cut() {
 */
 void Benders::run(std::ostream & stream, AbstractSolver* solver) {
 	
-	init_log(stream, _options.LOG_LEVEL);
+	init_log(stream, _options.LOG_LEVEL, _options);
 	for (auto const & kvp : _problem_to_id) {
 		_all_cuts_storage[kvp.first] = SlaveCutStorage();
 	}
-	init(_data);
+	init(_data, _options);
 	_data.nrandom = _options.RAND_AGGREGATION;
 
 	while (!_data.stop) {
 		if(_options.ALGORITHM == "INOUT" || _options.ALGORITHM == "BASE"){
-			perform_one_inout_iteration(std::ostream & stream);
+			perform_one_inout_iteration(stream);
 		}else if(_options.ALGORITHM == "SAMPLING"){
-			perform_one_sampling_iteration(std::ostream & stream);
+			perform_one_sampling_iteration(stream);
 		}
 	}
 
@@ -191,7 +191,7 @@ void Benders::perform_one_inout_iteration(std::ostream & stream) {
 		update_trace(_trace, _data);
 	}
 	_data.timer_master = timer_master.elapsed();
-	print_log(stream, _data, _options.LOG_LEVEL);
+	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
 }
 
@@ -220,12 +220,12 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	}
 
 	build_cut();
-	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
 
 	if (_options.TRACE) {
 		update_trace(_trace, _data);
 	}
 	_data.timer_master = timer_master.elapsed();
-	print_log(stream, _data, _options.LOG_LEVEL);
+	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
 }
