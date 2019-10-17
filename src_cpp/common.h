@@ -132,6 +132,7 @@ struct BendersData {
 	bool stop;
 	double alpha;
 	std::vector<double> alpha_i;
+	std::vector<double> previous_alpha_i;
 	double slave_cost;
 	double invest_cost;
 	Point bestx;
@@ -150,6 +151,12 @@ struct BendersData {
 	double dnslaves;
 	int master_status;
 	int nrandom;
+
+	//Add for random cuts
+	int nbr_sp_no_cut;
+	int nbr_sp_to_solve;
+	bool solve_master;
+	bool has_cut_this_ite;
 };
 
 double norm_point(Point const & x0, Point const & x1);

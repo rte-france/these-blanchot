@@ -11,7 +11,7 @@
 #include "WorkerMasterCPLX.h"
 #include "WorkerSlaveCPLX.h"
 
-void init(BendersData & data);
+void init(BendersData & data, BendersOptions const & options);
 void init_log(std::ostream&stream, int const log_level);
 
 
@@ -32,7 +32,7 @@ void check_status(AllCutPackage const & all_package, BendersData const & data);
 
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
 void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data);
-void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData const & data);
+void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData & data, Str2Int & _problem_to_id);
 
 
 void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, BendersTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id);

@@ -75,12 +75,34 @@ void Benders::build_cut() {
 	SlaveCutPackage slave_cut_package;
 	AllCutPackage all_package;
 	Timer timer_slaves;
+
 	if (_options.RAND_AGGREGATION) {
-		std::random_shuffle(_slaves.begin(), _slaves.end());
-		get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data);
+		if(_data.it < 2){
+			get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+
+		}else{
+			// Si solve_master == True, on est dans une iteration avec de nouvelles variables de premier niveau
+			// On shuffle les sous-problemes
+			// Sinon, on continue a tirer des sous-problemes associes a un shuffle jusqu'a couper
+			if( _data.solve_master ){
+				std::random_shuffle(_slaves.begin(), _slaves.end());
+			}
+			// New resolution
+			_data.has_cut_this_ite = false;
+			// Solving nrandom SP only if there are still at least nrandom SP to solve, if not, solving the left SP
+			_data.nbr_sp_to_solve = std::min(_data.nrandom, _data.nslaves - _data.nbr_sp_no_cut);
+			get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
+
+			if( _data.has_cut_this_ite ){
+				_data.solve_master = true;
+			}else{
+				_data.solve_master = false;
+			}
+		}
 	}
 	else {
 		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
@@ -91,6 +113,7 @@ void Benders::build_cut() {
 		get_slave_basis(slave_basis_package, _map_slaves);
 		all_basis_package.push_back(slave_basis_package);
 		sort_basis(all_basis_package, _problem_to_id, _basis, _data);
+
 	}
 }
 
@@ -111,44 +134,15 @@ void Benders::run(std::ostream & stream, AbstractSolver* solver) {
 	_data.nrandom = _options.RAND_AGGREGATION;
 
 	while (!_data.stop) {
-		Timer timer_master;
-		++_data.it;
-		get_master_value(_master, _data, _options);
-
-		// on recupere les bornes initiales sur les variables d'investissement
-		if(_data.it == 1){
-			save_bounds(_master, _data, _options);
+		if(_options.ALGORITHM == "INOUT" || _options.ALGORITHM == "BASE"){
+			perform_one_inout_iteration(std::ostream & stream);
+		}else if(_options.ALGORITHM == "SAMPLING"){
+			perform_one_sampling_iteration(std::ostream & stream);
 		}
-
-		// Calcul du point de coupe xcut et on evalue l'obj en ce nouveau point
-		if(_options.ALGORITHM == "INOUT"){
-			compute_x_cut(_master, _data, _options);
-		}
-
-		if (_options.ACTIVECUTS) {
-			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
-		}
-
-		if (_options.TRACE) {
-			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-		}
-		build_cut();
-
-		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
-
-		if (_options.TRACE) {
-			update_trace(_trace, _data);
-		}
-		_data.timer_master = timer_master.elapsed();
-		print_log(stream, _data, _options.LOG_LEVEL);
-		_data.stop = stopping_criterion(_data, _options);
 	}
-	
-	// on ecrit les iterations dans un fichier
-	std::ofstream fichier("Inout_iterations.txt", std::ios::out | std::ios::app);
-	if(fichier){
-		fichier << _options.ETA_IN_OUT << "     " << _data.it << std::endl;
-		fichier.close();
+
+	if(_options.ALGORITHM == "SAMPLING"){
+		_data.bestx = _data.x0;
 	}
 
 	print_solution(stream, _data.bestx, true);
@@ -158,4 +152,80 @@ void Benders::run(std::ostream & stream, AbstractSolver* solver) {
 	if (_options.ACTIVECUTS) {
 		print_active_cut(_active_cuts,_options);
 	}
+}
+
+/*!
+*  \brief Perform one iteration of InOut Algorithm
+*
+*  Method to Perform one iteration of InOut Algorithm
+*
+* \param stream : stream to print the output
+*/
+void Benders::perform_one_inout_iteration(std::ostream & stream) {
+	Timer timer_master;
+	++_data.it;
+	get_master_value(_master, _data, _options);
+
+	// on recupere les bornes initiales sur les variables d'investissement
+	if(_data.it == 1){
+		save_bounds(_master, _data, _options);
+	}
+
+	// Calcul du point de coupe xcut et on evalue l'obj en ce nouveau point
+	if(_options.ALGORITHM == "INOUT"){
+		compute_x_cut(_master, _data, _options);
+	}
+
+	if (_options.ACTIVECUTS) {
+		update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
+	}
+
+	if (_options.TRACE) {
+		_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+	}
+	build_cut();
+
+	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
+
+	if (_options.TRACE) {
+		update_trace(_trace, _data);
+	}
+	_data.timer_master = timer_master.elapsed();
+	print_log(stream, _data, _options.LOG_LEVEL);
+	_data.stop = stopping_criterion(_data, _options);
+}
+
+/*!
+*  \brief Perform one iteration of InOut Algorithm
+*
+*  Method to Perform one iteration of InOut Algorithm
+*
+* \param stream : stream to print the output
+*/
+void Benders::perform_one_sampling_iteration(std::ostream & stream) {
+	Timer timer_master;
+	++_data.it;
+
+	if(_data.solve_master){
+		_data.nbr_sp_no_cut = 0;
+		get_master_value(_master, _data, _options);
+	}
+	
+	if (_options.ACTIVECUTS) {
+		update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
+	}
+
+	if (_options.TRACE) {
+		_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+	}
+
+	build_cut();
+	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+
+	if (_options.TRACE) {
+		update_trace(_trace, _data);
+	}
+	_data.timer_master = timer_master.elapsed();
+	print_log(stream, _data, _options.LOG_LEVEL);
+	_data.stop = stopping_criterion(_data, _options);
 }

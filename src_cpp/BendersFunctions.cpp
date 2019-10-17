@@ -6,8 +6,12 @@
 *
 *  \param data : Benders data
 */
-void init(BendersData & data) {
-	std::srand(time(NULL));
+void init(BendersData & data, BendersOptions const & options) {
+	if (options.RAND_SEED == -1){
+		std::srand(time(NULL));
+	}else{
+		std::srand(options.RAND_SEED);
+	}
 	data.nbasis = 0;
 	data.lb = -1e20;
 	data.ub = +1e20;
@@ -19,6 +23,10 @@ void init(BendersData & data) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+
+	data.solve_master = true;
+	data.nbr_sp_no_cut = 0;
+	data.has_cut_this_ite = false;
 }
 
 /*!
@@ -30,7 +38,7 @@ void init(BendersData & data) {
 *
 * \param log_level : level of log precision (from 1 to 3)
 */
-void init_log(std::ostream&stream, int const log_level) {
+void init_log(std::ostream&stream, int const log_level, BendersOptions const & options) {
 	stream << std::setw(10) << "ITE";
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "UB";
@@ -46,10 +54,16 @@ void init_log(std::ostream&stream, int const log_level) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
-		stream << std::setw(15) << "ALPHAVALUE";
+		if(options.ALGORITHM == "SAMPLING"){
+			stream << std::setw(15) << "NBR_NOCUT";
+		}else{
+			stream << std::setw(15) << "ALPHAVALUE";
+		}
 	}
 	stream << std::endl;
 }
+
+
 
 /*!
 *  \brief Print iteration log
@@ -88,7 +102,13 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << data.deletedcut;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
-		stream << std::setw(15) << std::setprecision(2) << data.eta;
+		
+		if(options.ALGORITHM == "SAMPLING"){
+			stream << std::setw(15) << std::setprecision(2) << data.nbr_sp_no_cut;
+		}else{
+			stream << std::setw(15) << std::setprecision(2) << data.eta;
+		}
+
 	}
 	stream << std::endl;
 }
@@ -307,7 +327,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
-	return(((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || (data.lb + options.GAP >= data.best_ub));
+	return(((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || (data.lb + options.GAP >= data.best_ub) || (data.nbr_sp_no_cut == data.nslaves) );
 }
 
 /*!
@@ -368,6 +388,8 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	if (options.BOUND_ALPHA) {
 		master->fix_alpha(data.best_ub);
 	}
+
+	master->save_alpha_values(data);
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
@@ -415,6 +437,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 *  \brief Solve and store optimal variables of random Slaves Problems
 *
 *  Method to solve and store optimal variables of random Slaves Problems after fixing trial values
+*  -> ?], solve the next nrandom SP in those which haven't been solved yet
 *
 *  \param slave_cut_package : map storing for each slave its cut
 *
@@ -424,8 +447,9 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 *
 *  \param options : set of parameters
 */
-void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData const & data) {
-	for (int i(0); i < data.nrandom; i++){
+void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData & data) {
+	int begin = data.nbr_sp_no_cut; 
+	for (int i(begin); i < begin + data.nbr_sp_to_solve; i++){
 		Timer timer_slave;
 		std::string const name_slave(random_slaves[i]);
 		WorkerSlavePtr & ptr(map_slaves[name_slave]);
@@ -438,8 +462,14 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 		}
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
-			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
+
+		if(handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[random_slaves[i]]] < (options.GAP/data.nslaves) ){
+			data.nbr_sp_no_cut += 1;
+		}else{
+			data.has_cut_this_ite = true;
+		}
 		slave_cut_package[name_slave] = *slave_cut_data;
 	}
 }
@@ -571,9 +601,6 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 				trace[data.it - 1]->_cut_trace[kvp.first] = slave_cut_data;
 			}
 		}
-	}
-	if (nboundslaves == options.RAND_AGGREGATION) {
-		options.RAND_AGGREGATION = 0;
 	}
 }
 
