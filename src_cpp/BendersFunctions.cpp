@@ -362,7 +362,7 @@ void check_status(AllCutPackage const & all_package, BendersData const & data) {
 *
 *  \param data : benders data to update with master optimal solution
 */
-void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options, AbstractSolver* solver) {
+void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
 	if (options.BOUND_ALPHA) {

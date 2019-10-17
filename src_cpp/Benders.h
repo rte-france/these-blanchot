@@ -13,7 +13,7 @@
 */
 class Benders {
 public:
-	Benders(CouplingMap const & problem_list, BendersOptions const & options);
+	Benders(CouplingMap const & problem_list, BendersOptions const & options, AbstractSolver* solver);
 	virtual ~Benders();
 
 	WorkerMasterPtr _master;

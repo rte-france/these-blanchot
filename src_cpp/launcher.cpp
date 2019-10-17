@@ -80,14 +80,14 @@ void sequential_launch(BendersOptions const & options) {
 	}else if(options.SOLVER == "CPLEX"){
 		solver = new CPLEX_Solver();
 	}else{
-		std::cout << "SOLVER NON RECONUU" << std::endl;
+		std::cout << "SOLVER NON RECONU" << std::endl;
 		std::exit(0);
 	}
 
 	//XPRSinit("");
 	CouplingMap input;
 	build_input(options, input);
-	Benders benders(input, options);
+	Benders benders(input, options, solver);
 	benders.run(std::cout, solver);
 	benders.free();
 	delete solver;

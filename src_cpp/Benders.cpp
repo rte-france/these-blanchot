@@ -13,7 +13,7 @@ Benders::~Benders() {
 *
 *  \param options : set of options fixed by the user 
 */
-Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) : _options(options) {
+Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, AbstractSolver* solver) : _options(options) {
 	if (!problem_list.empty()) {
 		_data.nslaves = _options.SLAVE_NUMBER;
 		if (_data.nslaves < 0) {
@@ -29,6 +29,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				_problem_to_id[it->first] = i;
 				if(options.SOLVER == "XPRESS"){
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveXPRS(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
+				}else if(options.SOLVER == "CPLEX"){
+					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveCPLX(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options, solver));
 				}else{
 					std::cout << "SOLVEUR NON RECONNU" << std::endl;
 					std::exit(1);
@@ -37,9 +39,12 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				i++;
 			}
 		}
+
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
 		if(options.SOLVER == "XPRESS"){
 			_master.reset(new WorkerMasterXPRS(master_variable, _options.get_master_path(), _options, _data.nslaves));
+		}else if(options.SOLVER == "CPLEX"){
+			_master.reset(new WorkerMasterCPLX(master_variable, _options.get_master_path(), _options, solver, _data.nslaves));
 		}else{
 			std::cout << "SOLVEUR NON RECONNU" << std::endl;
 			std::exit(1);
@@ -108,7 +113,7 @@ void Benders::run(std::ostream & stream, AbstractSolver* solver) {
 	while (!_data.stop) {
 		Timer timer_master;
 		++_data.it;
-		get_master_value(_master, _data, _options, solver);
+		get_master_value(_master, _data, _options);
 
 		// on recupere les bornes initiales sur les variables d'investissement
 		if(_data.it == 1){
