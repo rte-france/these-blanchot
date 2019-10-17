@@ -76,5 +76,10 @@ BENDERS_OPTIONS_MACRO(TRICK_FISCHETTI, int, 0)
 //True if the in-out parameter is updated dynamically, false if constant
 BENDERS_OPTIONS_MACRO(DYNAMIC_STABILIZATION, bool, true)
 
-//True if the in-out parameter is updated dynamically, false if constant
+//Choice of the solver used to solve linear programs
 BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
+
+//Choice of the algorithm to solve Benders - BASE, INOUT, SAMPLING 
+BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "INOUT")
+
+

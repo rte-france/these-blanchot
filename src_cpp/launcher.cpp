@@ -91,7 +91,13 @@ void sequential_launch(BendersOptions const & options) {
 	benders.run(std::cout, solver);
 	benders.free();
 	delete solver;
+	
+	std::cout << std::endl;
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
+	
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
 }
 
 /*!

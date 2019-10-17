@@ -121,7 +121,9 @@ void Benders::run(std::ostream & stream, AbstractSolver* solver) {
 		}
 
 		// Calcul du point de coupe xcut et on evalue l'obj en ce nouveau point
-		compute_x_cut(_master, _data, _options);
+		if(_options.ALGORITHM == "INOUT"){
+			compute_x_cut(_master, _data, _options);
+		}
 
 		if (_options.ACTIVECUTS) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);

@@ -76,6 +76,12 @@ void BendersOptions::read(std::string const & file_name) {
 				buffer >> _weights[problem_name];
 			}
 		}
+
+		// Conflicts beetween algorithms
+		if(ALGORITHM == "INOUT"){
+			RAND_AGGREGATION = 0;
+		}
+
 	}
 	else {
 		std::cout << "setting option to default" << std::endl;
