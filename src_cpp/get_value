@@ -1,0 +1,28 @@
+Benders.cpp:		Str2Int const & master_variable(it_master->second);
+Benders.cpp:		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
+Benders.cpp:	_master->free();
+BendersFunctions.cpp:		master->fix_alpha(data.best_ub);
+BendersFunctions.cpp:	master->solve(data.master_status);
+BendersFunctions.cpp:	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
+BendersFunctions.cpp:	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
+BendersFunctions.cpp:				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+BendersFunctions.cpp:					slave_cut_id[itmap.first].push_back(master->get_number_constraint());
+BendersFunctions.cpp:	master->add_cut(s, data.x0, rhs);
+BendersFunctions.cpp:			master->add_cut_slave(problem_to_id[kvp.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+BendersFunctions.cpp:	master->delete_constraint(nconstraints);
+BendersFunctions.cpp:			master->add_dynamic_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
+BendersFunctions.cpp:			master->add_cut_by_iter(kvp.second, std::get<0>(dynamic_cuts[kvp.second]), std::get<1>(dynamic_cuts[kvp.second]), std::get<2>(dynamic_cuts[kvp.second]));
+BendersFunctions.cpp:	master->get_dual_values(dual);
+BendersFunctions.cpp:		current_point[i] = data.x0[master->_id_to_name[i]];
+BendersFunctions.cpp:	//XPRSchgbounds(master->_xprs, n_vars, index_vars.data(), both_type.data(), current_point.data());
+BendersFunctions.cpp:	master->chgbounds(n_vars, index_vars, lb_type, current_point);
+BendersFunctions.cpp:	master->chgbounds(n_vars, index_vars, ub_type, current_point);
+BendersFunctions.cpp:		master->fix_alpha(data.best_ub);
+BendersFunctions.cpp:	master->solve(local_status);
+BendersFunctions.cpp:	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
+BendersFunctions.cpp:	master->get_value(local_lb); /*Get the optimal value of the Master Problem*/
+BendersFunctions.cpp:	master->chgbounds(n_vars, index_vars, lb_type, data.global_lb);
+BendersFunctions.cpp:	master->chgbounds(n_vars, index_vars, ub_type, data.global_ub);
+BendersFunctions.cpp:	master->get_ncols(ncols);
+BendersFunctions.cpp:	master->getlb_variables(data, options, n_vars);
+BendersFunctions.cpp:	master->getub_variables(data, options, n_vars);
