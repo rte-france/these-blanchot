@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include "common.h"
 #include "ilcplex/cplex.h"
 
 

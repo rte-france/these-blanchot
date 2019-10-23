@@ -1,7 +1,7 @@
-#ifdef XPRESS
-
 #include "WorkerMasterXPRS.h"
 
+
+#ifdef XPRESS
 
 WorkerMasterXPRS::WorkerMasterXPRS() {
 }
@@ -407,6 +407,4 @@ void WorkerMasterXPRS::chgbounds(int nvars, std::vector<int> index_vars, std::ve
 void WorkerMasterXPRS::save_alpha_values(BendersData & data){
 	data.previous_alpha_i = data.alpha_i;
 }
-
-
 #endif

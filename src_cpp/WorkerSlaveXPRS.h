@@ -1,7 +1,9 @@
 #pragma once
+#include "WorkerSlave.h"
+#include "common.h"
+
 #ifdef XPRESS
 
-#include "WorkerSlave.h"
 #include "xprs.h"
 #include "SlaveCut.h"
 #include "SimplexBasis.h"
@@ -40,7 +42,6 @@ public:
 
 
 };
-
 
 
 void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);

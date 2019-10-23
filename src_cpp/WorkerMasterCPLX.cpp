@@ -1,6 +1,6 @@
-#ifdef CPLEX
 #include "WorkerMasterCPLX.h"
 
+#ifdef CPLEX
 WorkerMasterCPLX::WorkerMasterCPLX() {
 }
 
@@ -418,6 +418,5 @@ void WorkerMasterCPLX::chgbounds(int nvars, std::vector<int> index_vars, std::ve
 void WorkerMasterCPLX::save_alpha_values(BendersData & data){
 	data.previous_alpha_i = data.alpha_i;
 }
-
 
 #endif

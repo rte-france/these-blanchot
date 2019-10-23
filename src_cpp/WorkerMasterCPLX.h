@@ -1,7 +1,8 @@
 #pragma once
-#ifdef CPLEX
 #include "WorkerMaster.h"
+#include "common.h"
 
+#ifdef CPLEX
 /*!
 * \class WorkerSlave
 * \brief Class daughter of Worker Class, build and manage a master problem
@@ -49,6 +50,4 @@ public :
 	void chgbounds(int nvars, std::vector<int> index_vars, std::vector<char> bnd_types, std::vector<double> values);
 	void save_alpha_values(BendersData & data);
 };
-
-
 #endif

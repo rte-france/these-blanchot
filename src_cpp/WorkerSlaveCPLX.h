@@ -1,8 +1,9 @@
 #pragma once
-#ifdef CPLEX
 #include "WorkerSlave.h"
+#include "common.h"
 
 
+#ifdef CPLEX
 /*! 
 * \class WorkerSlaveCPLX
 * \brief Class daughter of WorkerSlave Class, build and manage a slave problem solved with CPLEX
@@ -37,7 +38,4 @@ public:
 
 };
 
-
 #endif
-
-

@@ -1,6 +1,7 @@
-#ifdef XPRESS
 #include "WorkerSlaveXPRS.h"
 
+
+#ifdef XPRESS
 
 /************************************************************************************\
 * Name:         optimizermsg                                                         *
@@ -275,6 +276,4 @@ void WorkerSlaveXPRS::get_ncols(int & ncols){
 void WorkerSlaveXPRS::get_nrows(int & nrows){
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &nrows);
 }
-
-
 #endif
