@@ -1,5 +1,5 @@
 # pragma once
-
+#ifdef CPLEX
 #include "Solver.h"
 #include "ilcplex/cplex.h"
 
@@ -14,3 +14,5 @@ public :
 	int _status; 
 	CPXENVptr _env;
 };
+
+#endif

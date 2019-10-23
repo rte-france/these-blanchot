@@ -1,3 +1,4 @@
+#ifdef CPLEX
 #include "WorkerSlaveCPLX.h"
 
 WorkerSlaveCPLX::WorkerSlaveCPLX() {
@@ -224,3 +225,5 @@ void WorkerSlaveCPLX::get_ncols(int & ncols){
 void WorkerSlaveCPLX::get_nrows(int & nrows){
 	nrows = CPXgetnumrows(_cplx, _prb);
 }
+
+#endif

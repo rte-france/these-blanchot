@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef CPLEX
 #include "WorkerSlave.h"
 
 
@@ -36,5 +36,8 @@ public:
 
 
 };
+
+
+#endif
 
 

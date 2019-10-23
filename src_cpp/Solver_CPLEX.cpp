@@ -1,3 +1,4 @@
+#ifdef CPLEX
 #include "Solver_CPLEX.h"
 /*
 Solver CPLEX
@@ -17,3 +18,5 @@ CPLEX_Solver::~CPLEX_Solver(){
 void CPLEX_Solver::get_env(CPXENVptr &env){
 	env = _env;
 }
+
+#endif

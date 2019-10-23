@@ -1,4 +1,5 @@
 #pragma once
+#ifdef XPRESS
 
 #include "WorkerSlave.h"
 #include "xprs.h"
@@ -45,4 +46,5 @@ public:
 void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
 void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 
+#endif
 

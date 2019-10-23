@@ -1,4 +1,5 @@
 #pragma once
+#ifdef XPRESS
 
 #include "WorkerMaster.h"
 #include "WorkerSlaveXPRS.h"
@@ -48,3 +49,7 @@ public :
 	void chgbounds(int nvars, std::vector<int> index_vars, std::vector<char> bnd_types, std::vector<double> values);
 	void save_alpha_values(BendersData & data);
 };
+
+
+
+#endif

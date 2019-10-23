@@ -1,5 +1,6 @@
 # pragma once
 
+#ifdef XPRESS
 #include "xprs.h"
 #include "Solver.h"
 
@@ -10,3 +11,6 @@ public :
 	~XPRESS_Solver();
 	void get_env(CPXENVptr &_env);
 };
+
+
+#endif

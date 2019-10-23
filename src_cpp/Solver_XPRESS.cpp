@@ -1,3 +1,4 @@
+#ifdef XPRESS
 #include "Solver_XPRESS.h"
 
 /*
@@ -18,3 +19,5 @@ XPRESS_Solver::~XPRESS_Solver(){
 
 void XPRESS_Solver::get_env(CPXENVptr &env){
 }
+
+#endif
