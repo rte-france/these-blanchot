@@ -75,11 +75,21 @@ void sequential_launch(BendersOptions const & options) {
 	Timer timer;
 	
 	AbstractSolver* solver(0);
-	if(options.SOLVER == "XPRESS"){
-		solver = new XPRESS_Solver();
-	}else if(options.SOLVER == "CPLEX"){
-		solver = new CPLEX_Solver();
-	}else{
+	if(options.SOLVER == ""){
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+	#ifdef CPLEX
+		else if(options.SOLVER == "CPLEX"){
+			solver = new CPLEX_Solver();
+		}
+	#endif
+	#ifdef XPRESS
+		else if(options.SOLVER == "XPRESS"){
+			solver = new XPRESS_Solver();
+		}
+	#endif
+	else{
 		std::cout << "SOLVER NON RECONU" << std::endl;
 		std::exit(0);
 	}

@@ -2,9 +2,6 @@
 
 #include "common.h"
 
-// To compile XPRESS, CPLEX or ALL
-#define CPLEX
-
 #ifdef CPLEX
 	#include "Solver_CPLEX.h"
 #endif

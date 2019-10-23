@@ -5,11 +5,15 @@
 #include "WorkerTrace.h"
 #include "BendersOptions.h"
 
-#include "WorkerMasterXPRS.h"
-#include "WorkerSlaveXPRS.h"
+#ifdef XPRESS
+	#include "WorkerMasterXPRS.h"
+	#include "WorkerSlaveXPRS.h"
+#endif
 
-#include "WorkerMasterCPLX.h"
-#include "WorkerSlaveCPLX.h"
+#ifdef CPLEX
+	#include "WorkerMasterCPLX.h"
+	#include "WorkerSlaveCPLX.h"
+#endif
 
 void init(BendersData & data, BendersOptions const & options);
 void init_log(std::ostream&stream, int const log_level, BendersOptions const & options);

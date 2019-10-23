@@ -4,6 +4,7 @@
 #include "Worker.h"
 #include "SlaveCut.h"
 #include "SimplexBasis.h"
+#include "launcher.h"
 
 
 /*! 

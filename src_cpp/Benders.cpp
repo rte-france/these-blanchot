@@ -27,11 +27,21 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
 				_problem_to_id[it->first] = i;
-				if(options.SOLVER == "XPRESS"){
-					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveXPRS(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
-				}else if(options.SOLVER == "CPLEX"){
-					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveCPLX(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options, solver));
-				}else{
+				if(options.SOLVER == ""){
+					std::cout << "SOLVEUR NON RECONNU" << std::endl;
+					std::exit(1);
+				}
+				#ifdef XPRESS
+					else if(options.SOLVER == "XPRESS"){
+						_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveXPRS(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
+					}
+				#endif
+				#ifdef CPLEX
+					else if(options.SOLVER == "CPLEX"){
+						_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlaveCPLX(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options, solver));
+					}
+				#endif
+				else{
 					std::cout << "SOLVEUR NON RECONNU" << std::endl;
 					std::exit(1);
 				}
@@ -41,11 +51,21 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		}
 
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
-		if(options.SOLVER == "XPRESS"){
-			_master.reset(new WorkerMasterXPRS(master_variable, _options.get_master_path(), _options, _data.nslaves));
-		}else if(options.SOLVER == "CPLEX"){
-			_master.reset(new WorkerMasterCPLX(master_variable, _options.get_master_path(), _options, solver, _data.nslaves));
-		}else{
+		if(options.SOLVER == ""){
+			std::cout << "SOLVEUR NON RECONNU" << std::endl;
+			std::exit(1);
+		}
+		#ifdef XPRESS
+			else if(options.SOLVER == "XPRESS"){
+				_master.reset(new WorkerMasterXPRS(master_variable, _options.get_master_path(), _options, _data.nslaves));
+			}
+		#endif
+		#ifdef CPLEX
+			else if(options.SOLVER == "CPLEX"){
+				_master.reset(new WorkerMasterCPLX(master_variable, _options.get_master_path(), _options, solver, _data.nslaves));
+		}
+		#endif
+		else{
 			std::cout << "SOLVEUR NON RECONNU" << std::endl;
 			std::exit(1);
 		}

@@ -1,6 +1,4 @@
 #include "WorkerSlaveCPLX.h"
-#include "launcher.h"
-
 
 WorkerSlaveCPLX::WorkerSlaveCPLX() {
 }
