@@ -5,7 +5,7 @@
 #include "Solver.h"
 
 
-void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
+
 class Worker;
 typedef std::shared_ptr<Worker> WorkerPtr;
 
@@ -49,9 +49,3 @@ public:
 	std::list<std::ostream * >_stream;
 	bool _is_master;
 };
-
-
-
-
-void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
-void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);

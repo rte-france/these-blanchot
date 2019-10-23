@@ -6,6 +6,8 @@
 #include "SimplexBasis.h"
 
 
+void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
+
 /*! 
 * \class WorkerSlave
 * \brief Class daughter of Worker Class, build and manage a slave problem
@@ -37,5 +39,10 @@ public:
 
 
 };
+
+
+
+void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
+void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 
 

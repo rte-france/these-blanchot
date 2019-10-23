@@ -86,6 +86,8 @@ void Benders::build_cut() {
 			// Sinon, on continue a tirer des sous-problemes associes a un shuffle jusqu'a couper
 			if( _data.solve_master ){
 				std::random_shuffle(_slaves.begin(), _slaves.end());
+				//std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+				_data.nbr_sp_no_cut = 0;
 			}
 			// New resolution
 			_data.has_cut_this_ite = false;
@@ -207,7 +209,7 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	++_data.it;
 
 	if(_data.solve_master){
-		_data.nbr_sp_no_cut = 0;
+		
 		get_master_value(_master, _data, _options);
 	}
 	
