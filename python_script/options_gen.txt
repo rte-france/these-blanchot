@@ -1,0 +1,28 @@
+--n							10
+--%							25
+--graphType					GRAPH
+
+--S 						1
+--seed 						2
+--masterSize 				0
+
+--solve 					1
+--log 						1
+
+--gridCompletion			0.08
+--shuffle 					100
+		
+--UBx 						3000
+--BigM 						1000
+
+--nCluster 					1
+
+--investInit 				0.8
+--flowMin 					1
+
+--propDemandNodes 			0.8
+--saveGraph					1
+
+--d1						0.1
+
+--solver					XPRESS
