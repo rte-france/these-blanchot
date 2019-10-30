@@ -25,3 +25,5 @@
 
 --d1						0.05
 --fullwrite 				0
+
+--instance_folder 			../instances/

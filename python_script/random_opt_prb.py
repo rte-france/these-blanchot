@@ -397,7 +397,7 @@ def read_options_line(args, datas) :
 
 	arglist = ['--n', '--m', '--%', '--seed', '--S', '--graphType', '--d1', '--masterSize', '--investInit', '--solve', \
 				'--gridCompletion', '--shuffle', '--UBx', '--BigM', '--nCluster', '--flowMin', '--propDemandNodes', \
-				'--saveGraph','--log', '--solver', '--folder', '--fullwrite']
+				'--saveGraph','--log', '--solver', '--folder', '--fullwrite', '--instance_folder']
 
 	while not stop :
 		if args[index] in arglist :
@@ -496,6 +496,10 @@ def read_options_line(args, datas) :
 
 			elif args[index] == '--fullwrite' :
 				datas.write_full_prb = bool(int(args[index+1]))
+				index += 2
+
+			elif args[index] == '--instance_folder' :
+				datas.instance_folder =args[index+1]
 				index += 2
 
 			if index >= len(args) :
