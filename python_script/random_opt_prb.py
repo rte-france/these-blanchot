@@ -48,6 +48,7 @@ class Datas :
 		self.demand_nodes 		= []
 
 		# Resolution pendant la generation de la reformulation determinite avec XPRESS
+		self.write_full_prb		= False
 		self.solve 				= False
 		self.saveGraph 			= False
 		self.log 				= 0
@@ -396,7 +397,7 @@ def read_options_line(args, datas) :
 
 	arglist = ['--n', '--m', '--%', '--seed', '--S', '--graphType', '--d1', '--masterSize', '--investInit', '--solve', \
 				'--gridCompletion', '--shuffle', '--UBx', '--BigM', '--nCluster', '--flowMin', '--propDemandNodes', \
-				'--saveGraph','--log', '--solver', '--folder']
+				'--saveGraph','--log', '--solver', '--folder', '--fullwrite']
 
 	while not stop :
 		if args[index] in arglist :
@@ -493,6 +494,10 @@ def read_options_line(args, datas) :
 				datas.folder_name = args[index+1]
 				index += 2
 
+			elif args[index] == '--fullwrite' :
+				datas.write_full_prb = bool(int(args[index+1]))
+				index += 2
+
 			if index >= len(args) :
 				stop = True
 
@@ -581,7 +586,7 @@ def one_problem_fulle_gen(args) :
 	pos = {}
 	generate_graph(G, datas, pos)
 	stop_graph = datetime.datetime.now()
-	print('Temps graphe    : ', stop_graph- start_graph)
+	print('Temps graphe    		: ', stop_graph- start_graph)
 
 	start_coef = datetime.datetime.now()
 	prod_n_demand_nodes(G, datas)
@@ -596,26 +601,29 @@ def one_problem_fulle_gen(args) :
 	invest_cost_generator(G, datas, cost)
 	demand_generator(G, datas, demandes)
 	stop_coef = datetime.datetime.now()
-	print('Temps coef      : ', stop_coef - start_coef)
-
-	start_benders = datetime.datetime.now()
+	print('Temps coef      		: ', stop_coef - start_coef)
 
 	#Graphe initial
+	start_invest_init = datetime.datetime.now()
 	find_init_invest(G, datas, cost, demandes)
+	stop_invest_init = datetime.datetime.now()
+	print('Temps invest init   	: ', stop_invest_init - start_invest_init)
 
 	# Ecriture des fichiers .MPS
+	start_write = datetime.datetime.now()
 	write_master_prb(G, datas, cost)
 	write_subproblems(G, datas, demandes, cost)
-	stop_benders = datetime.datetime.now()
-	print('Temps benders   : ', stop_benders - start_benders)
+	stop_write = datetime.datetime.now()
+	print('Temps ecriture MPS   : ', stop_write - start_write)
 
 	# Ecriture de la reformulation deterministe du probleme
 	# Resolution et ecriture de la reformulation deterministe
-	start_solve = datetime.datetime.now()
-	time_resolution = write_n_solve_deterministic_global_problem(G, datas, datas.S, cost, demandes, log=datas.log)
-
-	stop_solve = datetime.datetime.now()
-	print('Temps solve     : ', stop_solve - start_solve)
+	time_resolution = 0.0
+	if datas.write_full_prb :
+		start_solve = datetime.datetime.now()
+		time_resolution = write_n_solve_deterministic_global_problem(G, datas, datas.S, cost, demandes, log=datas.log)
+		stop_solve = datetime.datetime.now()
+		print('Temps solve     		: ', stop_solve - start_solve)
 
 
 	options = {}
@@ -625,10 +633,7 @@ def one_problem_fulle_gen(args) :
 	write_structure_file('structure.txt', datas)
 
 	stop = datetime.datetime.now()
-
-	tps_autre = stop - start - (stop_graph- start_graph) - (stop_coef - start_coef) - (stop_benders - start_benders) - (stop_solve - start_solve)
-	print('Temps autre     : ', tps_autre)
-	print('Temps total     : ', stop - start)
+	print('Temps total     		: ', stop - start)
 	
 
 	write_datas(datas)

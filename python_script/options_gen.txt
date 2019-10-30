@@ -1,12 +1,12 @@
---n							10
---%							25
---graphType					GRAPH
+--n							400
+--%							0.5
+--graphType					GRID
 
---S 						1
+--S 						300
 --seed 						2
---masterSize 				0
+--masterSize 				0.2
 
---solve 					1
+--solve 					0
 --log 						1
 
 --gridCompletion			0.08
@@ -17,12 +17,11 @@
 
 --nCluster 					1
 
---investInit 				0.8
+--investInit 				0.5
 --flowMin 					1
 
 --propDemandNodes 			0.8
 --saveGraph					1
 
---d1						0.1
-
---solver					XPRESS
+--d1						0.05
+--fullwrite 				0
