@@ -105,8 +105,11 @@ void Benders::build_cut() {
 			// On shuffle les sous-problemes
 			// Sinon, on continue a tirer des sous-problemes associes a un shuffle jusqu'a couper
 			if( _data.solve_master ){
-				std::random_shuffle(_slaves.begin(), _slaves.end());
-				//std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+				if(_options.SAMPLING_STRATEGY == "RANDOM"){
+					std::random_shuffle(_slaves.begin(), _slaves.end());
+				}else if(_options.SAMPLING_STRATEGY == "ORDERED"){
+					std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+				}
 				_data.nbr_sp_no_cut = 0;
 			}
 			// New resolution
@@ -228,8 +231,7 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	Timer timer_master;
 	++_data.it;
 
-	if(_data.solve_master){
-		
+	if(_data.solve_master){	
 		get_master_value(_master, _data, _options);
 	}
 	
@@ -242,7 +244,7 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	}
 
 	build_cut();
-	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
+	//update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
 
 	if (_options.TRACE) {
 		update_trace(_trace, _data);

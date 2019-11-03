@@ -85,4 +85,7 @@ BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
 //Choice of the algorithm to solve Benders - BASE, INOUT, SAMPLING 
 BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "INOUT")
 
+//Choice of the sampling strategy
+BENDERS_OPTIONS_MACRO(SAMPLING_STRATEGY, std::string, "RANDOM")
+
 
