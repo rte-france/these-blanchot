@@ -109,6 +109,8 @@ void Benders::build_cut() {
 					std::random_shuffle(_slaves.begin(), _slaves.end());
 				}else if(_options.SAMPLING_STRATEGY == "ORDERED"){
 					std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+				}else if(_options.SAMPLING_STRATEGY == "PSEUDOCOST"){
+					std::sort(_slaves.begin(), _slaves.end(), compare_pseudocost);
 				}
 				_data.nbr_sp_no_cut = 0;
 			}
@@ -234,6 +236,9 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	if(_data.solve_master){	
 		get_master_value(_master, _data, _options);
 	}
+
+	// il vaudra 0 si pas de resolution du master
+	compute_delta_x(_master, _data, _options);
 	
 	if (_options.ACTIVECUTS) {
 		update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
@@ -252,4 +257,7 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	_data.timer_master = timer_master.elapsed();
 	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
+
+	// On conserve le point precedent avant de resoudre a nouveau le master
+	previous_x = x0;
 }

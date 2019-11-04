@@ -58,3 +58,7 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 
 void compute_x_cut(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
 void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
+
+void compute_delta_x(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
+
+bool compare_pseudocost(int i, int j);

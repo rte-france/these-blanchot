@@ -392,6 +392,10 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	master->save_alpha_values(data);
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
+
+	// On conserve la Lower BOund precedente pour calculer de delta
+	data.previous_lb = data.lb;
+
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;
 	if (!options.RAND_AGGREGATION) {
@@ -971,4 +975,18 @@ void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions co
 
 	master->getlb_variables(data, options, n_vars);
 	master->getub_variables(data, options, n_vars);
+}
+
+
+void compute_delta_x(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options){
+
+	data.delta_x = 0;
+	for(int i = 0; i < data.x0.size(); i++){
+		data.delta_x += pow(data.x0[i] - data.previous_x[i], 2);
+	}
+	data.delta_x = sqrt(data.delta_x);
+}
+
+bool compare_pseudocost(int i, int j){
+	
 }

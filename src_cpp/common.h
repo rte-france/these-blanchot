@@ -160,6 +160,12 @@ struct BendersData {
 	int nbr_sp_to_solve;
 	bool solve_master;
 	bool has_cut_this_ite;
+
+	// Pseudo-cost strategy
+	std::vector<double> pseudocost;
+	double delta_lb;
+	double delta_x;
+	Point previous_x;
 };
 
 double norm_point(Point const & x0, Point const & x1);
