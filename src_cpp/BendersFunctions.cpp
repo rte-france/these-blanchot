@@ -27,6 +27,15 @@ void init(BendersData & data, BendersOptions const & options) {
 	data.solve_master = true;
 	data.nbr_sp_no_cut = 0;
 	data.has_cut_this_ite = false;
+
+	data.pseudocost = std::vector<double>(data.nslaves, 0.0);
+	data.indices = std::vector<int>(data.nslaves, 0);
+	for(unsigned int i = 0; i < data.nslaves; i++){
+		data.indices[i] = i;
+	}
+
+	data.nbr_solve = std::vector<int>(data.nslaves, 0);
+	data.current_slave_index = 0;
 }
 
 /*!
@@ -51,13 +60,13 @@ void init_log(std::ostream&stream, int const log_level, BendersOptions const & o
 	}
 
 	if (log_level > 2) {
-		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
 		if(options.ALGORITHM == "SAMPLING"){
 			stream << std::setw(15) << "NBR_NOCUT";
 		}else{
 			stream << std::setw(15) << "ALPHAVALUE";
+			stream << std::setw(15) << "CUR_SP";
 		}
 	}
 	stream << std::endl;
@@ -99,12 +108,12 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 	}
 
 	if (log_level > 2) {
-		stream << std::setw(15) << data.deletedcut;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
 		
 		if(options.ALGORITHM == "SAMPLING"){
 			stream << std::setw(15) << std::setprecision(2) << data.nbr_sp_no_cut;
+			stream << std::setw(15) << data.last_slave_index;
 		}else{
 			stream << std::setw(15) << std::setprecision(2) << data.eta;
 		}
@@ -393,10 +402,8 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 
-	// On conserve la Lower BOund precedente pour calculer de delta
-	data.previous_lb = data.lb;
-
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
+	data.delta_lb = data.lb - data.previous_lb;
 	data.invest_cost = data.lb - data.alpha;
 	if (!options.RAND_AGGREGATION) {
 		data.ub = data.invest_cost;
@@ -451,11 +458,15 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 *
 *  \param options : set of parameters
 */
-void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData & data, Str2Int & _problem_to_id) {
+void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & slaves, BendersOptions const & options, BendersData & data, Str2Int & _problem_to_id) {
 	int begin = data.nbr_sp_no_cut; 
 	for (int i(begin); i < begin + data.nbr_sp_to_solve; i++){
 		Timer timer_slave;
-		std::string const name_slave(random_slaves[i]);
+
+		std::string const name_slave(slaves[data.indices[i]]);
+		data.last_slave_index = data.current_slave_index;
+		data.current_slave_index = data.indices[i];
+
 		WorkerSlavePtr & ptr(map_slaves[name_slave]);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
@@ -469,10 +480,12 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 
-		if(handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[random_slaves[i]]] < (options.GAP/data.nslaves) ){
+		if(handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[slaves[data.indices[i]]]] < (data.remaining_gap) ){
 			data.nbr_sp_no_cut += 1;
+			data.remaining_gap -= handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[slaves[data.indices[i]]]];
 		}else{
 			data.has_cut_this_ite = true;
+			data.nbr_solve[data.indices[i]] += 1;
 		}
 		slave_cut_package[name_slave] = *slave_cut_data;
 	}
@@ -981,12 +994,28 @@ void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions co
 void compute_delta_x(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options){
 
 	data.delta_x = 0;
-	for(int i = 0; i < data.x0.size(); i++){
-		data.delta_x += pow(data.x0[i] - data.previous_x[i], 2);
+	for(auto const& kvp : data.x0){
+		data.delta_x += pow(kvp.second - data.previous_x[kvp.first], 2);
 	}
 	data.delta_x = sqrt(data.delta_x);
 }
 
-bool compare_pseudocost(int i, int j){
-	
+void compute_pseudocosts(BendersData & data, BendersOptions const & options){
+	//std::cout << "PSEUDO BEFORE " << data.pseudocost[data.current_slave_index] << std::endl;
+
+	if(data.it > 2){
+		//std::cout << "ANCIEN " << data.pseudocost[data.current_slave_index] << std::endl;
+		data.pseudocost[data.current_slave_index] *= ( data.nbr_solve[data.current_slave_index] - 1 );
+		
+		//std::cout << "N " << data.nbr_solve[data.current_slave_index] << std::endl;
+		//std::cout << "D " << data.delta_lb << "   " <<  data.delta_x << std::endl;
+		
+		if(data.delta_x > 1e-8){
+			data.pseudocost[data.current_slave_index] += data.delta_lb / data.delta_x;
+		}
+		data.pseudocost[data.current_slave_index] /= ( data.nbr_solve[data.current_slave_index] );
+		
+		//std::cout << "NOUVEA " << data.pseudocost[data.current_slave_index] << std::endl;
+	}
+	//std::cout << "PSEUDO AFTER " << data.pseudocost[data.current_slave_index] << std::endl;
 }

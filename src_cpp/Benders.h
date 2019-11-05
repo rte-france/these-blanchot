@@ -39,4 +39,5 @@ public:
 
 	void perform_one_sampling_iteration(std::ostream & stream);
 	void perform_one_inout_iteration(std::ostream & stream);
+
 };

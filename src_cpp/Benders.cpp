@@ -106,11 +106,25 @@ void Benders::build_cut() {
 			// Sinon, on continue a tirer des sous-problemes associes a un shuffle jusqu'a couper
 			if( _data.solve_master ){
 				if(_options.SAMPLING_STRATEGY == "RANDOM"){
-					std::random_shuffle(_slaves.begin(), _slaves.end());
+					//std::random_shuffle(_slaves.begin(), _slaves.end());
+					std::random_shuffle(_data.indices.begin(), _data.indices.end());
+					
 				}else if(_options.SAMPLING_STRATEGY == "ORDERED"){
-					std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+					//std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+					std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
 				}else if(_options.SAMPLING_STRATEGY == "PSEUDOCOST"){
-					std::sort(_slaves.begin(), _slaves.end(), compare_pseudocost);
+					if(*std::min_element(_data.pseudocost.begin(), _data.pseudocost.end()) < 1e-6){
+						std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
+						std::cout << "MIN " << *std::min_element(_data.pseudocost.begin(), _data.pseudocost.end()) << std::endl;
+						std::cout << "MAX " << *std::max_element(_data.pseudocost.begin(), _data.pseudocost.end()) << std::endl;
+					}else{
+						//std::exit(1);
+						std::sort(_data.indices.begin(), _data.indices.end(), [&](const int i, const int j){return _data.pseudocost[i] > _data.pseudocost[j]; });
+						std::cout << "MIN " << *std::min_element(_data.pseudocost.begin(), _data.pseudocost.end()) << std::endl;
+						std::cout << "MAX " << *std::max_element(_data.pseudocost.begin(), _data.pseudocost.end()) << std::endl;
+						std::cout << "CHOIX " << _slaves[_data.indices[0]] << "  " << _data.pseudocost[_data.indices[0]] << std::endl;
+						//sort_slaves_by_pseudocost();	
+					}
 				}
 				_data.nbr_sp_no_cut = 0;
 			}
@@ -233,31 +247,39 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	Timer timer_master;
 	++_data.it;
 
-	if(_data.solve_master){	
+	if(_data.solve_master){
+		// On conserve le point precedent avant de resoudre a nouveau le master
+		_data.previous_x 	= _data.x0;
+		_data.previous_lb 	= _data.lb;
+		
+		// On remet le gap restant a 0
+		_data.remaining_gap = _options.GAP;
+
+		_data.timer_master = timer_master.elapsed();
 		get_master_value(_master, _data, _options);
+		_data.timer_master = timer_master.elapsed();
+		compute_delta_x(_master, _data, _options);
+		compute_pseudocosts(_data, _options);
 	}
-
-	// il vaudra 0 si pas de resolution du master
-	compute_delta_x(_master, _data, _options);
 	
-	if (_options.ACTIVECUTS) {
-		update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
-	}
+	// if (_options.ACTIVECUTS) {
+	// 	update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
+	// }
 
-	if (_options.TRACE) {
-		_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-	}
+	// if (_options.TRACE) {
+	// 	_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
+	// }
 
 	build_cut();
 	//update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.eta, _options.DYNAMIC_STABILIZATION);
 
-	if (_options.TRACE) {
-		update_trace(_trace, _data);
+	// if (_options.TRACE) {
+	// 	update_trace(_trace, _data);
+	// }
+	
+	if(_data.it % 1 == 0){
+		print_log(stream, _data, _options.LOG_LEVEL, _options);
 	}
-	_data.timer_master = timer_master.elapsed();
-	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
 
-	// On conserve le point precedent avant de resoudre a nouveau le master
-	previous_x = x0;
 }

@@ -161,11 +161,22 @@ struct BendersData {
 	bool solve_master;
 	bool has_cut_this_ite;
 
+	// vecteur de l'ordre des ss-prb
+	std::vector<int> indices;
+
 	// Pseudo-cost strategy
 	std::vector<double> pseudocost;
 	double delta_lb;
 	double delta_x;
+	double previous_lb;
 	Point previous_x;
+
+	int current_slave_index;
+	int last_slave_index;
+	std::vector<int> nbr_solve;
+
+	// critere d'arret
+	double remaining_gap;
 };
 
 double norm_point(Point const & x0, Point const & x1);
