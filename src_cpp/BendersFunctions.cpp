@@ -1019,3 +1019,25 @@ void compute_pseudocosts(BendersData & data, BendersOptions const & options){
 	}
 	//std::cout << "PSEUDO AFTER " << data.pseudocost[data.current_slave_index] << std::endl;
 }
+
+
+void compute_x_momentum(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
+
+	data.x_simplex = data.x0;
+
+	// Pas la premiere fois car on ne connait pas encore bestx (le point IN)
+	if(data.it % data.nslaves == 0){
+		data.eta = std::min(data.eta*1.02, 1.0);
+	}
+
+
+	if(data.it > 1){
+		// Si trick==0 ou (trick!=0 et it%trick!=0) alors on y va
+		if(options.TRICK_FISCHETTI == 0 || (options.TRICK_FISCHETTI != 0 && data.it%options.TRICK_FISCHETTI != 0)){
+			// composante par composante
+			for(auto const & kvp : data.x_simplex){
+				data.x0[kvp.first] = data.eta * kvp.second + (1 - data.eta) * data.previous_x[kvp.first];
+			}
+		}
+	}
+}

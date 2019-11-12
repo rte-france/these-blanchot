@@ -262,6 +262,8 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 		compute_pseudocosts(_data, _options);
 	}
 	
+	compute_x_momentum(_master, _data, _options);
+
 	// if (_options.ACTIVECUTS) {
 	// 	update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 	// }

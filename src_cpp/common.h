@@ -10,7 +10,7 @@
 #endif 
 
 #define CPLEX
-//#define XPRESS
+#define XPRESS
 
 #include <tuple>
 #include <sstream>

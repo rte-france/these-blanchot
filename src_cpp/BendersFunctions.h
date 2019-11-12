@@ -61,3 +61,5 @@ void save_bounds(WorkerMasterPtr & master, BendersData & data, BendersOptions co
 
 void compute_delta_x(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
 void compute_pseudocosts(BendersData & data, BendersOptions const & options);
+
+void compute_x_momentum(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options);
