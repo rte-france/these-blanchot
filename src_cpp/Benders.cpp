@@ -97,8 +97,17 @@ void Benders::build_cut() {
 	Timer timer_slaves;
 
 	if (_options.RAND_AGGREGATION) {
+		// if(_data.it <= _data.nslaves){
+		// 	_options.SAMPLING_STRATEGY == "ORDERED";
+		// }else{
+		// 	_options.SAMPLING_STRATEGY == "MAX_GAP";
+		// }
+
 		if(_data.it < 2){
-			get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+			get_slave_cut(slave_cut_package, _map_slaves, _options, _data, _problem_to_id);
+			for(int i=0; i<_data.nslaves; i++){
+				_data.gap_i[i] = _data.min_val_i[i] - _data.alpha_i[i];
+			}
 
 		}else{
 			// Si solve_master == True, on est dans une iteration avec de nouvelles variables de premier niveau
@@ -125,6 +134,42 @@ void Benders::build_cut() {
 						std::cout << "CHOIX " << _slaves[_data.indices[0]] << "  " << _data.pseudocost[_data.indices[0]] << std::endl;
 						//sort_slaves_by_pseudocost();	
 					}
+				}else if(_options.SAMPLING_STRATEGY == "ORDERED_RANDOMIZED"){
+					//std::rotate(_slaves.begin(), _slaves.begin()+_data.nbr_sp_no_cut+1,_slaves.end());
+					if(_data.it == 2){
+						std::random_shuffle(_data.indices.begin(), _data.indices.end());
+					}
+					std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut, _data.indices.end());
+				}else if(_options.SAMPLING_STRATEGY == "RANDOM_EPOCH"){
+					if(_data.to_shuffle){
+						std::random_shuffle(_data.indices.begin(), _data.indices.end());
+						_data.first_id = _data.indices[0];
+						_data.to_shuffle = false;
+					}
+					std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
+					for(int i=0; i < _data.nrandom; i++){
+						if(_data.indices[i] == _data.first_id){
+							_data.to_shuffle = true;
+						}
+					}
+				}else if(_options.SAMPLING_STRATEGY == "MAX_GAP"){
+					// 1. calcul des gap
+					if(_data.has_cut_this_ite){
+						for(int i=0; i<_data.nslaves; i++){
+							_data.gap_i[i] = _data.min_val_i[i] - _data.alpha_i[i];
+						}
+						// 2. tri
+
+						std::sort(_data.indices.begin(), _data.indices.end(), [&](const int i, const int j){ return _data.gap_i[i] > _data.gap_i[j]; });	
+						//std::cout << _data.gap_i[_data.indices[0]] << std::endl;
+						_data.current_gap = _data.gap_i[_data.indices[0]];
+						if(_data.gap_i[_data.indices[0]] < (_options.GAP / _data.nslaves) ){
+							_options.ALGORITHM = "INOUT";
+							_data.nrandom = _data.nslaves;
+							_options.RAND_AGGREGATION = 0;
+							std::cout << "SWITCH STRATEGY" << std::endl;
+						}
+					}
 				}
 				_data.nbr_sp_no_cut = 0;
 			}
@@ -142,7 +187,7 @@ void Benders::build_cut() {
 		}
 	}
 	else {
-		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+		get_slave_cut(slave_cut_package, _map_slaves, _options, _data, _problem_to_id);
 
 	}
 	_data.timer_slaves = timer_slaves.elapsed();

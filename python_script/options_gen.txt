@@ -1,9 +1,9 @@
---n							400
+--n							401
 --%							0.5
 --graphType					GRID
 
 --S 						300
---seed 						2
+--seed 						0
 --masterSize 				0.2
 
 --solve 					0
@@ -24,6 +24,22 @@
 --saveGraph					1
 
 --d1						0.05
---fullwrite 				0
+--fullwrite 				1
 
 --instance_folder 			../instances/
+
+
+
+--costFlowMin 				10
+--costFlowMax 				30
+--costProdMin 				10
+--costProdMax 				30
+
+--costInvestFlowMin 		10
+--costInvestFlowMax 		100
+--costInvestProdMin 		10
+--costInvestProdMax 		100
+
+--dMin 						10
+--dMax						30
+

@@ -1,9 +1,9 @@
 from random_graph 	import *
+from utils 			import *
 from pulp 			import *
 import time
 import datetime
 import re
-
 
 class Datas :
 	def __init__(self):
@@ -52,8 +52,12 @@ class Datas :
 		self.solve 				= False
 		self.saveGraph 			= False
 		self.log 				= 0
-		self.solver 			= ''
-		#self.CPLEX_path			= '/home/xavier/Programmes/ibm/ILOG/CPLEX_Studio129'
+		self.solver 			= 'XPRESS'
+		self.costMin			= {'flow': 1, 	'prod' : 1, 	'Investflow' : 1, 	'Investprod' : 1}
+		self.costMax			= {'flow': 10, 	'prod' : 10, 	'Investflow' : 10, 	'Investprod' : 10}
+
+		self.dMin 				= 1
+		self.dMax 				= 10
 
 class Cost :
 	def __init__(self, S):
@@ -344,234 +348,26 @@ def operational_cost_generator(G, datas, cost) :
 	links = [(i,j) for (i,j) in list(G.edges)] + [(j,i) for (i,j) in list(G.edges)]
 
 	for s in range(datas.S) :
-		valeurs = np.random.randint(1,10,len(links))
+		valeurs = np.random.randint(datas.costMin['flow'], datas.costMax['flow'], len(links))
 		cost.flow[s] = dict( zip(links,valeurs) )
 		for v in datas.prod_nodes :
-			cost.prod[s][v] = random.randint(1,10)
+			cost.prod[s][v] = random.randint(datas.costMin['prod'], datas.costMax['prod'])
 
 def invest_cost_generator(G, datas, cost) :
-	valeurs = np.random.randint(1,10,len(datas.prod_nodes))
+	valeurs = np.random.randint(datas.costMin['Investflow'], datas.costMax['Investflow'], len(datas.prod_nodes))
 	cost.invest_prod=dict( zip(datas.prod_nodes, valeurs) )
 
-	valeurs = np.random.randint(1,10,len(datas.invest_edges))
+	valeurs = np.random.randint(datas.costMin['Investprod'], datas.costMax['Investprod'], len(datas.invest_edges))
 	cost.invest_flow = dict( zip(datas.invest_edges, valeurs) )
 
 def demand_generator(G, datas, demandes) :
 	for s in range(datas.S) :
 		local_sum = 0
-		valeurs = np.random.randint(1,10,len(datas.demand_nodes))
+		valeurs = np.random.randint(datas.dMin, datas.dMax, len(datas.demand_nodes))
 		demandes[s] = dict( zip(datas.demand_nodes, valeurs) )
 	return 0
 
 
-def read_options(args, datas) :
-
-	if '--file' in args :
-		read_options_file(args, datas)
-	else :
-		read_options_line(args, datas)
-
-	if datas.seed == -1 :
-		datas.seed = random.randint(0,10000)
-		random.seed(datas.seed)
-		np.random.seed(datas.seed)
-
-def read_options_file(args, datas) :
-
-	index_file = 0
-	for k in range(len(args)) :
-		if args[k] in ['--file'] :
-			index_file = k+1
-
-	file = open(args[index_file], 'r')
-	argFinal = []
-	for line in file :
-		if len(line) > 0 :
-			for elt in line.split() :
-				argFinal.append(elt)
-	read_options_line(argFinal, datas)
-
-def read_options_line(args, datas) :
-	stop = False
-	index = 0
-
-	arglist = ['--n', '--m', '--%', '--seed', '--S', '--graphType', '--d1', '--masterSize', '--investInit', '--solve', \
-				'--gridCompletion', '--shuffle', '--UBx', '--BigM', '--nCluster', '--flowMin', '--propDemandNodes', \
-				'--saveGraph','--log', '--solver', '--folder', '--fullwrite', '--instance_folder']
-
-	while not stop :
-		if args[index] in arglist :
-
-			if args[index] == '--n' :
-				datas.n = int(args[index+1])
-				index += 2
-
-			elif args[index] == '--m' :
-				datas.m = int(args[index+1])
-				index += 2
-
-			elif args[index] == '--%' :
-				datas.m = int( float(args[index+1])*datas.n*(datas.n-1)/200 ) 
-				if datas.m < datas.n-1 :
-					pMin = 2/datas.n
-					print("Le nombre d'arete doit au moins etre egal a n-1 pour pouvoir \
-						creer un graphe connexe. Pour n = %i, cela fait un minimum de %.2f\
-						 pourcents." % (datas.n, 100*pMin) )
-					exit()
-				index += 2
-
-			elif args[index] == '--seed' :
-				datas.seed = int(args[index+1])
-				random.seed(datas.seed)
-				np.random.seed(datas.seed)
-				index += 2
-
-			elif args[index] == '--S' :
-				datas.S = int(args[index+1])
-				index += 2
-
-			elif args[index] == '--graphType' :
-				datas.graphType = args[index+1]
-				index += 2
-
-			elif args[index] == '--d1' :
-				datas.degreeOne = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--masterSize' :
-				datas.masterSize = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--investInit' :
-				datas.investInit = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--flowMin' :
-				datas.flowMin = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--saveGraph' :
-				datas.saveGraph = bool(int(args[index+1]))
-				index += 2
-			
-			elif args[index] == '--solve' :
-				datas.solve = bool(int(args[index+1]))
-				index += 2
-
-			elif args[index] == '--shuffle' :
-				datas.shuffleGraph = int(args[index+1])
-				index += 2
-
-			elif args[index] == '--gridCompletion' :
-				datas.gridCompletion = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--UBx' :
-				datas.UBx = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--BigM' :
-				datas.BigM = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--nCluster' :
-				datas.nCluster = int(args[index+1])
-				index += 2
-
-			elif args[index] == '--propDemandNodes' :
-				datas.propDemandNodes = float(args[index+1])
-				index += 2
-
-			elif args[index] == '--log' :
-				datas.log = int(args[index+1])
-				index += 2
-
-			elif args[index] == '--solver' :
-				datas.solver = args[index+1]
-				index += 2
-
-			elif args[index] == '--folder' :
-				datas.folder_name = args[index+1]
-				index += 2
-
-			elif args[index] == '--fullwrite' :
-				datas.write_full_prb = bool(int(args[index+1]))
-				index += 2
-
-			elif args[index] == '--instance_folder' :
-				datas.instance_folder =args[index+1]
-				index += 2
-
-			if index >= len(args) :
-				stop = True
-
-		else :
-			print("Argument non reconnu. Lancer la commande [python3 random_graphs.py --help] pour obtenir la liste des arguments.")
-			exit()
-
-	if datas.m > datas.n*(datas.n-1)/2 :
-		print("Le nombre d'arete doit etre inferieur a n(n-1)/2. Pour n = %i, cela fait un maximum de %i\
-			aretes." % (datas.n, int(datas.n*(datas.n-1)/2)) )
-		exit(0)
-
-
-def write_option_file(file_name, options) :
-
-	file = open(file_name, 'w')
-	for name in options :
-		file.write('%50s%50s\n' % ( name,str(options[name]) ))
-	file.close()
-
-# Les variables sont ecrites par ordre alphabetique dans les fichiers .mps par PuLP
-def write_structure_file(file_name, datas) :
-
-	datas.masterVars.sort()
-	problems = ['master']
-	problems += ['SP_%i'%(i+1) for i in range(datas.S)]
-	file = open(file_name, 'w')
-	for prb in problems :
-		index = 0
-		for var in datas.masterVars :
-			file.write('%-15s%-25s%-15i\n' % (prb,var, index))
-			index += 1
-	file.close()
-
-def go_to_instance_folder(datas) :
-	
-	folder_name = ''
-	if datas.graphType == 'GRID' :
-		folder_name = 'GRID-%i-%i-%i-%.2f'%(datas.n,datas.S,datas.seed, datas.masterSize)
-	elif datas.graphType == 'GRAPH' :
-		folder_name = 'GRAPH-%i-%i-%i-%i'%(datas.n,datas.m,datas.S,datas.seed)
-	else :
-		print('WRONG GRAPH TYPE')
-		exit()
-	folder = datas.instance_folder + folder_name
-	os.makedirs(folder, exist_ok=True)
-	os.chdir(folder)
-	
-
-def write_datas(datas) :
-
-	file = open('infos.txt', 'w')
-	file.write('%-35s%-10s\n' % ('Type', datas.graphType))
-	file.write('%-35s%-10i\n' % ('n', datas.n))
-	file.write('%-35s%-10i\n' % ('m', datas.m))
-	file.write('%-35s%-10.3f\n' % ('Completion', datas.graphCompletion))
-	file.write('%-35s%-10i\n' % ('seed', datas.seed))
-	file.write('%-35s%-10i\n' % ('S', datas.S))
-	file.write('%-35s%-10.2f\n' % ('masterSize', datas.masterSize))
-	file.write('%-35s%-10i\n' % ('NMasterVars', datas.NMasterVars))
-	file.write('%-35s%-10i\n' % ('NSlaveVars', datas.NSlaveVars))
-	file.write('%-35s%-10i\n' % ('NTot',datas.NMasterVars + datas.S * datas.NSlaveVars))
-	file.write('%-35s%-10.2f\n' % ('degre1', datas.degreeOne))
-	file.write('%-35s%-10i\n' % ('shuffle', datas.shuffleGraph))
-	file.write('%-35s%-10i\n' % ('nCluster', datas.nCluster))
-	file.write('%-35s%-10.2f\n' % ('investInit', datas.investInit))
-	file.write('%-35s%-10.2f\n' % ('flowMin', datas.flowMin))
-	file.write('%-35s%-10.2f\n' % ('propDemandNodes', datas.propDemandNodes))
-
-	file.close()
 
 def one_problem_fulle_gen(args) : 
 
@@ -611,7 +407,7 @@ def one_problem_fulle_gen(args) :
 	start_invest_init = datetime.datetime.now()
 	find_init_invest(G, datas, cost, demandes)
 	stop_invest_init = datetime.datetime.now()
-	print('Temps invest init   	: ', stop_invest_init - start_invest_init)
+	print('Temps invest init 	: ', stop_invest_init - start_invest_init)
 
 	# Ecriture des fichiers .MPS
 	start_write = datetime.datetime.now()
@@ -661,7 +457,7 @@ def options_creator(options) :
 	options["SLAVE_NUMBER"] 			= -1
 	options["STRUCTURE_FILE"] 			= "structure.txt"
 	options["INPUTROOT"] 				= "."
-	options["BASIS"] 					= 1
+	options["BASIS"] 					= 0
 	options["THRESHOLD_AGGREGATION"] 	= 0
 	options["RAND_AGGREGATION"] 		= 0
 	options["RAND_SEED"] 				= 0

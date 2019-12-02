@@ -175,6 +175,17 @@ struct BendersData {
 	int last_slave_index;
 	std::vector<int> nbr_solve;
 
+	//Max Gap strategy
+	std::vector<double> min_val_i;
+	std::vector<double> gap_i;
+	std::vector<bool> reprice;
+	double current_gap;
+
+
+	// EPOCH strategy
+	int first_id;
+	bool to_shuffle;
+
 	// critere d'arret
 	double remaining_gap;
 };

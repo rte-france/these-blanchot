@@ -35,7 +35,11 @@ void init(BendersData & data, BendersOptions const & options) {
 	}
 
 	data.nbr_solve = std::vector<int>(data.nslaves, 0);
+	data.min_val_i = std::vector<double>(data.nslaves, 1e6);
+	data.gap_i = std::vector<double>(data.nslaves, 0);
+	data.reprice = std::vector<bool>(data.nslaves, true);
 	data.current_slave_index = 0;
+	data.to_shuffle = true;
 }
 
 /*!
@@ -114,6 +118,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		if(options.ALGORITHM == "SAMPLING"){
 			stream << std::setw(15) << std::setprecision(2) << data.nbr_sp_no_cut;
 			stream << std::setw(15) << data.last_slave_index;
+			stream << std::setw(15) << std::setprecision(2) << data.current_gap;
 		}else{
 			stream << std::setw(15) << std::setprecision(2) << data.eta;
 		}
@@ -425,7 +430,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 *
 *  \param options : set of parameters
 */
-void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
+void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData & data, Str2Int & _problem_to_id) {
 	for (auto & kvp : map_slaves) {
 		Timer timer_slave;
 		WorkerSlavePtr & ptr(kvp.second);
@@ -441,6 +446,13 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
+
+		if(data.reprice[_problem_to_id[kvp.first]]){
+			data.min_val_i[_problem_to_id[kvp.first]] = handler->get_dbl(SLAVE_COST);	
+			data.reprice[_problem_to_id[kvp.first]] = false;
+		}else{
+			data.min_val_i[_problem_to_id[kvp.first]] = std::min(data.min_val_i[_problem_to_id[kvp.first]], handler->get_dbl(SLAVE_COST));	
+		}
 	}
 }
 
@@ -480,7 +492,15 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 
-		if(handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[slaves[data.indices[i]]]] < (data.remaining_gap) ){
+		if(data.reprice[data.indices[i]]){
+			data.min_val_i[data.indices[i]] = handler->get_dbl(SLAVE_COST);	
+			data.reprice[data.indices[i]] = false;
+		}else{
+			data.min_val_i[data.indices[i]] = std::min(data.min_val_i[data.indices[i]], handler->get_dbl(SLAVE_COST));	
+		}
+
+		//std::cout << "   GAP " << handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[slaves[data.indices[i]]]] << "  " << (options.GAP / data.nslaves) << std::endl;
+		if(handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[slaves[data.indices[i]]]] < (options.GAP / data.nslaves) ){
 			data.nbr_sp_no_cut += 1;
 			data.remaining_gap -= handler->get_dbl(SLAVE_COST) - data.alpha_i[_problem_to_id[slaves[data.indices[i]]]];
 		}else{
