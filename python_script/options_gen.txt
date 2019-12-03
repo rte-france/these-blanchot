@@ -1,35 +1,53 @@
---n							401
---%							0.5
---graphType					GRID
+################################################################################
+#################### OPTIONS GENERATION INSTANCE ALEATOIRE  ####################
+################################################################################
 
+########################################
+# Options generales
+--n							50
 --S 						300
 --seed 						0
+--instance_folder 			../instances/test/
+--saveGraph					1
+
+--graphType					GRID
 --masterSize 				0.2
-
---solve 					0
---log 						1
-
---gridCompletion			0.08
---shuffle 					100
-		
---UBx 						3000
---BigM 						1000
-
---nCluster 					1
+--propDemandNodes 			0.8
 
 --investInit 				0.5
 --flowMin 					1
 
---propDemandNodes 			0.8
---saveGraph					1
+--UBx 						3000
+--BigM 						1000
+--nCluster 					1
+########################################
 
---d1						0.05
+
+########################################
+# Ecriture et resolution reformulation deterministe
 --fullwrite 				1
+--solve 					0
+--log 						1
+########################################
 
---instance_folder 			../instances/
+
+########################################
+# Options GRAPH_TYPE == GRID
+--gridCompletion			0.08
+--d1						0.1
+--n_remove					2
+########################################
 
 
+########################################
+# Options GRAPH_TYPE == GRAPH
+--%							100
+--shuffle 					100
+########################################
 
+
+########################################
+# Espaces des variables aleatoires (couts et demandes)
 --costFlowMin 				10
 --costFlowMax 				30
 --costProdMin 				10
@@ -42,4 +60,5 @@
 
 --dMin 						10
 --dMax						30
+########################################
 

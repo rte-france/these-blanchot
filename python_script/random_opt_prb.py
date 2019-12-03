@@ -59,6 +59,8 @@ class Datas :
 		self.dMin 				= 1
 		self.dMax 				= 10
 
+		self.n_remove			= 50
+
 class Cost :
 	def __init__(self, S):
 		self.prod = [{} for i in range(S)]
@@ -68,7 +70,7 @@ class Cost :
 
 def generate_graph(G, datas, pos) :
 	if datas.graphType == 'GRID' :
-		grid_generation(G, datas.n, datas.m, pos, ratioN=2, ratioP=3, proportion=datas.gridCompletion, Nbr_deg_1=datas.degreeOne)
+		grid_generation(G, datas.n, datas.m, pos, ratioN=2, ratioP=3, proportion=datas.gridCompletion, Nbr_deg_1=datas.degreeOne, n_remove=datas.n_remove)
 		datas.m = G.number_of_edges()
 		datas.graphCompletion = 2 * datas.m / (datas.n * (datas.n-1))
 	elif datas.graphType == 'GRAPH' :
@@ -369,15 +371,12 @@ def demand_generator(G, datas, demandes) :
 
 
 
-def one_problem_fulle_gen(args) : 
+def one_problem_fulle_gen(datas) : 
 
-	start = datetime.datetime.now()
-	
-	datas = Datas()
-	read_options(args, datas)
-	
+	start = datetime.datetime.now()	
 
 	# On se place dans le dossier associe a l instance
+	owd = os.getcwd()
 	go_to_instance_folder(datas)
 	
 
@@ -386,7 +385,7 @@ def one_problem_fulle_gen(args) :
 	pos = {}
 	generate_graph(G, datas, pos)
 	stop_graph = datetime.datetime.now()
-	print('Temps graphe    		: ', stop_graph- start_graph)
+	print('Temps graphe              : ', stop_graph- start_graph)
 
 	start_coef = datetime.datetime.now()
 	prod_n_demand_nodes(G, datas)
@@ -401,20 +400,20 @@ def one_problem_fulle_gen(args) :
 	invest_cost_generator(G, datas, cost)
 	demand_generator(G, datas, demandes)
 	stop_coef = datetime.datetime.now()
-	print('Temps coef      		: ', stop_coef - start_coef)
+	print('Temps coef                : ', stop_coef - start_coef)
 
 	#Graphe initial
 	start_invest_init = datetime.datetime.now()
 	find_init_invest(G, datas, cost, demandes)
 	stop_invest_init = datetime.datetime.now()
-	print('Temps invest init 	: ', stop_invest_init - start_invest_init)
+	print('Temps invest init         : ', stop_invest_init - start_invest_init)
 
 	# Ecriture des fichiers .MPS
 	start_write = datetime.datetime.now()
 	write_master_prb(G, datas, cost)
 	write_subproblems(G, datas, demandes, cost)
 	stop_write = datetime.datetime.now()
-	print('Temps ecriture MPS   : ', stop_write - start_write)
+	print('Temps ecriture MPS        : ', stop_write - start_write)
 
 	# Ecriture de la reformulation deterministe du probleme
 	# Resolution et ecriture de la reformulation deterministe
@@ -423,7 +422,7 @@ def one_problem_fulle_gen(args) :
 		start_solve = datetime.datetime.now()
 		time_resolution = write_n_solve_deterministic_global_problem(G, datas, datas.S, cost, demandes, log=datas.log)
 		stop_solve = datetime.datetime.now()
-		print('Temps solve     		: ', stop_solve - start_solve)
+		print('Temps solve               : ', stop_solve - start_solve)
 
 
 	options = {}
@@ -433,13 +432,12 @@ def one_problem_fulle_gen(args) :
 	write_structure_file('structure.txt', datas)
 
 	stop = datetime.datetime.now()
-	print('Temps total     		: ', stop - start)
+	print('Temps total               : ', stop - start)
 	
 
 	write_datas(datas)
 
-	os.chdir('..')
-
+	os.chdir(owd)
 
 	return time_resolution, datas.NMasterVars, datas.NSlaveVars 
 
@@ -459,13 +457,15 @@ def options_creator(options) :
 	options["INPUTROOT"] 				= "."
 	options["BASIS"] 					= 0
 	options["THRESHOLD_AGGREGATION"] 	= 0
-	options["RAND_AGGREGATION"] 		= 0
+	options["RAND_AGGREGATION"] 		= 1
 	options["RAND_SEED"] 				= 0
 	options["ETA_IN_OUT"] 				= 0.5
 	options["TRICK_FISCHETTI"] 			= 0
 	options["DYNAMIC_STABILIZATION"] 	= 1
 	options["SOLVER"] 					= "CPLEX"
 	options["ALGORITHM"] 				= "INOUT"
+	options["SAMPLING_STRATEGY"] 		= "ORDERED"
+
 
 #####################################################################################################################
 #####################################################################################################################
@@ -478,5 +478,17 @@ if __name__ == '__main__' :
 	nMasterVars 	= 0
 	nSlaveVars 		= 0
 
-	time_resolution, nMasterVars, nSlaveVars = one_problem_fulle_gen(sys.argv[1:])
-	exit()
+	for n in range(50,150,50) :
+		for S in range(200,500,200) :
+			for seed in range(2) :
+				for masterSize in np.arange(0.1,0.4,0.2) :
+					datas = Datas()
+					read_options(sys.argv[1:], datas)
+					datas.n = n
+					datas.S = S
+					datas.seed = seed
+					datas.masterSize = masterSize
+
+					time_resolution, nMasterVars, nSlaveVars = one_problem_fulle_gen(datas)
+					print()
+	

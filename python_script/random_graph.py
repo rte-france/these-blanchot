@@ -305,15 +305,19 @@ def sample_positions(pos,n,distances,ratioN=2, ratioP=3, proportion=0.005) :
 def dist(pos,i,k) :
 	return math.sqrt( (pos[i][0] - pos[k][0])**2 + (pos[i][1] - pos[k][1])**2 )
 
-def try_remove_edge(G,T,n) :
+def try_remove_edge(G,T,n,cnt) :
 	liste_edges = random.sample(list(G.edges), T)
 	for (i,j) in liste_edges :
 		G.remove_edge(i,j)
 	if not is_connex(G,n) :
 		for (i,j) in liste_edges :
 			G.add_edge(i,j)
+		return cnt + 1
+	return 0
 
-def grid_generation(G, n, m, pos, ratioN=2, ratioP=3, proportion=0.005, Nbr_deg_1=0.08) :
+
+
+def grid_generation(G, n, m, pos, ratioN=2, ratioP=3, proportion=0.005, Nbr_deg_1=0.08, n_remove=50) :
 
 	G.add_nodes_from([i for i in range(n)])
 	Dmax = 0
@@ -331,8 +335,13 @@ def grid_generation(G, n, m, pos, ratioN=2, ratioP=3, proportion=0.005, Nbr_deg_
 	#nx.draw(G, pos=pos, with_labels=False, node_color=couleurs ,font_weight='bold', alpha=0.8, node_size=300)
 	
 	degre1 = [ v for v in list(G.nodes) if G.degree[v] == 1 ]
+	try_remove_counter = 0
 	while(len(degre1) <= max(2,Nbr_deg_1*n)) :
-		try_remove_edge(G,50,n)
+		if try_remove_counter == 100 :
+			print("Echec de la suppression d aretes")
+			print("Nombre de degrs 1 final : %i" % len(degre1))
+			break	
+		try_remove_counter = try_remove_edge(G,n_remove,n,try_remove_counter)
 		degre1 = [ v for v in list(G.nodes) if G.degree[v] == 1 ]
 
 	couleurs = [j*10 for (i,j) in list(G.degree)]
