@@ -4,61 +4,61 @@
 
 ########################################
 # Options generales
---n							50
---S 						300
---seed 						0
---instance_folder 			../instances/test/
---saveGraph					1
+--n                         500
+--S                         700
+--seed                      0
+--instance_folder           ../instances/
+--saveGraph                 1
 
---graphType					GRID
---masterSize 				0.2
---propDemandNodes 			0.8
+--graphType                 GRID
+--masterSize                0.7
+--propDemandNodes           0.8
 
---investInit 				0.5
---flowMin 					1
+--investInit                0.5
+--flowMin                   1
 
---UBx 						3000
---BigM 						1000
---nCluster 					1
+--UBx                       3000
+--BigM                      1e6
+--nCluster                  1
 ########################################
 
 
 ########################################
 # Ecriture et resolution reformulation deterministe
---fullwrite 				1
---solve 					0
---log 						1
+--fullwrite                 1
+--solve                     0
+--log                       1
 ########################################
 
 
 ########################################
 # Options GRAPH_TYPE == GRID
---gridCompletion			0.08
---d1						0.1
---n_remove					2
+--gridCompletion            0.08
+--d1                        0.1
+--n_remove                  2
 ########################################
 
 
 ########################################
 # Options GRAPH_TYPE == GRAPH
---%							100
---shuffle 					100
+--%                         100
+--shuffle                   100
 ########################################
 
 
 ########################################
 # Espaces des variables aleatoires (couts et demandes)
---costFlowMin 				10
---costFlowMax 				30
---costProdMin 				10
---costProdMax 				30
+--costFlowMin               10
+--costFlowMax               30
+--costProdMin               10
+--costProdMax               30
 
---costInvestFlowMin 		10
---costInvestFlowMax 		100
---costInvestProdMin 		10
---costInvestProdMax 		100
+--costInvestFlowMin         10
+--costInvestFlowMax         100
+--costInvestProdMin         10
+--costInvestProdMax         100
 
---dMin 						10
---dMax						30
+--dMin                      10
+--dMax                      30
 ########################################
 

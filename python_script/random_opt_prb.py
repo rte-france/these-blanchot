@@ -478,6 +478,11 @@ if __name__ == '__main__' :
 	nMasterVars 	= 0
 	nSlaveVars 		= 0
 
+	datas = Datas()
+	read_options(sys.argv[1:], datas)
+	time_resolution, nMasterVars, nSlaveVars = one_problem_fulle_gen(datas)
+	exit()
+
 	for n in range(50,150,50) :
 		for S in range(200,500,200) :
 			for seed in range(2) :

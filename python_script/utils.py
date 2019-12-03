@@ -13,8 +13,8 @@ def read_options(args, datas) :
 
 	if '--file' in args :
 		read_options_file(args, datas)
-	else :
-		read_options_line(args, datas)
+
+	read_options_line(args[2:], datas)
 
 	if datas.seed == -1 :
 		datas.seed = random.randint(0,10000)
