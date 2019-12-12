@@ -108,6 +108,21 @@ void Benders::build_cut() {
 			for(int i=0; i<_data.nslaves; i++){
 				_data.gap_i[i] = _data.min_val_i[i] - _data.alpha_i[i];
 			}
+			/*
+			if( _data.solve_master ){
+				std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
+			}
+			// New resolution
+			_data.has_cut_this_ite = false;
+			// Solving nrandom SP only if there are still at least nrandom SP to solve, if not, solving the left SP
+			_data.nbr_sp_to_solve = std::min(_data.nrandom, _data.nslaves - _data.nbr_sp_no_cut);
+			get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
+
+			if( _data.has_cut_this_ite ){
+				_data.solve_master = true;
+			}else{
+				_data.solve_master = false;
+			}*/
 
 		}else{
 			// Si solve_master == True, on est dans une iteration avec de nouvelles variables de premier niveau
@@ -296,6 +311,7 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 		// On conserve le point precedent avant de resoudre a nouveau le master
 		_data.previous_x 	= _data.x0;
 		_data.previous_lb 	= _data.lb;
+		std::cout << "COUOUC" << std::endl;
 		
 		// On remet le gap restant a 0
 		_data.remaining_gap = _options.GAP;

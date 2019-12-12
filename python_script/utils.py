@@ -13,8 +13,8 @@ def read_options(args, datas) :
 
 	if '--file' in args :
 		read_options_file(args, datas)
-
-	read_options_line(args[2:], datas)
+	if len(args) >= 3 :
+		read_options_line(args[2:], datas)
 
 	if datas.seed == -1 :
 		datas.seed = random.randint(0,10000)
@@ -59,14 +59,15 @@ def read_options_line(args, datas) :
 				index += 2
 
 			elif args[index] == '--%' :
-				datas.m = int( float(args[index+1])*datas.n*(datas.n-1)/200 ) 
-				if datas.m < datas.n-1 :
-					pMin = 2/datas.n
-					print("Le nombre d'arete doit au moins etre egal a n-1 pour pouvoir \
-						creer un graphe connexe. Pour n = %i, cela fait un minimum de %.2f\
-						 pourcents." % (datas.n, 100*pMin) )
-					exit()
-				index += 2
+				if datas.graphType=='GRAPH' :
+					datas.m = int( float(args[index+1])*datas.n*(datas.n-1)/200 )
+					if datas.m < datas.n-1 :
+						pMin = 2/datas.n
+						print("Le nombre d'arete doit au moins etre egal a n-1 pour pouvoir \
+							creer un graphe connexe. Pour n = %i, cela fait un minimum de %.2f\
+							 pourcents." % (datas.n, 100*pMin) )
+						exit()
+					index += 2
 
 			elif args[index] == '--seed' :
 				datas.seed = int(args[index+1])
@@ -204,10 +205,11 @@ def read_options_line(args, datas) :
 			print("Argument non reconnu. Lancer la commande [python3 random_graphs.py --help] pour obtenir la liste des arguments.")
 			exit()
 
-	if datas.m > datas.n*(datas.n-1)/2 :
-		print("Le nombre d'arete doit etre inferieur a n(n-1)/2. Pour n = %i, cela fait un maximum de %i\
-			aretes." % (datas.n, int(datas.n*(datas.n-1)/2)) )
-		exit(0)
+	if datas.graphType=='GRAPH' :
+		if datas.m > datas.n*(datas.n-1)/2 :
+			print("Le nombre d'arete doit etre inferieur a n(n-1)/2. Pour n = %i, cela fait un maximum de %i\
+				aretes." % (datas.n, int(datas.n*(datas.n-1)/2)) )
+			exit(0)
 
 
 def write_option_file(file_name, options) :

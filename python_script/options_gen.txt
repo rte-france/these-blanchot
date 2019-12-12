@@ -4,21 +4,21 @@
 
 ########################################
 # Options generales
---n                         500
+--n                         300
 --S                         700
 --seed                      0
 --instance_folder           ../instances/
 --saveGraph                 1
 
 --graphType                 GRID
---masterSize                0.7
+--masterSize                0.5
 --propDemandNodes           0.8
 
 --investInit                0.5
 --flowMin                   1
 
 --UBx                       3000
---BigM                      1e6
+--BigM                      1e3
 --nCluster                  1
 ########################################
 
@@ -41,7 +41,7 @@
 
 ########################################
 # Options GRAPH_TYPE == GRAPH
---%                         100
+--%                         50
 --shuffle                   100
 ########################################
 
