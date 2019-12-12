@@ -104,10 +104,12 @@ void Benders::build_cut() {
 		// }
 
 		if(_data.it < 2){
+			
 			get_slave_cut(slave_cut_package, _map_slaves, _options, _data, _problem_to_id);
 			for(int i=0; i<_data.nslaves; i++){
 				_data.gap_i[i] = _data.min_val_i[i] - _data.alpha_i[i];
 			}
+			
 			/*
 			if( _data.solve_master ){
 				std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
@@ -122,8 +124,8 @@ void Benders::build_cut() {
 				_data.solve_master = true;
 			}else{
 				_data.solve_master = false;
-			}*/
-
+			}
+			*/
 		}else{
 			// Si solve_master == True, on est dans une iteration avec de nouvelles variables de premier niveau
 			// On shuffle les sous-problemes
@@ -311,7 +313,6 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 		// On conserve le point precedent avant de resoudre a nouveau le master
 		_data.previous_x 	= _data.x0;
 		_data.previous_lb 	= _data.lb;
-		std::cout << "COUOUC" << std::endl;
 		
 		// On remet le gap restant a 0
 		_data.remaining_gap = _options.GAP;
@@ -323,7 +324,7 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 		compute_pseudocosts(_data, _options);
 	}
 	
-	compute_x_momentum(_master, _data, _options);
+	//compute_x_momentum(_master, _data, _options);
 
 	// if (_options.ACTIVECUTS) {
 	// 	update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
