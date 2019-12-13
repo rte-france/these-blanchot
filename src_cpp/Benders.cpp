@@ -105,27 +105,31 @@ void Benders::build_cut() {
 
 		if(_data.it < 2){
 			
-			get_slave_cut(slave_cut_package, _map_slaves, _options, _data, _problem_to_id);
-			for(int i=0; i<_data.nslaves; i++){
-				_data.gap_i[i] = _data.min_val_i[i] - _data.alpha_i[i];
+			if(_options.SAMPLING_INIT == "FULL"){
+				get_slave_cut(slave_cut_package, _map_slaves, _options, _data, _problem_to_id);
+				for(int i=0; i<_data.nslaves; i++){
+					_data.gap_i[i] = _data.min_val_i[i] - _data.alpha_i[i];
+				}
+			}else if(_options.SAMPLING_INIT == "ORDERED"){
+				if( _data.solve_master ){
+					std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
+				}
+				// New resolution
+				_data.has_cut_this_ite = false;
+				// Solving nrandom SP only if there are still at least nrandom SP to solve, if not, solving the left SP
+				_data.nbr_sp_to_solve = std::min(_data.nrandom, _data.nslaves - _data.nbr_sp_no_cut);
+				get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
+
+				if( _data.has_cut_this_ite ){
+					_data.solve_master = true;
+				}else{
+					_data.solve_master = false;
+				}
+			}else{
+				std::cout << "UNKNOWN INITIALISATION" << std::endl;
+				std::exit(1);
 			}
 			
-			/*
-			if( _data.solve_master ){
-				std::rotate(_data.indices.begin(), _data.indices.begin()+_data.nbr_sp_no_cut+1, _data.indices.end());
-			}
-			// New resolution
-			_data.has_cut_this_ite = false;
-			// Solving nrandom SP only if there are still at least nrandom SP to solve, if not, solving the left SP
-			_data.nbr_sp_to_solve = std::min(_data.nrandom, _data.nslaves - _data.nbr_sp_no_cut);
-			get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
-
-			if( _data.has_cut_this_ite ){
-				_data.solve_master = true;
-			}else{
-				_data.solve_master = false;
-			}
-			*/
 		}else{
 			// Si solve_master == True, on est dans une iteration avec de nouvelles variables de premier niveau
 			// On shuffle les sous-problemes
@@ -181,10 +185,12 @@ void Benders::build_cut() {
 						//std::cout << _data.gap_i[_data.indices[0]] << std::endl;
 						_data.current_gap = _data.gap_i[_data.indices[0]];
 						if(_data.gap_i[_data.indices[0]] < (_options.GAP / _data.nslaves) ){
-							_options.ALGORITHM = "INOUT";
-							_data.nrandom = _data.nslaves;
+							_options.ALGORITHM = "SAMPLING";
+							_options.SAMPLING_STRATEGY = "ORDERED";
+							/*_data.nrandom = _data.nslaves;
 							_options.RAND_AGGREGATION = 0;
 							std::cout << "SWITCH STRATEGY" << std::endl;
+							_data.bestx = _data.x0;*/
 						}
 					}
 				}
@@ -318,10 +324,13 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 		_data.remaining_gap = _options.GAP;
 
 		_data.timer_master = timer_master.elapsed();
+
 		get_master_value(_master, _data, _options);
+		
 		_data.timer_master = timer_master.elapsed();
+		
 		compute_delta_x(_master, _data, _options);
-		compute_pseudocosts(_data, _options);
+		//compute_pseudocosts(_data, _options);
 	}
 	
 	//compute_x_momentum(_master, _data, _options);

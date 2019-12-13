@@ -47,9 +47,9 @@ def read_options_line(args, datas) :
 				'--costFlowMin', '--costFlowMax', '--costProdMin', '--costProdMax','--n_remove',\
 				'--costInvestFlowMin', '--costInvestFlowMax', '--costInvestProdMin', '--costInvestProdMax', '--dMin', '--dMax']
 
+
 	while not stop :
 		if args[index] in arglist :
-
 			if args[index] == '--n' :
 				datas.n = int(args[index+1])
 				index += 2
@@ -67,7 +67,7 @@ def read_options_line(args, datas) :
 							creer un graphe connexe. Pour n = %i, cela fait un minimum de %.2f\
 							 pourcents." % (datas.n, 100*pMin) )
 						exit()
-					index += 2
+				index += 2
 
 			elif args[index] == '--seed' :
 				datas.seed = int(args[index+1])
@@ -194,8 +194,6 @@ def read_options_line(args, datas) :
 			elif args[index] == '--n_remove' :
 				datas.n_remove = int(args[index+1])
 				index += 2
-
-
 
 			if index >= len(args) :
 				stop = True

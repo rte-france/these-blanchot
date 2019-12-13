@@ -4,14 +4,14 @@
 
 ########################################
 # Options generales
---n                         300
---S                         700
---seed                      0
+--n                         500
+--S                         300
+--seed                      2
 --instance_folder           ../instances/
 --saveGraph                 1
 
 --graphType                 GRID
---masterSize                0.5
+--masterSize                0.3
 --propDemandNodes           0.8
 
 --investInit                0.5
@@ -25,7 +25,7 @@
 
 ########################################
 # Ecriture et resolution reformulation deterministe
---fullwrite                 1
+--fullwrite                 0
 --solve                     0
 --log                       1
 ########################################
@@ -41,7 +41,7 @@
 
 ########################################
 # Options GRAPH_TYPE == GRAPH
---%                         50
+--%                         100
 --shuffle                   100
 ########################################
 
@@ -61,4 +61,3 @@
 --dMin                      10
 --dMax                      30
 ########################################
-

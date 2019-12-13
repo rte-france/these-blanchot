@@ -48,7 +48,7 @@ WorkerMasterCPLX::WorkerMasterCPLX(Str2Int const & variable_map, std::string con
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));
 	if (it == _name_to_id.end()) {
-		double lb(-1e10); /*!< Lower Bound */
+		double lb(options.THETA_LB); /*!< Lower Bound */
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
 		double zero(0);
@@ -370,12 +370,14 @@ void WorkerMasterCPLX::add_cut_slave(int i, Point const & s, Point const & x0, d
 		rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
 		mclind[kvp.second] = kvp.second;
 		matval[kvp.second] = s.find(kvp.first)->second;
+		//std::cout << kvp.second << "  " << matval[kvp.second] << std::endl;
  	}
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 	mstart.back() = (int)matval.size();
 
 	CPXaddrows(_cplx, _prb, 0, nrows, ncoeffs, rowrhs.data(), rowtype.data(), mstart.data(), mclind.data(), matval.data(), NULL, NULL);
+
 }
 
 /*!

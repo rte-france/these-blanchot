@@ -1045,9 +1045,8 @@ void compute_x_momentum(WorkerMasterPtr & master, BendersData & data, BendersOpt
 
 	data.x_simplex = data.x0;
 
-	// Pas la premiere fois car on ne connait pas encore bestx (le point IN)
 	if(data.it % data.nslaves == 0){
-		data.eta = std::min(data.eta*1.02, 1.0);
+		data.eta = std::min(data.eta*1.1, 1.0);
 	}
 
 
