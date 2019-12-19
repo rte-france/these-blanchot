@@ -188,6 +188,8 @@ struct BendersData {
 
 	// critere d'arret
 	double remaining_gap;
+
+	bool switch_strategy = false;
 };
 
 double norm_point(Point const & x0, Point const & x1);

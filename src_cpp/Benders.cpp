@@ -185,8 +185,9 @@ void Benders::build_cut() {
 						//std::cout << _data.gap_i[_data.indices[0]] << std::endl;
 						_data.current_gap = _data.gap_i[_data.indices[0]];
 						if(_data.gap_i[_data.indices[0]] < (_options.GAP / _data.nslaves) ){
-							_options.ALGORITHM = "SAMPLING";
-							_options.SAMPLING_STRATEGY = "ORDERED";
+							_data.switch_strategy = true;
+							//_options.ALGORITHM = "SAMPLING";
+							//_options.SAMPLING_STRATEGY = "ORDERED";
 							/*_data.nrandom = _data.nslaves;
 							_options.RAND_AGGREGATION = 0;
 							std::cout << "SWITCH STRATEGY" << std::endl;
@@ -350,9 +351,19 @@ void Benders::perform_one_sampling_iteration(std::ostream & stream) {
 	// 	update_trace(_trace, _data);
 	// }
 	
-	if(_data.it % 1 == 0){
+	if(_data.it % _options.LOG_NUMBER_ITE == 0){
 		print_log(stream, _data, _options.LOG_LEVEL, _options);
 	}
 	_data.stop = stopping_criterion(_data, _options);
+
+	if(_data.switch_strategy){
+		//_options.ALGORITHM = "INOUT";
+		_options.SAMPLING_STRATEGY = "ORDERED";
+		//_data.nrandom = _data.nslaves;
+		//_options.RAND_AGGREGATION = 0;
+		//_data.bestx = _data.x0;
+		//std::cout << "SWITCH STRATEGY" << std::endl;
+		_data.switch_strategy = false;
+	}
 
 }

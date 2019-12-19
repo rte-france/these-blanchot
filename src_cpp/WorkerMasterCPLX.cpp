@@ -48,6 +48,7 @@ WorkerMasterCPLX::WorkerMasterCPLX(Str2Int const & variable_map, std::string con
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));
 	if (it == _name_to_id.end()) {
+		std::cout << "COUCOU" << std::endl;
 		double lb(options.THETA_LB); /*!< Lower Bound */
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
@@ -58,6 +59,7 @@ WorkerMasterCPLX::WorkerMasterCPLX(Str2Int const & variable_map, std::string con
 		//CPXaddcols(_cplx, _prb, 1, 0, &obj, start.data(), NULL, NULL, &lb, &ub, alpha.c_str() );
 		CPXaddcols(_cplx, _prb, 1, 0, &obj, start.data(), NULL, NULL, &lb, &ub, NULL ); 
 
+		double lb2 = lb / nslaves;
 		_id_alpha_i.resize(nslaves, -1);
 		for (int i(0); i < nslaves; ++i) {
 			_id_alpha_i[i] = CPXgetnumcols(_cplx, _prb); 

@@ -89,9 +89,12 @@ BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "INOUT")
 BENDERS_OPTIONS_MACRO(SAMPLING_STRATEGY, std::string, "RANDOM")
 
 //Lower bound on epigraph variables
-BENDERS_OPTIONS_MACRO(THETA_LB, double, -1e6)
+BENDERS_OPTIONS_MACRO(THETA_LB, double, -1)
 
 //Choice of initialisation type
 BENDERS_OPTIONS_MACRO(SAMPLING_INIT, std::string, "FULL")
+
+//Choice of initialisation type
+BENDERS_OPTIONS_MACRO(LOG_NUMBER_ITE, int, 1)
 
 

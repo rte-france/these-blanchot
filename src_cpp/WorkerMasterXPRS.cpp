@@ -45,7 +45,7 @@ WorkerMasterXPRS::WorkerMasterXPRS(Str2Int const & variable_map, std::string con
 	std::string const alpha("alpha");
 	auto const it(_name_to_id.find(alpha));
 	if (it == _name_to_id.end()) {
-		double lb(-1e10); /*!< Lower Bound */
+		double lb(options.THETA_LB); /*!< Lower Bound */
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
 		double zero(0);
