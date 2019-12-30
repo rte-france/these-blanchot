@@ -1,10 +1,20 @@
 import os
 import sys
 
-n_master_var = 167
+n_master_var = 0
 
 instance = sys.argv[1]
 
+# Recuperation du nombre de variables du probleme maitre dans le fichier info.txt
+file = open(instance + "infos.txt", 'r')
+name = "NMasterVars"
+for line in file :
+	if line.split()[0] == name :
+		n_master_var = int(line.split()[1])
+
+print("Taille master : " , n_master_var)
+
+# Ecriture du fichier annotations
 file = open(instance + "annotation.ann", 'w')
 
 file.write("<?xml version='1.0' encoding='utf-8'?>\n")
