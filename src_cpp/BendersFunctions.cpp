@@ -370,7 +370,7 @@ void update_trace(BendersTrace & trace, BendersData const & data) {
 *  \param all_package : storage of each slaves status
 */
 void check_status(AllCutPackage const & all_package, BendersData const & data) {
-	if (data.master_status != 1) {
+	if (data.master_status != 1 && data.master_status != 101 && data.master_status != 102) {
 		std::cout << "Master status is " << data.master_status << std::endl;
 		exit(0);
 	}

@@ -60,6 +60,7 @@ class Datas :
 		self.dMax 				= 10
 
 		self.n_remove			= 50
+		self.integerVars 		= 0
 
 class Cost :
 	def __init__(self, S):
@@ -155,8 +156,14 @@ def write_master_prb(G, datas, cost, invest_init='invest_init.txt') :
 	master_prb = LpProblem('master', LpMinimize)
 
 	# Investissement
-	invest_prod = LpVariable.dicts("_invest_prod", datas.prod_nodes, 	lowBound=0, upBound=datas.UBx)
-	invest_flow = LpVariable.dicts("_invest_flot", datas.invest_edges, 	lowBound=0, upBound=datas.UBx)
+	if datas.integerVars >= 1 :
+		invest_prod = LpVariable.dicts("_invest_prod", datas.prod_nodes, 	lowBound=0, upBound=datas.UBx, cat=LpInteger)
+	else :
+		invest_prod = LpVariable.dicts("_invest_prod", datas.prod_nodes, 	lowBound=0, upBound=datas.UBx)
+	if datas.integerVars == 2 :
+		invest_flow = LpVariable.dicts("_invest_flot", datas.invest_edges, 	lowBound=0, upBound=datas.UBx, cat=LpInteger)
+	else :
+		invest_flow = LpVariable.dicts("_invest_flot", datas.invest_edges, 	lowBound=0, upBound=datas.UBx)
 
 	master_prb += lpSum([cost.invest_prod[v]*invest_prod[v] 		for v in datas.prod_nodes]) \
 				+ lpSum([cost.invest_flow[(i,j)]*invest_flow[(i,j)] for (i,j) in datas.invest_edges])
@@ -256,8 +263,15 @@ def write_n_solve_deterministic_global_problem(	G, datas, S, cost, demandes, wri
 	obj = 0
 
 	# Investissement
-	invest_prod = LpVariable.dicts("_invest_prod", datas.prod_nodes, 	lowBound=0)
-	invest_flow = LpVariable.dicts("_invest_flot", datas.invest_edges, 	lowBound=0)
+	# Investissement
+	if datas.integerVars >= 1 :
+		invest_prod = LpVariable.dicts("_invest_prod", datas.prod_nodes, 	lowBound=0, upBound=datas.UBx, cat=LpInteger)
+	else :
+		invest_prod = LpVariable.dicts("_invest_prod", datas.prod_nodes, 	lowBound=0, upBound=datas.UBx)
+	if datas.integerVars == 2 :
+		invest_flow = LpVariable.dicts("_invest_flot", datas.invest_edges, 	lowBound=0, upBound=datas.UBx, cat=LpInteger)
+	else :
+		invest_flow = LpVariable.dicts("_invest_flot", datas.invest_edges, 	lowBound=0, upBound=datas.UBx)
 
 	links = [(i,j) for (i,j) in list(G.edges)] + [(j,i) for (i,j) in list(G.edges)]
 

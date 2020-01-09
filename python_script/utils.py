@@ -45,7 +45,7 @@ def read_options_line(args, datas) :
 				'--gridCompletion', '--shuffle', '--UBx', '--BigM', '--nCluster', '--flowMin', '--propDemandNodes', \
 				'--saveGraph','--log', '--solver', '--folder', '--fullwrite', '--instance_folder',\
 				'--costFlowMin', '--costFlowMax', '--costProdMin', '--costProdMax','--n_remove',\
-				'--costInvestFlowMin', '--costInvestFlowMax', '--costInvestProdMin', '--costInvestProdMax', '--dMin', '--dMax']
+				'--costInvestFlowMin', '--costInvestFlowMax', '--costInvestProdMin', '--costInvestProdMax', '--dMin', '--dMax', '--integerVars']
 
 
 	while not stop :
@@ -193,6 +193,10 @@ def read_options_line(args, datas) :
 
 			elif args[index] == '--n_remove' :
 				datas.n_remove = int(args[index+1])
+				index += 2
+
+			elif args[index] == '--integerVars' :
+				datas.integerVars = int(args[index+1])
 				index += 2
 
 			if index >= len(args) :

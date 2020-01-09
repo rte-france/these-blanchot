@@ -142,24 +142,46 @@ void WorkerMasterCPLX::solve(int & lp_status){
 	CPXsetintparam(_cplx, CPXPARAM_Read_Scale, -1);
 	CPXsetdblparam(_cplx, CPXPARAM_Simplex_Tolerances_Optimality, 1e0);
 
-	status = CPXlpopt ((_cplx), _prb);
-	CPXsolution(_cplx, _prb, &lp_status, NULL, NULL, NULL, NULL, NULL);
+	if( CPXgetprobtype( _cplx, _prb ) == CPXPROB_LP ){
+		status = CPXlpopt ((_cplx), _prb);
+		CPXsolution(_cplx, _prb, &lp_status, NULL, NULL, NULL, NULL, NULL);
 
-	if (lp_status != CPX_STAT_OPTIMAL) {
-		std::cout << "lp_status is : " << lp_status << std::endl;
-		std::stringstream buffer;
-		
-		buffer << _path_to_mps << "_lp_status_";
-		buffer << CPLEX_LP_STATUS[lp_status];
-		buffer<< ".mps";
-		std::cout << "lp_status is : " << CPLEX_LP_STATUS[lp_status] << std::endl;
-		std::cout << "written in " << buffer.str() << std::endl;
-		std::string typ = "mps";
-		status = CPXwriteprob(_cplx, _prb, buffer.str().c_str(), typ.c_str() );
-		std::exit(0);
-	}
-	else if (status) {
-		std::cout << "Worker::solve() status " << status << ", " << _path_to_mps << std::endl;	
+		if (lp_status != CPX_STAT_OPTIMAL) {
+			std::cout << "lp_status is : " << lp_status << std::endl;
+			std::stringstream buffer;
+			
+			buffer << _path_to_mps << "_lp_status_";
+			buffer << CPLEX_LP_STATUS[lp_status];
+			buffer<< ".mps";
+			std::cout << "lp_status is : " << CPLEX_LP_STATUS[lp_status] << std::endl;
+			std::cout << "written in " << buffer.str() << std::endl;
+			std::string typ = "mps";
+			status = CPXwriteprob(_cplx, _prb, buffer.str().c_str(), typ.c_str() );
+			std::exit(0);
+		}
+		else if (status) {
+			std::cout << "Worker::solve() status " << status << ", " << _path_to_mps << std::endl;	
+		}
+	}else if(CPXgetprobtype( _cplx, _prb ) == CPXPROB_MILP ){
+		status = CPXmipopt (_cplx, _prb);
+		CPXsolution(_cplx, _prb, &lp_status, NULL, NULL, NULL, NULL, NULL);
+
+		if (lp_status != CPXMIP_OPTIMAL && lp_status != CPXMIP_OPTIMAL_TOL) {
+			std::cout << "lp_status is : " << lp_status << std::endl;
+			std::stringstream buffer;
+			
+			buffer << _path_to_mps << "_lp_status_";
+			buffer << CPLEX_LP_STATUS[lp_status];
+			buffer<< ".mps";
+			std::cout << "lp_status is : " << CPLEX_LP_STATUS[lp_status] << std::endl;
+			std::cout << "written in " << buffer.str() << std::endl;
+			std::string typ = "mps";
+			status = CPXwriteprob(_cplx, _prb, buffer.str().c_str(), typ.c_str() );
+			std::exit(0);
+		}
+		else if (status) {
+			std::cout << "Worker::solve() status " << status << ", " << _path_to_mps << std::endl;	
+		}
 	}
 }
 
