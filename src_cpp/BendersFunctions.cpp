@@ -328,7 +328,7 @@ void update_trace(BendersTrace & trace, BendersData const & data) {
 *  \param all_package : storage of each slaves status
 */
 void check_status(AllCutPackage const & all_package, BendersData const & data) {
-	if (data.master_status != 1) {
+	if (data.master_status != XPRS_MIP_OPTIMAL && data.master_status != XPRS_LP_OPTIMAL) {
 		std::cout << "Master status is " << data.master_status << std::endl;
 		exit(0);
 	}
@@ -359,7 +359,8 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	if (options.BOUND_ALPHA) {
 		master->fix_alpha(data.best_ub);
 	}
-	master->solve(data.master_status);
+	master->solve_integer(data.master_status);
+	//master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 	data.invest_cost = data.lb - data.alpha;

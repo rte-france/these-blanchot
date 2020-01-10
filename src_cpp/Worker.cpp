@@ -154,8 +154,11 @@ void Worker::solve(int & lp_status) {
 	//	XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
 	//	XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 500);
 	//}
-	status = XPRSlpoptimize(_xprs, "");
 	
+	status = XPRSlpoptimize(_xprs, "");
+	//status = XPRSmipoptimize(_xprs, "");
+	//std::cout << "STATUS " << status << std::endl;
+
 	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);
 	if (lp_status != XPRS_LP_OPTIMAL) {
 		std::cout << "lp_status is : " << lp_status << std::endl;
@@ -172,6 +175,49 @@ void Worker::solve(int & lp_status) {
 	else if (status) {
 		std::cout << "Worker::solve() status " << status<<", "<<_path_to_mps << std::endl;
 		
+	}
+}
+
+void Worker::solve_integer(int& lp_status) {
+
+	int status(0);
+
+	//int initial_rows(0);
+	//int presolved_rows(0);
+	//if (_is_master) {
+	//	XPRSgetintattrib(_xprs, XPRS_ROWS, &initial_rows);
+
+	//	XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 0);
+	//	XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 0);
+
+	//	status = XPRSlpoptimize(_xprs, "");
+
+	//	XPRSgetintattrib(_xprs, XPRS_ROWS, &presolved_rows);
+
+	//	XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
+	//	XPRSsetintcontrol(_xprs, XPRS_BARITERLIMIT, 500);
+	//}
+
+	//status = XPRSlpoptimize(_xprs, "");
+	status = XPRSmipoptimize(_xprs, "");
+	//std::cout << "STATUS " << status << std::endl;
+
+	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &lp_status);
+	if (lp_status != XPRS_MIP_OPTIMAL && lp_status != XPRS_LP_OPTIMAL) {
+		std::cout << "lp_status is : " << lp_status << std::endl;
+		std::stringstream buffer;
+
+		buffer << _path_to_mps << "_lp_status_";
+		buffer << XPRS_LP_STATUS[lp_status];
+		buffer << ".mps";
+		std::cout << "lp_status is : " << XPRS_LP_STATUS[lp_status] << std::endl;
+		std::cout << "written in " << buffer.str() << std::endl;
+		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
+		std::exit(0);
+	}
+	else if (status) {
+		std::cout << "Worker::solve() status " << status << ", " << _path_to_mps << std::endl;
+
 	}
 }
 

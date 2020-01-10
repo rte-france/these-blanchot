@@ -46,6 +46,8 @@ public:
 
 	void solve(int & lp_status);
 
+	void solve_integer(int& lp_status);
+
 
 public:
 	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
