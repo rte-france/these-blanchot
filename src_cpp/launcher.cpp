@@ -55,13 +55,14 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 		for (auto const & problem : coupling_map) {
 			if (problem.first == options.MASTER_NAME)
 				trimmer.insert(problem);
-			else if (n< options.SLAVE_NUMBER){
+			else if (n < options.SLAVE_NUMBER){
 				trimmer.insert(problem);
 				++n;
 			}
 		}
 		coupling_map = trimmer;
 	}
+	
 	summary.close();
 	return 0;
 }

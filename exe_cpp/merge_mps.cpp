@@ -24,7 +24,10 @@ int main(int argc, char** argv)
 	int ncols(0);
 	int nslaves(input.size());
 	CouplingMap x_mps_id;
+
+
 	for (auto const & kvp : input) {
+
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
 		XPRSgetintattrib(full, XPRS_COLS, &ncols);
 		_decalage[kvp.first] = ncols;
@@ -50,14 +53,26 @@ int main(int argc, char** argv)
 			}
 			XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
 		}
+		
 		StandardLp lpData(prob);
 		lpData.append_in(full);
 
+
+
+
+
+		if (kvp.first == options.MASTER_NAME) {
+			XPRSwriteprob(full, "full.lp", "l");
+		}
+
 		XPRSdestroyprob(prob);
 		for (auto const & x : kvp.second) {
+			//std::cout << x.first << " " << x.second << std::endl;
 			x_mps_id[x.first][kvp.first] = x.second;
 		}
 	}
+
+
 	IntVector mstart;
 	IntVector cindex;
 	DblVector values;
@@ -111,14 +126,23 @@ int main(int argc, char** argv)
 	//std::cout << "Writting lp file" << std::endl; 
 	//XPRSwriteprob(full, "full.lp", "l");
 	std::cout << "Solving" << std::endl;
-	XPRSsetintcontrol(full, XPRS_BARTHREADS, 16);
-	XPRSsetintcontrol(full, XPRS_BARCORES, 16);
-	XPRSlpoptimize(full, "-b");
+	XPRSmipoptimize(full, "");
 
 	Point x0;
 	XPRSgetintattrib(full, XPRS_COLS, &ncols);
 	DblVector ptr(ncols, 0);
-	XPRSgetlpsol(full, ptr.data(), NULL, NULL, NULL);
+	XPRSgetmipsol(full, ptr.data(), NULL);
+
+	// Test de l'integrite des variables
+	std::vector<char> types;
+	types.resize(9);
+	XPRSgetcoltype(full, types.data(), 0, 8);
+	for (int i = 0; i < 9; i++) {
+		std::cout << ptr[i] << "  " << types[i] << std::endl;
+	}
+
+
+	
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];
 	}

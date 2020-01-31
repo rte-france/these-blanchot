@@ -360,9 +360,13 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 		master->fix_alpha(data.best_ub);
 	}
 	master->solve_integer(data.master_status);
+	std::cout << "STATUS MASTER : " << data.master_status << std::endl;
 	//master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
+
+	std::cout << "LOWER BOUND : " << data.lb << std::endl;
+
 	data.invest_cost = data.lb - data.alpha;
 	if (!options.RAND_AGGREGATION) {
 		data.ub = data.invest_cost;

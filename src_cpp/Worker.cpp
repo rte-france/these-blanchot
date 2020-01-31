@@ -90,8 +90,13 @@ void Worker::free() {
 *  \param lb : double which receives the optimal value
 */
 void Worker::get_value(double & lb) {
-	XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
-}
+	if (_is_master) {
+		XPRSgetdblattrib(_xprs, XPRS_MIPOBJVAL, &lb);
+	}
+	else {
+		XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
+	}
+}	
 
 /*!
 *  \brief Initialization of a problem 
@@ -203,6 +208,7 @@ void Worker::solve_integer(int& lp_status) {
 	//std::cout << "STATUS " << status << std::endl;
 
 	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &lp_status);
+	std::cout << "STATUS : " << lp_status << std::endl;
 	if (lp_status != XPRS_MIP_OPTIMAL && lp_status != XPRS_LP_OPTIMAL) {
 		std::cout << "lp_status is : " << lp_status << std::endl;
 		std::stringstream buffer;
