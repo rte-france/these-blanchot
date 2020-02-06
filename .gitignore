@@ -1,4 +1,4 @@
-build
+build*
 data/
 cas1*
 *.lp

@@ -208,7 +208,6 @@ void Worker::solve_integer(int& lp_status) {
 	//std::cout << "STATUS " << status << std::endl;
 
 	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &lp_status);
-	std::cout << "STATUS : " << lp_status << std::endl;
 	if (lp_status != XPRS_MIP_OPTIMAL && lp_status != XPRS_LP_OPTIMAL) {
 		std::cout << "lp_status is : " << lp_status << std::endl;
 		std::stringstream buffer;

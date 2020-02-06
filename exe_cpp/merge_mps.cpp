@@ -126,22 +126,15 @@ int main(int argc, char** argv)
 	//std::cout << "Writting lp file" << std::endl; 
 	//XPRSwriteprob(full, "full.lp", "l");
 	std::cout << "Solving" << std::endl;
+	
+	// Resolution sequentielle
+	XPRSsetintcontrol(full, XPRS_THREADS, 1);
 	XPRSmipoptimize(full, "");
 
 	Point x0;
 	XPRSgetintattrib(full, XPRS_COLS, &ncols);
 	DblVector ptr(ncols, 0);
 	XPRSgetmipsol(full, ptr.data(), NULL);
-
-	// Test de l'integrite des variables
-	std::vector<char> types;
-	types.resize(9);
-	XPRSgetcoltype(full, types.data(), 0, 8);
-	for (int i = 0; i < 9; i++) {
-		std::cout << ptr[i] << "  " << types[i] << std::endl;
-	}
-
-
 	
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];

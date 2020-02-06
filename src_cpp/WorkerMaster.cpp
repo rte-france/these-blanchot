@@ -20,7 +20,7 @@ WorkerMaster::~WorkerMaster() {
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 	x0.clear();
 	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
-	XPRSgetsol(_xprs, ptr.data(), NULL, NULL, NULL);
+	XPRSgetmipsol(_xprs, ptr.data(), NULL);
 	for (auto const & kvp : _id_to_name) {
 		x0[kvp.second] = ptr[kvp.first];
 	}
@@ -33,13 +33,13 @@ void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 /*!
 *  \brief Set dual values of a problem in a vector
 *
-*  \param dual : reference to a vector of double
+*  \param dual : reference to a vector of double -- getmipsol : slack and no duals
 */
 void WorkerMaster::get_dual_values(std::vector<double> & dual) {
 	int rows;
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
 	dual.resize(rows);
-	XPRSgetlpsol(_xprs, NULL, NULL, dual.data(), NULL);
+	XPRSgetmipsol(_xprs, NULL, dual.data());
 }
 
 /*!
