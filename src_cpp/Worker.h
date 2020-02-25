@@ -3,6 +3,7 @@
 #include "common.h"
 #include "BendersOptions.h"
 #include "xprs.h"
+#include "SolverAbstract.h"
 
 
 void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
@@ -24,7 +25,6 @@ public:
 	virtual ~Worker();
 
 	void get_value(double & lb);
-
 	void get_simplex_ite(int & result);
 
 	void free();
@@ -35,17 +35,9 @@ public:
 	
 public:
 
-	/*!
-	*  \brief Generate an error message
-	*
-	*  Method to manage the different errors we could encounter during the optimization process
-	*
-	*  \param sSubName : 
-	*/
 	std::list<std::ostream *> & stream();
 
 	void solve(int & lp_status);
-
 	void solve_integer(int& lp_status);
 
 
@@ -53,6 +45,7 @@ public:
 	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
 	std::list<std::ostream * >_stream;
 	bool _is_master;
+	SolverAbstract* _solver;
 };
 
 void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
