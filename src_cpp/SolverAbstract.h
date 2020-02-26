@@ -25,6 +25,7 @@ public:
 	virtual void writeprob(const char* name, const char* flags);
 	virtual void solve(int& lp_status, std::string path_to_mps);
 	virtual void solve_integer(int& lp_status, std::string path_to_mps);
+	virtual void get_obj(double* obj, int first, int last);
 	virtual void get_ncols(int& cols);
 	virtual void get_nrows(int& rows);
 	virtual void free();
@@ -39,11 +40,12 @@ public:
 	virtual void add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
 		const double* dmatval, const double* bdl, const double* bdu);
 	virtual void add_names(int type, const char* cnames, int first, int last);
+	virtual void chgobj(int nels, const int* mindex, const double* obj);
 	virtual void chgbounds(int nbds, const int* mindex, const char* qbtype, const double* bnd);
 	
 // Methods to get a solution
 public:	
-	virtual SimplexBasis get_basis();
+	virtual void get_basis(int* rstatus, int* cstatus);
 	virtual void get_value(double& lb);
 	virtual void getmipvalue(double& lb);
 	virtual void getlpvalue(double& lb);

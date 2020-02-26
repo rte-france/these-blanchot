@@ -16,68 +16,24 @@ WorkerSlave::WorkerSlave() {
 */
 WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options) {
 	init(variable_map, path_to_mps);
-	if (options.XPRESS_TRACE == 2 || options.XPRESS_TRACE == 3) {
-		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	}
-	else {
-		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
-	}
+	_solver->set_output_loglevel(options.XPRESS_TRACE);
+
 	int mps_ncols;
-	XPRSgetintattrib(_xprs, XPRS_COLS, &mps_ncols);
+	_solver->get_ncols(mps_ncols);
+
 	DblVector o(mps_ncols, 0);
 	IntVector sequence(mps_ncols);
 	for (int i(0); i < mps_ncols; ++i) {
 		sequence[i] = i;
 	}
-	XPRSgetobj(_xprs, o.data(), 0, mps_ncols - 1);
-	//std::cout << "slave_weight : " << slave_weight << std::endl;
+	_solver->get_obj(o.data(), 0, mps_ncols - 1);
+
 	for (auto & c : o) {
 		c *= slave_weight;
 	}
-	XPRSchgobj(_xprs, mps_ncols, sequence.data(), o.data());
-	XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
+	_solver->chgobj(mps_ncols, sequence.data(), o.data());
+	_solver->set_algorithm("DUAL");
 
-	//IntVector scols;
-	//for (auto const & x : _id_to_name) {
-	//	scols.push_back(x.first);
-	//}
-	//int ncols;
-	//int nrows;
-	//XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
-	//XPRSgetintattrib(_xprs, XPRS_COLS, &nrows);
-	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	//XPRSloadsecurevecs(_xprs, 0, scols.size(), NULL, scols.data());
-	//XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 0);
-	//XPRSlpoptimize(_xprs, "");
-	//double objrhs(0);
-	//XPRSgetdblattrib(_xprs, XPRS_OBJRHS, &objrhs);
-	//IntVector colmap(ncols);
-	//XPRSgetpresolvemap(_xprs, NULL, colmap.data());
-	//for (int i(0); i < ncols; ++i) {
-	//	//if(_id_to_name.find(colmap[i]) != _id_to_name.end())
-	//	//std::cout << i << "   |   " << colmap[i] << std::endl;
-	//}
-	//StandardLp datapre(_xprs);
-	//IntVector precolstatus(ncols);
-	//IntVector prerowstatus(nrows);
-	//XPRSgetpresolvebasis(_xprs, prerowstatus.data(), precolstatus.data());
-	//XPRSprob prexp;
-	//XPRScreateprob(&prexp);
-	//XPRSsetcbmessage(prexp, optimizermsg, this);
-	//XPRSsetintcontrol(prexp, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	//XPRSsetintcontrol(prexp, XPRS_THREADS, 1);
-	//XPRSloadlp(prexp, "prexp", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-	//datapre.append_in(prexp);
-	//IntVector minus_one(1, -1);
-	//std::cout << "objrhs : " << objrhs << std::endl;
-	//XPRSchgobj(prexp, 1, minus_one.data(), &objrhs);
-	//XPRSloadbasis(prexp, prerowstatus.data(), precolstatus.data());
-	//std::cout << "solving prexp" << std::endl;
-	//XPRSlpoptimize(prexp, "");
-	//std::cout << "solving xprs" << std::endl;
-	//XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
-	//XPRSlpoptimize(_xprs, "");
-	//std::exit(0);
 }
 WorkerSlave::~WorkerSlave() {
 
@@ -93,7 +49,7 @@ WorkerSlave::~WorkerSlave() {
 void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";
-	XPRSwriteprob(_xprs, name.str().c_str(), "l");
+	_solver->writeprob(name.str().c_str(), "l");
 }
 
 /*!
@@ -116,7 +72,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 		++i;
 	}
 
-	XPRSchgbounds(_xprs, nbnds, indexes.data(), bndtypes.data(), values.data());
+	_solver->chgbounds(nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
 /*!
@@ -127,9 +83,9 @@ void WorkerSlave::fix_to(Point const & x0) {
 void WorkerSlave::get_subgradient(Point & s) {
 	s.clear();
 	int ncols;
-	XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
+	_solver->get_ncols(ncols);
 	std::vector<double> ptr(ncols, 0);
-	XPRSgetlpsol(_xprs, NULL, NULL, NULL, ptr.data());
+	_solver->get_LPsol(NULL, NULL, NULL, ptr.data());
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
@@ -146,11 +102,13 @@ SimplexBasis WorkerSlave::get_basis() {
 	int nrows;
 	IntVector cstatus;
 	IntVector rstatus;
-	XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
-	XPRSgetintattrib(_xprs, XPRS_ROWS, &nrows);
+
+	_solver->get_nrows(nrows);
+	_solver->get_ncols(ncols);
+
 	cstatus.resize(ncols);
 	rstatus.resize(nrows);
-	XPRSgetbasis(_xprs, rstatus.data(), cstatus.data());
+	_solver->get_basis(rstatus.data(), cstatus.data());
 	return std::make_pair(rstatus, cstatus);
 }
 
