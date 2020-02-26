@@ -67,6 +67,9 @@ BENDERS_OPTIONS_MACRO(BOUND_ALPHA, bool, true)
 //Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
 BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 
+//Choice of the solver to use (XPRESS only for now)
+BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
+
 
 
 

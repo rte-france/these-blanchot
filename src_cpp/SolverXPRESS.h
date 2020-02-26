@@ -4,6 +4,8 @@
 #ifdef XPRESS
 #include "xprs.h"
 
+void XPRS_CC optimizermsg(XPRSprob prob, void* stream, const char* sMsg, int nLen, int nMsglvl);
+
 /*!
 * \class SolverXPRESS
 * \brief Class for XPRESS problems and methods 
@@ -31,7 +33,7 @@ public:
 public:
 	void fix_first_stage(Point const& x0);
 	void add_cut(Point const& s, Point const& x0, double const& rhs);
-	int del_rows(int nrows, const int* mindex);
+	void del_rows(int nrows, const int* mindex);
 	void add_rows(int newrows, int newnz, const char* qrtype, const double* rhs,
 		const double* range, const int* mstart, const int* mclind, const double* dmatval);
 	void add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
@@ -58,5 +60,6 @@ public:
 	void set_algorithm(std::string algo);
 };
 
-
+void errormsg(XPRSprob& xprs, const char* sSubName, int nLineNo, int nErrCode);
+void optimizermsg(XPRSprob prob, void* stream, const char* sMsg, int nLen, int nMsglvl);
 #endif

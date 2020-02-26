@@ -24,7 +24,7 @@ void SolverAbstract::fix_first_stage(Point const& x0) {}
 
 void SolverAbstract::add_cut(Point const& s, Point const& x0, double const& rhs) {}
 
-int SolverAbstract::del_rows(int nrows, const int* mindex) {}
+void SolverAbstract::del_rows(int nrows, const int* mindex) {}
 
 void SolverAbstract::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, const double* range, const int* mstart, const int* mclind, const double* dmatval) {}
 

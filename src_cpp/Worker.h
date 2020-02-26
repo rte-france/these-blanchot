@@ -1,12 +1,15 @@
 #pragma once
 
-#include "common.h"
-#include "BendersOptions.h"
+//#include "common.h"
+//#include "BendersOptions.h"
 #include "xprs.h"
 #include "SolverAbstract.h"
+#ifdef XPRESS
+#include "SolverXPRESS.h"
+#endif
 
 
-void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
+
 class Worker;
 typedef std::shared_ptr<Worker> WorkerPtr;
 
@@ -19,6 +22,12 @@ typedef std::shared_ptr<Worker> WorkerPtr;
 
 class Worker
 {
+public:
+	//XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
+	std::list<std::ostream* >_stream;
+	bool _is_master;
+	SolverAbstract* _solver;
+
 public:
 	Worker();
 	void init(Str2Int const & variable_map, std::string const & path_to_mps);
@@ -40,13 +49,4 @@ public:
 	void solve(int & lp_status);
 	void solve_integer(int& lp_status);
 
-
-public:
-	XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
-	std::list<std::ostream * >_stream;
-	bool _is_master;
-	SolverAbstract* _solver;
 };
-
-void errormsg(XPRSprob & xprs,  const char *sSubName, int nLineNo, int nErrCode);
-void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);

@@ -15,6 +15,27 @@ WorkerSlave::WorkerSlave() {
 *
 */
 WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options) {
+	
+	// Declaration du solver
+	if (options.SOLVER == "") {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+	#ifdef CPLEX
+	else if (options.SOLVER == "CPLEX") {
+		_solver = new SolverCPLEX();
+	}
+	#endif
+	#ifdef XPRESS
+	else if (options.SOLVER == "XPRESS") {
+		_solver = new SolverXPRESS();
+	}
+	#endif
+	else {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+	
 	init(variable_map, path_to_mps);
 	_solver->set_output_loglevel(options.XPRESS_TRACE);
 

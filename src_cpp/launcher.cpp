@@ -76,6 +76,9 @@ int build_input(BendersOptions const & options, CouplingMap & coupling_map) {
 void sequential_launch(BendersOptions const & options) {
 	Timer timer;
 	XPRSinit("");
+
+	std::cout << "INIT XPRESS OK" << std::endl;
+
 	CouplingMap input;
 	build_input(options, input);
 	Benders benders(input, options);

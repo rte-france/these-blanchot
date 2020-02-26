@@ -4,8 +4,8 @@
 #include <iostream>
 #include "common.h"
 #include "BendersOptions.h"
-#include "SlaveCut.h"
-#include "SimplexBasis.h"
+//#include "SlaveCut.h"
+//#include "SimplexBasis.h"
 
 /*!
 * \class class SolverAbstract
@@ -34,7 +34,7 @@ public:
 public:
 	virtual void fix_first_stage(Point const& x0);
 	virtual void add_cut(Point const& s, Point const& x0, double const& rhs);
-	virtual int del_rows(int nrows, const int* mindex);
+	virtual void del_rows(int nrows, const int* mindex);
 	virtual void add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
 		const double* range, const int* mstart, const int* mclind, const double* dmatval);
 	virtual void add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
