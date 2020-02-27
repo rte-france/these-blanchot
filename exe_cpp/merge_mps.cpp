@@ -58,9 +58,6 @@ int main(int argc, char** argv)
 		lpData.append_in(full);
 
 
-
-
-
 		if (kvp.first == options.MASTER_NAME) {
 			XPRSwriteprob(full, "full.lp", "l");
 		}

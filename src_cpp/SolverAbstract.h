@@ -11,29 +11,31 @@
 * \class class SolverAbstract
 * \brief Virtual class to implement solvers methods
 */
+
 class SolverAbstract {
 public:
 	std::string _name;
-
+	typedef std::unique_ptr<SolverAbstract> SolverPtr;
 public:
 	SolverAbstract();
 	virtual ~SolverAbstract();
 
 // General methods
 public:
-	virtual void init(std::string const& path_to_mps);
+	virtual void init(std::string const& path_to_mps) = 0;
 	virtual void writeprob(const char* name, const char* flags);
-	virtual void solve(int& lp_status, std::string path_to_mps);
-	virtual void solve_integer(int& lp_status, std::string path_to_mps);
+	virtual void solve(int& lp_status, std::string const& path_to_mps);
+	virtual void solve_integer(int& lp_status, std::string const& path_to_mps);
 	virtual void get_obj(double* obj, int first, int last);
 	virtual void get_ncols(int& cols);
+	virtual int  get_ncols() const = 0;
 	virtual void get_nrows(int& rows);
 	virtual void free();
 
 // Methods to tranform a problem
 public:
 	virtual void fix_first_stage(Point const& x0);
-	virtual void add_cut(Point const& s, Point const& x0, double const& rhs);
+	virtual void add_cut(Point const& s, Point const& x0, double rhs);
 	virtual void del_rows(int nrows, const int* mindex);
 	virtual void add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
 		const double* range, const int* mstart, const int* mclind, const double* dmatval);

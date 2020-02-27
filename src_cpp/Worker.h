@@ -26,7 +26,7 @@ public:
 	//XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
 	std::list<std::ostream* >_stream;
 	bool _is_master;
-	SolverAbstract* _solver;
+	SolverAbstract::Ptr _solver;
 
 public:
 	Worker();

@@ -28,7 +28,7 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	#endif
 	#ifdef XPRESS
 	else if (options.SOLVER == "XPRESS") {
-		_solver = new SolverXPRESS();
+		_solver = std::make_unique< SolverXPRESS>();
 	}
 	#endif
 	else {
