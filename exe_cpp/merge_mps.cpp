@@ -4,10 +4,12 @@
 #include "Worker.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
+#include <cplex.h>
 
 
 int main(int argc, char** argv)
 {
+
 	usage(argc);
 	BendersOptions options(build_benders_options(argc, argv));
 	options.print(std::cout);
@@ -56,7 +58,6 @@ int main(int argc, char** argv)
 		
 		StandardLp lpData(prob);
 		lpData.append_in(full);
-
 
 		if (kvp.first == options.MASTER_NAME) {
 			XPRSwriteprob(full, "full.lp", "l");

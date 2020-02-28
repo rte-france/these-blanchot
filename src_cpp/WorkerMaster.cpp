@@ -20,7 +20,7 @@ WorkerMaster::~WorkerMaster() {
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 	x0.clear();
 	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
-	_solver->get_MIPsol(ptr.data(), NULL);
+	_solver->get_MIP_sol(ptr.data(), NULL);
 	for (auto const & kvp : _id_to_name) {
 		x0[kvp.second] = ptr[kvp.first];
 	}
@@ -36,18 +36,16 @@ void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 *  \param dual : reference to a vector of double -- getmipsol : slack and no duals
 */
 void WorkerMaster::get_dual_values(std::vector<double> & dual) {
-	int rows;
-	_solver->get_nrows(rows);
+	int rows = _solver->get_nrows();
 	dual.resize(rows);
-	_solver->get_MIPsol(NULL, dual.data());
+	_solver->get_MIP_sol(NULL, dual.data());
 }
 
 /*!
 *  \brief Return number of constraint in a problem
 */
 int WorkerMaster::get_number_constraint() {
-	int rows;
-	_solver->get_nrows(rows);
+	int rows = _solver->get_nrows();
 	return rows;
 }
 
@@ -75,7 +73,7 @@ void WorkerMaster::delete_constraint(int const nrows) {
 void WorkerMaster::write(int it) {
 	std::stringstream name;
 	name << "master_" << it << ".lp";
-	_solver->writeprob(name.str().c_str(), "l");
+	_solver->write_prob(name.str().c_str(), "l");
 }
 
 /*!
@@ -233,7 +231,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	#endif
 	#ifdef XPRESS
 	else if (options.SOLVER == "XPRESS") {
-		_solver = new SolverXPRESS();
+		_solver = std::make_shared< SolverXPRESS>();
 	}
 	#endif
 	else {
@@ -249,7 +247,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	
 	std::cout << "debut master " << std::endl;
 
-	_solver->set_output_loglevel(options.XPRESS_TRACE);
+	_solver->set_output_log_level(options.XPRESS_TRACE);
 
 	std::cout << "output level ok " << std::endl;
 
@@ -268,7 +266,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 		double obj(+1);
 		double zero(0);
 		std::vector<int> start(2, 0);
-		_solver->get_ncols(_id_alpha); /* Set the number of columns in _id_alpha */
+		_id_alpha = _solver->get_ncols(); /* Set the number of columns in _id_alpha */
 		_solver->add_cols(1, 0, &obj, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
 		_solver->add_names(2, alpha.c_str(), _id_alpha, _id_alpha);
 
@@ -277,7 +275,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 		std::cout << "ajout variables epigraphes ok " << std::endl;
 
 		for (int i(0); i < nslaves; ++i) {
-			_solver->get_ncols(_id_alpha_i[i]);
+			_id_alpha_i[i] = _solver->get_ncols();
 			_solver->add_cols(1, 0, &zero, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha_i and its parameters */
 			std::stringstream buffer;
 			buffer << "alpha_" << i;
@@ -312,5 +310,5 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 */
 void WorkerMaster::fix_alpha(double const & bestUB) {
 	std::vector<char> boundtype(1, 'U');
-	_solver->chgbounds(1, &_id_alpha, boundtype.data(), &bestUB);
+	_solver->chg_bounds(1, &_id_alpha, boundtype.data(), &bestUB);
 }

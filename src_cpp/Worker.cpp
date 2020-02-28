@@ -1,18 +1,17 @@
 #include "Worker.h"
 
 
-std::list<std::ostream *> & Worker::stream() {
-	return _stream;
+std::list<std::ostream *> & Worker::get_stream() {
+	return _solver->get_stream();
 }
 
 
 
 Worker::Worker() {
-
+	_is_master = false;
 }
 
 Worker::~Worker() {
-	
 }
 
 /*!
@@ -29,10 +28,10 @@ void Worker::free() {
 */
 void Worker::get_value(double & lb) {
 	if (_is_master) {
-		_solver->getmipvalue(lb);
+		_solver->get_mip_value(lb);
 	}
 	else {
-		_solver->getlpvalue(lb);
+		_solver->get_lp_value(lb);
 	}
 }	
 
@@ -45,7 +44,7 @@ void Worker::get_value(double & lb) {
 */
 void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps) {
 	_path_to_mps = path_to_mps;
-	_stream.push_back(&std::cout);
+	add_stream(std::cout);
 	std::cout << "avant init solver " << std::endl;
 	_solver->init(path_to_mps);
 
@@ -55,6 +54,11 @@ void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps)
 		_id_to_name[kvp.second] = kvp.first;
 	}
 	_is_master = false;
+}
+
+void Worker::add_stream(std::ostream& stream)
+{
+	get_stream().push_back(&stream);
 }
 
 

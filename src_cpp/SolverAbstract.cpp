@@ -1,5 +1,5 @@
 #include "SolverAbstract.h"
-
+/*
 SolverAbstract::SolverAbstract() {}
 
 SolverAbstract::~SolverAbstract() {}
@@ -56,3 +56,4 @@ void SolverAbstract::get_MIPsol(double* primals, double* duals) {}
 void SolverAbstract::set_output_loglevel(int loglevel) {}
 
 void SolverAbstract::set_algorithm(std::string algo) {}
+*/

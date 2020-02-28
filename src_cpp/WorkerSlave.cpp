@@ -28,7 +28,7 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	#endif
 	#ifdef XPRESS
 	else if (options.SOLVER == "XPRESS") {
-		_solver = std::make_unique< SolverXPRESS>();
+		_solver = std::make_shared< SolverXPRESS>();
 	}
 	#endif
 	else {
@@ -37,10 +37,10 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	}
 	
 	init(variable_map, path_to_mps);
-	_solver->set_output_loglevel(options.XPRESS_TRACE);
+	_solver->set_output_log_level(options.XPRESS_TRACE);
 
 	int mps_ncols;
-	_solver->get_ncols(mps_ncols);
+	mps_ncols = _solver->get_ncols();
 
 	DblVector o(mps_ncols, 0);
 	IntVector sequence(mps_ncols);
@@ -52,7 +52,7 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	for (auto & c : o) {
 		c *= slave_weight;
 	}
-	_solver->chgobj(mps_ncols, sequence.data(), o.data());
+	_solver->chg_obj(mps_ncols, sequence.data(), o.data());
 	_solver->set_algorithm("DUAL");
 
 }
@@ -70,7 +70,7 @@ WorkerSlave::~WorkerSlave() {
 void WorkerSlave::write(int it) {
 	std::stringstream name;
 	name << "slave_" << it << ".lp";
-	_solver->writeprob(name.str().c_str(), "l");
+	_solver->write_prob(name.str().c_str(), "l");
 }
 
 /*!
@@ -93,7 +93,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 		++i;
 	}
 
-	_solver->chgbounds(nbnds, indexes.data(), bndtypes.data(), values.data());
+	_solver->chg_bounds(nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
 /*!
@@ -104,9 +104,9 @@ void WorkerSlave::fix_to(Point const & x0) {
 void WorkerSlave::get_subgradient(Point & s) {
 	s.clear();
 	int ncols;
-	_solver->get_ncols(ncols);
+	ncols = _solver->get_ncols();
 	std::vector<double> ptr(ncols, 0);
-	_solver->get_LPsol(NULL, NULL, NULL, ptr.data());
+	_solver->get_LP_sol(NULL, NULL, NULL, ptr.data());
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
@@ -124,8 +124,8 @@ SimplexBasis WorkerSlave::get_basis() {
 	IntVector cstatus;
 	IntVector rstatus;
 
-	_solver->get_nrows(nrows);
-	_solver->get_ncols(ncols);
+	nrows = _solver->get_nrows();
+	ncols = _solver->get_ncols();
 
 	cstatus.resize(ncols);
 	rstatus.resize(nrows);

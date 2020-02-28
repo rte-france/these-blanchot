@@ -24,13 +24,14 @@ class Worker
 {
 public:
 	//XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
-	std::list<std::ostream* >_stream;
+	//std::list<std::ostream* >_stream;
 	bool _is_master;
 	SolverAbstract::Ptr _solver;
 
 public:
 	Worker();
 	void init(Str2Int const & variable_map, std::string const & path_to_mps);
+	void add_stream(std::ostream& stream);
 	virtual ~Worker();
 
 	void get_value(double & lb);
@@ -44,7 +45,7 @@ public:
 	
 public:
 
-	std::list<std::ostream *> & stream();
+	std::list<std::ostream *> & get_stream();
 
 	void solve(int & lp_status);
 	void solve_integer(int& lp_status);

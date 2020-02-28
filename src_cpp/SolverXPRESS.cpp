@@ -78,34 +78,36 @@ void errormsg(XPRSprob & _xprs, const char* sSubName, int nLineNo, int nErrCode)
 	exit(nErrCode);
 }
 
-
+int SolverXPRESS::_NumberOfProblems = 0;
 SolverXPRESS::SolverXPRESS() {
-
+	if (_NumberOfProblems == 0) {
+		XPRSinit("");
+	}
+	_NumberOfProblems += 1;
+	_xprs = NULL;
+	XPRScreateprob(&_xprs);
 }
 
 SolverXPRESS::~SolverXPRESS() {
-	
+	_NumberOfProblems -= 1;
+	if (_NumberOfProblems == 0) {
+		XPRSfree();
+	}
 }
 
 void SolverXPRESS::init(std::string const& path_to_mps) {
-
-	std::cout << "debut init solver " << std::endl;
-	XPRScreateprob(&_xprs);
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
-	std::cout << "avant suppresion de la routine messages d'erreur " << std::endl;
-	//XPRSsetcbmessage(_xprs, optimizermsg, this);
-	std::cout << "avant lecture " << std::endl;
+	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
 	XPRSreadprob(_xprs, path_to_mps.c_str(), "");
-	std::cout << "tout est pardonne " << std::endl;
 }
 
-void SolverXPRESS::writeprob(const char* name, const char* flags) {
+void SolverXPRESS::write_prob(const char* name, const char* flags) const {
 	XPRSwriteprob(_xprs, name, flags);
 }
 
-void SolverXPRESS::solve(int& lp_status, std::string path_to_mps) {
+void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 	int status = XPRSlpoptimize(_xprs, "");
 
 	status = XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);
@@ -126,7 +128,7 @@ void SolverXPRESS::solve(int& lp_status, std::string path_to_mps) {
 	}
 }
 
-void SolverXPRESS::solve_integer(int& lp_status, std::string path_to_mps) {
+void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps) {
 	int status(0);
 	status = XPRSmipoptimize(_xprs, "");
 
@@ -148,16 +150,20 @@ void SolverXPRESS::solve_integer(int& lp_status, std::string path_to_mps) {
 	}
 }
 
-void SolverXPRESS::get_obj(double* obj, int first, int last) {
+void SolverXPRESS::get_obj(double* obj, int first, int last) const {
 	XPRSgetobj(_xprs, obj, first, last);
 }
 
-void SolverXPRESS::get_ncols(int& cols) {
+int SolverXPRESS::get_ncols() const {
+	int cols(0);
 	XPRSgetintattrib(_xprs, XPRS_COLS, &cols);
+	return cols;
 }
 
-void SolverXPRESS::get_nrows(int& rows){
+int SolverXPRESS::get_nrows() const {
+	int rows(0);
 	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
+	return rows;
 }
 
 void SolverXPRESS::free() {
@@ -168,7 +174,7 @@ void SolverXPRESS::fix_first_stage(Point const& x0) {
 
 }
 
-void SolverXPRESS::add_cut(Point const& s, Point const& x0, double const& rhs) {
+void SolverXPRESS::add_cut(Point const& s, Point const& x0, double rhs) {
 
 }
 
@@ -190,31 +196,31 @@ void SolverXPRESS::add_names(int type, const char* cnames, int first, int last) 
 	XPRSaddnames(_xprs, type, cnames, first, last);
 }
 
-void SolverXPRESS::chgobj(int nels, const int* mindex, const double* obj) {
+void SolverXPRESS::chg_obj(int nels, const int* mindex, const double* obj) {
 	XPRSchgobj(_xprs, nels, mindex, obj);
 }
 
-void SolverXPRESS::chgbounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) {
+void SolverXPRESS::chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) {
 	XPRSchgbounds(_xprs, nbds, mindex, qbtype, bnd);
 }
 
-void SolverXPRESS::get_basis(int* rstatus, int* cstatus) {
+void SolverXPRESS::get_basis(int* rstatus, int* cstatus) const {
 	XPRSgetbasis(_xprs, rstatus, cstatus);
 }
 
-void SolverXPRESS::get_value(double& lb) {
+void SolverXPRESS::get_value(double& lb)const  {
 
 }
 
-void SolverXPRESS::getmipvalue(double& lb) {
+void SolverXPRESS::get_mip_value(double& lb) const {
 	XPRSgetdblattrib(_xprs, XPRS_MIPOBJVAL, &lb);
 }
 
-void SolverXPRESS::getlpvalue(double& lb) {
+void SolverXPRESS::get_lp_value(double& lb) const {
 	XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
 }
 
-void SolverXPRESS::get_simplex_ite(int& result) {
+void SolverXPRESS::get_simplex_ite(int& result) const {
 	XPRSgetintattrib(_xprs, XPRS_SIMPLEXITER, &result);
 }
 
@@ -222,15 +228,15 @@ void SolverXPRESS::get(Point& x0, double& alpha, DblVector& alpha_i) {
 
 }
 
-void SolverXPRESS::get_LPsol(double* primals, double* slacks, double* duals, double* reduced_costs) {
+void SolverXPRESS::get_LP_sol(double* primals, double* slacks, double* duals, double* reduced_costs) {
 	XPRSgetlpsol(_xprs, primals, slacks, duals, reduced_costs);
 }
 
-void SolverXPRESS::get_MIPsol(double* primals, double* duals) {
+void SolverXPRESS::get_MIP_sol(double* primals, double* duals) {
 	XPRSgetmipsol(_xprs, primals, duals);
 }
 
-void SolverXPRESS::set_output_loglevel(int loglevel) {
+void SolverXPRESS::set_output_log_level(int loglevel) {
 	if (loglevel == 1 || loglevel == 3) {
 		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 	}
@@ -239,7 +245,7 @@ void SolverXPRESS::set_output_loglevel(int loglevel) {
 	}
 }
 
-void SolverXPRESS::set_algorithm(std::string algo) {
+void SolverXPRESS::set_algorithm(std::string const& algo) {
 	if (algo == "BARRIER") {
 		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
 	}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-//#include <xprs.h>
+#include <xprs.h>
 
 class BendersOptions;
 int build_input(BendersOptions const & options, CouplingMap & coupling_map);
