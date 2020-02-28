@@ -14,12 +14,8 @@ Benders::~Benders() {
 *  \param options : set of options fixed by the user 
 */
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) : _options(options) {
-	
-	std::cout << "Debut creation BENDERS" << std::endl;
 
 	if (!problem_list.empty()) {
-
-		std::cout << "BOUCLE PROBLEMES " << std::endl;
 
 		_data.nslaves = _options.SLAVE_NUMBER;
 		if (_data.nslaves < 0) {
@@ -39,12 +35,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 
-		std::cout << "Fin creation salves" << std::endl;
-
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
-
-		std::cout << "fin creation master " << std::endl;
 	}
 
 }

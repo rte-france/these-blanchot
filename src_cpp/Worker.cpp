@@ -45,7 +45,6 @@ void Worker::get_value(double & lb) {
 void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps) {
 	_path_to_mps = path_to_mps;
 	add_stream(std::cout);
-	std::cout << "avant init solver " << std::endl;
 	_solver->init(path_to_mps);
 
 	//std::ifstream file(_path_to_mapping.c_str());

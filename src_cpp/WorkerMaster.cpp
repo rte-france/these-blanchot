@@ -216,8 +216,6 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param nslaves : number of slaves
 */
 WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
-	
-	std::cout << "On est rentre " << std::endl;
 
 	// Declaration du solver
 	if (options.SOLVER == "") {
@@ -226,7 +224,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	}
 	#ifdef CPLEX
 	else if (options.SOLVER == "CPLEX") {
-		_solver = new SolverCPLEX();
+		_solver = std::make_shared< SolverCPLEX>();
 	}
 	#endif
 	#ifdef XPRESS
@@ -238,24 +236,15 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 		std::cout << "SOLVER NON RECONU" << std::endl;
 		std::exit(0);
 	}
-	
-	std::cout << "Pointeur solver declare " << std::endl;
 
-	std::cout << "Avant init " << std::endl;
 	init(variable_map, path_to_mps);
 	_is_master = true;
-	
-	std::cout << "debut master " << std::endl;
 
 	_solver->set_output_log_level(options.XPRESS_TRACE);
-
-	std::cout << "output level ok " << std::endl;
 
 	// 4 barrier
 	// 2 dual
 	_solver->set_algorithm(options.MASTER_METHOD);
-	
-	std::cout << "set algo ok " << std::endl;
 
 	// add the variable alpha
 	std::string const alpha("alpha");
@@ -271,8 +260,6 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 		_solver->add_names(2, alpha.c_str(), _id_alpha, _id_alpha);
 
 		_id_alpha_i.resize(nslaves, -1);
-
-		std::cout << "ajout variables epigraphes ok " << std::endl;
 
 		for (int i(0); i < nslaves; ++i) {
 			_id_alpha_i[i] = _solver->get_ncols();

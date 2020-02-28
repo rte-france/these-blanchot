@@ -1,8 +1,5 @@
 #pragma once
 
-//#include "common.h"
-//#include "BendersOptions.h"
-#include "xprs.h"
 #include "SolverAbstract.h"
 #ifdef XPRESS
 #include "SolverXPRESS.h"
@@ -23,8 +20,6 @@ typedef std::shared_ptr<Worker> WorkerPtr;
 class Worker
 {
 public:
-	//XPRSprob _xprs; /*!< Problem stocked in the instance Worker*/
-	//std::list<std::ostream* >_stream;
 	bool _is_master;
 	SolverAbstract::Ptr _solver;
 

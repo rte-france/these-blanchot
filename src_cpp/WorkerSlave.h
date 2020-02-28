@@ -1,8 +1,6 @@
 #pragma once
 
-
 #include "Worker.h"
-#include "xprs.h"
 #include "SlaveCut.h"
 #include "SimplexBasis.h"
 

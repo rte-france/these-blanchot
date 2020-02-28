@@ -4,7 +4,6 @@
 #include "Worker.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
-#include <cplex.h>
 
 
 int main(int argc, char** argv)
@@ -14,18 +13,33 @@ int main(int argc, char** argv)
 	BendersOptions options(build_benders_options(argc, argv));
 	options.print(std::cout);
 
-	//XPRSinit("");
 	CouplingMap input;
 	build_input(options, input);
 	
-	//XPRSprob full;
 	SolverAbstract::Ptr full;
-	//XPRScreateprob(&full);
-	
-	//XPRSsetcbmessage(full, optimizermsg, NULL);
-	//XPRSsetintcontrol(full, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	if (options.SOLVER == "") {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+	#ifdef CPLEX
+	else if (options.SOLVER == "CPLEX") {
+		full = std::make_shared< SolverCPLEX>();
+	}
+	#endif
+	#ifdef XPRESS
+	else if (options.SOLVER == "XPRESS") {
+		std::cout << "COUCOU" << std::endl;
+		full = std::make_shared< SolverXPRESS>();
+	}
+	#endif
+	else {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+
+
 	full->load_lp("full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-	//XPRSloadlp(full, "full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
 	Str2Int _decalage;
 	int ncols(0);
 	int nslaves(input.size());
@@ -36,36 +50,45 @@ int main(int argc, char** argv)
 
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
 		ncols = full->get_ncols();
-		//XPRSgetintattrib(full, XPRS_COLS, &ncols);
 		_decalage[kvp.first] = ncols;
 
-		//XPRSprob prob;
 		SolverAbstract::Ptr prob;
+		if (options.SOLVER == "") {
+			std::cout << "SOLVER NON RECONU" << std::endl;
+			std::exit(0);
+		}
+		#ifdef CPLEX
+		else if (options.SOLVER == "CPLEX") {
+			prob = new SolverCPLEX();
+		}
+		#endif
+		#ifdef XPRESS
+		else if (options.SOLVER == "XPRESS") {
+			prob = std::make_shared< SolverXPRESS>();
+		}
+		#endif
+		else {
+			std::cout << "SOLVER NON RECONU" << std::endl;
+			std::exit(0);
+		}
 
-		//XPRScreateprob(&prob);
 		prob->init(problem_name.c_str());
-		//XPRSsetcbmessage(prob, optimizermsg, NULL);
-		//XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
-		//XPRSreadprob(prob, problem_name.c_str(), "");
 		
 		if (kvp.first != options.MASTER_NAME) {
 
 			int mps_ncols = prob->get_ncols();
 			
-			//XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
 			DblVector o(mps_ncols, 0);
 			IntVector sequence(mps_ncols);
 			for (int i(0); i < mps_ncols; ++i) {
 				sequence[i] = i;
 			}
 			prob->get_obj(o.data(), 0, mps_ncols - 1);
-			//XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
 			double const weigth = options.slave_weight(nslaves, problem_name);
 			for (auto & c : o) {
 				c *= weigth;
 			}
 			prob->chg_obj(mps_ncols, sequence.data(), o.data());
-			//XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
 		}
 		
 		StandardLp lpData(prob);
@@ -73,13 +96,10 @@ int main(int argc, char** argv)
 
 		if (kvp.first == options.MASTER_NAME) {
 			full->write_prob("full.lp", "l");
-			//XPRSwriteprob(full, "full.lp", "l");
 		}
 
 		prob->free();
-		//XPRSdestroyprob(prob);
 		for (auto const & x : kvp.second) {
-			//std::cout << x.first << " " << x.second << std::endl;
 			x_mps_id[x.first][kvp.first] = x.second;
 		}
 	}
@@ -134,14 +154,14 @@ int main(int argc, char** argv)
 	full->add_rows(nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 	//XPRSaddrows(full, nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 
-	//std::cout << "Writting mps file" << std::endl;
-	//XPRSwriteprob(full, "full.mps", "");
-	//std::cout << "Writting lp file" << std::endl; 
-	//XPRSwriteprob(full, "full.lp", "l");
 	std::cout << "Solving" << std::endl;
 	
 	// Resolution sequentielle
 	
+	std::cout << full->get_ncols() << std::endl;
+	std::cout << full->get_nrows() << std::endl;
+	std::cout << full->get_nelems() << std::endl;
+
 	// AJOUTER SET IN CONTROL THREADS !!!!!!
 	//XPRSsetintcontrol(full, XPRS_THREADS, 1);
 	int status = 0;
