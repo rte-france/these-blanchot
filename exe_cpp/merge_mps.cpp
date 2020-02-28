@@ -14,14 +14,18 @@ int main(int argc, char** argv)
 	BendersOptions options(build_benders_options(argc, argv));
 	options.print(std::cout);
 
-	XPRSinit("");
+	//XPRSinit("");
 	CouplingMap input;
 	build_input(options, input);
-	XPRSprob full;
-	XPRScreateprob(&full);
-	XPRSsetcbmessage(full, optimizermsg, NULL);
-	XPRSsetintcontrol(full, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	XPRSloadlp(full, "full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+	
+	//XPRSprob full;
+	SolverAbstract::Ptr full;
+	//XPRScreateprob(&full);
+	
+	//XPRSsetcbmessage(full, optimizermsg, NULL);
+	//XPRSsetintcontrol(full, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	full->load_lp("full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+	//XPRSloadlp(full, "full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 	Str2Int _decalage;
 	int ncols(0);
 	int nslaves(input.size());
@@ -31,39 +35,49 @@ int main(int argc, char** argv)
 	for (auto const & kvp : input) {
 
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
-		XPRSgetintattrib(full, XPRS_COLS, &ncols);
+		ncols = full->get_ncols();
+		//XPRSgetintattrib(full, XPRS_COLS, &ncols);
 		_decalage[kvp.first] = ncols;
 
-		XPRSprob prob;
-		XPRScreateprob(&prob);
-		XPRSsetcbmessage(prob, optimizermsg, NULL);
-		XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
-		XPRSreadprob(prob, problem_name.c_str(), "");
+		//XPRSprob prob;
+		SolverAbstract::Ptr prob;
+
+		//XPRScreateprob(&prob);
+		prob->init(problem_name.c_str());
+		//XPRSsetcbmessage(prob, optimizermsg, NULL);
+		//XPRSsetintcontrol(prob, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+		//XPRSreadprob(prob, problem_name.c_str(), "");
+		
 		if (kvp.first != options.MASTER_NAME) {
 
-			int mps_ncols(0);
-			XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
+			int mps_ncols = prob->get_ncols();
+			
+			//XPRSgetintattrib(prob, XPRS_COLS, &mps_ncols);
 			DblVector o(mps_ncols, 0);
 			IntVector sequence(mps_ncols);
 			for (int i(0); i < mps_ncols; ++i) {
 				sequence[i] = i;
 			}
-			XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
+			prob->get_obj(o.data(), 0, mps_ncols - 1);
+			//XPRSgetobj(prob, o.data(), 0, mps_ncols - 1);
 			double const weigth = options.slave_weight(nslaves, problem_name);
 			for (auto & c : o) {
 				c *= weigth;
 			}
-			XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
+			prob->chg_obj(mps_ncols, sequence.data(), o.data());
+			//XPRSchgobj(prob, mps_ncols, sequence.data(), o.data());
 		}
 		
 		StandardLp lpData(prob);
 		lpData.append_in(full);
 
 		if (kvp.first == options.MASTER_NAME) {
-			XPRSwriteprob(full, "full.lp", "l");
+			full->write_prob("full.lp", "l");
+			//XPRSwriteprob(full, "full.lp", "l");
 		}
 
-		XPRSdestroyprob(prob);
+		prob->free();
+		//XPRSdestroyprob(prob);
 		for (auto const & x : kvp.second) {
 			//std::cout << x.first << " " << x.second << std::endl;
 			x_mps_id[x.first][kvp.first] = x.second;
@@ -117,7 +131,8 @@ int main(int argc, char** argv)
 	}
 	DblVector rhs(nrows, 0);
 	CharVector sense(nrows, 'E');
-	XPRSaddrows(full, nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
+	full->add_rows(nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
+	//XPRSaddrows(full, nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 
 	//std::cout << "Writting mps file" << std::endl;
 	//XPRSwriteprob(full, "full.mps", "");
@@ -126,21 +141,32 @@ int main(int argc, char** argv)
 	std::cout << "Solving" << std::endl;
 	
 	// Resolution sequentielle
-	XPRSsetintcontrol(full, XPRS_THREADS, 1);
-	XPRSmipoptimize(full, "");
+	
+	// AJOUTER SET IN CONTROL THREADS !!!!!!
+	//XPRSsetintcontrol(full, XPRS_THREADS, 1);
+	int status = 0;
+	full->solve_integer(status, "full.mps");
+	//XPRSmipoptimize(full, "");
 
 	Point x0;
-	XPRSgetintattrib(full, XPRS_COLS, &ncols);
+	ncols = full->get_ncols();
+	//XPRSgetintattrib(full, XPRS_COLS, &ncols);
 	DblVector ptr(ncols, 0);
-	XPRSgetmipsol(full, ptr.data(), NULL);
+	full->get_MIP_sol(ptr.data(), NULL);
+	//XPRSgetmipsol(full, ptr.data(), NULL);
 	
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];
 	}
 	print_solution(std::cout, x0, true);
 
-	XPRSdestroyprob(full);
-	XPRSfree();
+	full->free();
+	//XPRSdestroyprob(full);
+	
+
+	// AJOUTER UN TEST QUE LE FREE A BIEN ETE APPELE A CET ETAPE !!!!
+
+	//XPRSfree();
 
 	return 0;
 }

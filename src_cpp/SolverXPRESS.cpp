@@ -103,6 +103,11 @@ void SolverXPRESS::init(std::string const& path_to_mps) {
 	XPRSreadprob(_xprs, path_to_mps.c_str(), "");
 }
 
+void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
+{
+	XPRSloadlp(_xprs, probname, ncol, nrow, qrtype, rhs, range, obj, mstart, mnel, mrwind, dmatval, dlb, dub);
+}
+
 void SolverXPRESS::write_prob(const char* name, const char* flags) const {
 	XPRSwriteprob(_xprs, name, flags);
 }
@@ -166,6 +171,41 @@ int SolverXPRESS::get_nrows() const {
 	return rows;
 }
 
+int SolverXPRESS::get_nelems() const {
+	int elems(0);
+	XPRSgetintattrib(_xprs, XPRS_ELEMS, &elems);
+	return elems;
+}
+
+void SolverXPRESS::get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, int first, int last) const {
+	XPRSgetrows(_xprs, mstart, mclind, dmatval, size, nels, first, last);
+}
+
+void SolverXPRESS::get_row_type(char* qrtype, int first, int last) const
+{
+	XPRSgetrowtype(_xprs, qrtype, first, last);
+}
+
+void SolverXPRESS::get_rhs(double* rhs, int first, int last) const {
+	XPRSgetrhs(_xprs, rhs, first, last);
+}
+
+void SolverXPRESS::get_rhs_range(double* range, int first, int last) const {
+	XPRSgetrhsrange(_xprs, range, first, last);
+}
+
+void SolverXPRESS::get_col_type(char* coltype, int first, int last) const {
+	XPRSgetcoltype(_xprs, coltype, first, last);
+}
+
+void SolverXPRESS::get_lb(double* lb, int first, int last) const {
+	XPRSgetlb(_xprs, lb, first, last);
+}
+
+void SolverXPRESS::get_ub(double* ub, int first, int last) const {
+	XPRSgetub(_xprs, ub, first, last);
+}
+
 void SolverXPRESS::free() {
 	XPRSdestroyprob(_xprs);
 }
@@ -202,6 +242,10 @@ void SolverXPRESS::chg_obj(int nels, const int* mindex, const double* obj) {
 
 void SolverXPRESS::chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) {
 	XPRSchgbounds(_xprs, nbds, mindex, qbtype, bnd);
+}
+
+void SolverXPRESS::chg_col_type(int nels, const int* mindex, const char* qctype) const {
+	XPRSchgcoltype(_xprs, nels, mindex, qctype);
 }
 
 void SolverXPRESS::get_basis(int* rstatus, int* cstatus) const {

@@ -22,12 +22,27 @@ public:
 // General methods
 public:
 	virtual void init(std::string const& path_to_mps);
+	virtual void load_lp(const char* probname, int ncol, int nrow,
+		const char* qrtype, const double* rhs, const double* range,
+		const double* obj, const int* mstart, const int* mnel, const int* mrwind,
+		const double* dmatval, const double* dlb, const double* dub);
 	virtual void write_prob(const char* name, const char* flags) const;
 	virtual void solve(int& lp_status, std::string const& path_to_mps);
 	virtual void solve_integer(int& lp_status, std::string const& path_to_mps);
 	virtual void get_obj(double* obj, int first, int last) const;
 	virtual int get_ncols() const;
 	virtual int get_nrows() const;
+	virtual int get_nelems() const;
+	
+	virtual void get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, int first, int last) const;
+	virtual void get_row_type(char* qrtype, int first, int last) const;
+	virtual void get_rhs(double* rhs, int first, int last) const;
+	virtual void get_rhs_range(double* range, int first, int last) const;
+	virtual void get_col_type(char* coltype, int first, int last) const;
+	virtual void get_lb(double* lb, int fisrt, int last) const;
+	virtual void get_ub(double* ub, int fisrt, int last) const;
+
+
 	virtual void free();
 
 // Methods to tranform a problem
@@ -42,6 +57,7 @@ public:
 	virtual void add_names(int type, const char* cnames, int first, int last);
 	virtual void chg_obj(int nels, const int* mindex, const double* obj);
 	virtual void chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd);
+	virtual void chg_col_type(int nels, const int* mindex, const char* qctype) const;
 
 // Methods to get a solution
 public:

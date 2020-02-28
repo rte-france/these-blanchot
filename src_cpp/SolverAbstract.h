@@ -27,12 +27,26 @@ public:
 // General methods
 public:
 	virtual void init(std::string const& path_to_mps) = 0;
+	virtual void load_lp(const char* probname, int ncol, int nrow, 
+		const char* qrtype, const double* rhs, const double* range,
+		const double* obj, const int* mstart, const int* mnel, const int* mrwind,
+		const double* dmatval, const double* dlb, const double* dub) = 0;
 	virtual void write_prob(const char* name, const char* flags) const = 0;
 	virtual void solve(int& lp_status, std::string const& path_to_mps) = 0;
 	virtual void solve_integer(int& lp_status, std::string const& path_to_mps) = 0;
 	virtual void get_obj(double* obj, int first, int last) const = 0;
 	virtual int  get_ncols() const = 0;
 	virtual int  get_nrows() const = 0;
+	virtual int  get_nelems() const = 0;
+
+	virtual void get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, int first, int last) const = 0;
+	virtual void get_row_type(char* qrtype, int first, int last) const = 0;
+	virtual void get_rhs(double* rhs, int first, int last) const = 0;
+	virtual void get_rhs_range(double* range, int first, int last) const = 0;
+	virtual void get_col_type(char* coltype, int first, int last) const = 0;
+	virtual void get_lb(double* lb, int fisrt, int last) const = 0;
+	virtual void get_ub(double* ub, int fisrt, int last) const = 0;
+
 	virtual void free() = 0;
 
 // Methods to tranform a problem
@@ -47,6 +61,7 @@ public:
 	virtual void add_names(int type, const char* cnames, int first, int last) = 0;
 	virtual void chg_obj(int nels, const int* mindex, const double* obj) = 0;
 	virtual void chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) = 0;
+	virtual void chg_col_type(int nels, const int* mindex, const char* qctype) const = 0;
 	
 // Methods to get a solution
 public:	

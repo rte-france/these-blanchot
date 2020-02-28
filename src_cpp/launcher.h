@@ -1,7 +1,8 @@
 #pragma once
 
 #include "common.h"
-#include <xprs.h>
+#include "SolverAbstract.h"
+//#include <xprs.h>
 
 class BendersOptions;
 int build_input(BendersOptions const & options, CouplingMap & coupling_map);
@@ -65,12 +66,12 @@ public:
 		std::get<Attribute::CHAR_VECTOR>(_data).assign(CharVectorAttribute::MAX_CHAR_VECTOR_ATTRIBUTE, CharVector());
 		std::get<Attribute::DBL_VECTOR>(_data).assign(DblVectorAttribute::MAX_DBL_VECTOR_ATTRIBUTE, DblVector());
 	}
-	StandardLp(XPRSprob & _xp) {
+	StandardLp(SolverAbstract::Ptr _solver) {
 		init();
 
-		XPRSgetintattrib(_xp, XPRS_COLS, &std::get<Attribute::INT>(_data)[IntAttribute::NCOLS]);
-		XPRSgetintattrib(_xp, XPRS_ROWS, &std::get<Attribute::INT>(_data)[IntAttribute::NROWS]);
-		XPRSgetintattrib(_xp, XPRS_ELEMS, &std::get<Attribute::INT>(_data)[IntAttribute::NELES]);
+		std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] = _solver->get_ncols();
+		std::get<Attribute::INT>(_data)[IntAttribute::NROWS] = _solver->get_nrows();
+		std::get<Attribute::INT>(_data)[IntAttribute::NELES] = _solver->get_nelems();
 
 		std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].assign(
 			std::get<Attribute::INT>(_data)[IntAttribute::NROWS] + 1, 0);
@@ -98,34 +99,33 @@ public:
 
 		int ncoeffs(0);
 
-		XPRSgetrows(_xp, std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].data(), 
-			std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MINDEX].data(), 
-			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::MVALUE].data(), 
-			std::get<Attribute::INT>(_data)[IntAttribute::NELES], &ncoeffs, 
+		_solver->get_rows(std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].data(),
+			std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MINDEX].data(),
+			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::MVALUE].data(),
+			std::get<Attribute::INT>(_data)[IntAttribute::NELES], &ncoeffs,
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
 
-		XPRSgetrowtype(_xp, std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(), 
+		_solver->get_row_type(std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
-		XPRSgetrhs(_xp, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(), 
+		_solver->get_rhs(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
-		XPRSgetrhsrange(_xp, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RANGE].data(), 
+		_solver->get_rhs_range(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RANGE].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
-		XPRSgetcoltype(_xp, std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::COLTYPE].data(), 
+		_solver->get_col_type(std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::COLTYPE].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-		XPRSgetlb(_xp, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(), 
+		_solver->get_lb(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-		XPRSgetub(_xp, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::UB].data(), 
+		_solver->get_ub(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::UB].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-		XPRSgetobj(_xp, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(), 
+		_solver->get_obj(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-
 	}
 
-	int append_in(XPRSprob & xp) const {
+	int append_in(SolverAbstract::Ptr _solver) const {
 		IntVector newmindex(std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MINDEX]);
 
 		int ncols(0);
-		int status = XPRSgetintattrib(xp, XPRS_COLS, &ncols);
+		int status = _solver->get_ncols();
 		int newcols = std::get<Attribute::INT>(_data)[IntAttribute::NCOLS];
 
 		IntVector newcindex(newcols);
@@ -139,20 +139,20 @@ public:
 			newcindex[i] = i + ncols;
 		}
 
-		status = XPRSaddcols(xp, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS], 
-			0, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(), 
-			NULL, NULL, NULL, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(), 
+		_solver->add_cols(std::get<Attribute::INT>(_data)[IntAttribute::NCOLS],
+			0, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(),
+			NULL, NULL, NULL, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(),
 			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::UB].data());
 		
-		status = XPRSchgcoltype(xp, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS], 
+		_solver->chg_col_type(std::get<Attribute::INT>(_data)[IntAttribute::NCOLS],
 			newcindex.data(), std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::COLTYPE].data());
 		
-		status = XPRSaddrows(xp, std::get<Attribute::INT>(_data)[IntAttribute::NROWS], 
-			std::get<Attribute::INT>(_data)[IntAttribute::NELES], 
-			std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(), 
-			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(), 
-			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RANGE].data(), 
-			std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].data(), 
+		_solver->add_rows(std::get<Attribute::INT>(_data)[IntAttribute::NROWS],
+			std::get<Attribute::INT>(_data)[IntAttribute::NELES],
+			std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(),
+			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(),
+			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RANGE].data(),
+			std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].data(),
 			newmindex.data(), std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::MVALUE].data());
 		
 		return ncols;
