@@ -124,8 +124,7 @@ public:
 	int append_in(SolverAbstract::Ptr _solver) const {
 		IntVector newmindex(std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MINDEX]);
 
-		int ncols(0);
-		int status = _solver->get_ncols();
+		int ncols = _solver->get_ncols();
 		int newcols = std::get<Attribute::INT>(_data)[IntAttribute::NCOLS];
 
 		IntVector newcindex(newcols);

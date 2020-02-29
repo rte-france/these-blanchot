@@ -45,8 +45,6 @@ int main(int argc, char** argv)
 	int nslaves(input.size());
 	CouplingMap x_mps_id;
 
-	int iteration = 0;
-
 	for (auto const & kvp : input) {
 
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
@@ -103,10 +101,6 @@ int main(int argc, char** argv)
 		for (auto const & x : kvp.second) {
 			x_mps_id[x.first][kvp.first] = x.second;
 		}
-
-		std::string name = "prb_" + std::to_string(iteration);
-		full->write_prob(name.c_str(), "l");
-		iteration++;
 	}
 
 
@@ -157,7 +151,6 @@ int main(int argc, char** argv)
 	DblVector rhs(nrows, 0);
 	CharVector sense(nrows, 'E');
 	full->add_rows(nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
-	//XPRSaddrows(full, nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 
 	std::cout << "Solving" << std::endl;
 	
@@ -167,14 +160,11 @@ int main(int argc, char** argv)
 	//XPRSsetintcontrol(full, XPRS_THREADS, 1);
 	int status = 0;
 	full->solve_integer(status, "full");
-	//XPRSmipoptimize(full, "");
 
 	Point x0;
 	ncols = full->get_ncols();
-	//XPRSgetintattrib(full, XPRS_COLS, &ncols);
 	DblVector ptr(ncols, 0);
 	full->get_MIP_sol(ptr.data(), NULL);
-	//XPRSgetmipsol(full, ptr.data(), NULL);
 	
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];
@@ -182,12 +172,6 @@ int main(int argc, char** argv)
 	print_solution(std::cout, x0, true);
 
 	full->free();
-	//XPRSdestroyprob(full);
-	
-
-	// AJOUTER UN TEST QUE LE FREE A BIEN ETE APPELE A CET ETAPE !!!!
-
-	//XPRSfree();
 
 	return 0;
 }
