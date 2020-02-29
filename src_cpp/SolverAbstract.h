@@ -80,4 +80,5 @@ public:
 // Methods to set algorithm or logs levels
 	virtual void set_output_log_level(int loglevel) = 0;
 	virtual void set_algorithm(std::string const& algo) = 0;
+	virtual void set_threads(int n_threads) = 0;
 };

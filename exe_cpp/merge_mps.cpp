@@ -28,7 +28,6 @@ int main(int argc, char** argv)
 	#endif
 	#ifdef XPRESS
 	else if (options.SOLVER == "XPRESS") {
-		std::cout << "COUCOU" << std::endl;
 		full = std::make_shared< SolverXPRESS>();
 	}
 	#endif
@@ -36,7 +35,6 @@ int main(int argc, char** argv)
 		std::cout << "SOLVER NON RECONU" << std::endl;
 		std::exit(0);
 	}
-
 
 	full->load_lp("full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
@@ -155,9 +153,8 @@ int main(int argc, char** argv)
 	std::cout << "Solving" << std::endl;
 	
 	// Resolution sequentielle
+	full->set_threads(1);
 
-	// AJOUTER SET IN CONTROL THREADS !!!!!!
-	//XPRSsetintcontrol(full, XPRS_THREADS, 1);
 	int status = 0;
 	full->solve_integer(status, "full");
 

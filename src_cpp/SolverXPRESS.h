@@ -75,6 +75,7 @@ public:
 // Methods to set algorithms or loglevel
 	virtual void set_output_log_level(int loglevel);
 	virtual void set_algorithm(std::string const& algo);
+	virtual void set_threads(int n_threads);
 };
 
 void errormsg(XPRSprob& xprs, const char* sSubName, int nLineNo, int nErrCode);

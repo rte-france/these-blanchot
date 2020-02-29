@@ -229,7 +229,6 @@ void SolverXPRESS::del_rows(int nrows, const int* mindex) {
 void SolverXPRESS::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
 	const double* range, const int* mstart, const int* mclind, const double* dmatval) {
 	int status = XPRSaddrows(_xprs, newrows, newnz, qrtype, rhs, range, mstart, mclind, dmatval);
-	std::cout << "SATUS ADD ROWS " << status << std::endl;
 }
 
 void SolverXPRESS::add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
@@ -305,4 +304,9 @@ void SolverXPRESS::set_algorithm(std::string const& algo) {
 	else {
 		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
 	}
+}
+
+void SolverXPRESS::set_threads(int n_threads)
+{
+	XPRSsetintcontrol(_xprs, XPRS_THREADS, n_threads);
 }
