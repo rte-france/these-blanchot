@@ -45,6 +45,7 @@ int main(int argc, char** argv)
 	int nslaves(input.size());
 	CouplingMap x_mps_id;
 
+	int iteration = 0;
 
 	for (auto const & kvp : input) {
 
@@ -102,6 +103,10 @@ int main(int argc, char** argv)
 		for (auto const & x : kvp.second) {
 			x_mps_id[x.first][kvp.first] = x.second;
 		}
+
+		std::string name = "prb_" + std::to_string(iteration);
+		full->write_prob(name.c_str(), "l");
+		iteration++;
 	}
 
 
@@ -157,15 +162,11 @@ int main(int argc, char** argv)
 	std::cout << "Solving" << std::endl;
 	
 	// Resolution sequentielle
-	
-	std::cout << full->get_ncols() << std::endl;
-	std::cout << full->get_nrows() << std::endl;
-	std::cout << full->get_nelems() << std::endl;
 
 	// AJOUTER SET IN CONTROL THREADS !!!!!!
 	//XPRSsetintcontrol(full, XPRS_THREADS, 1);
 	int status = 0;
-	full->solve_integer(status, "full.mps");
+	full->solve_integer(status, "full");
 	//XPRSmipoptimize(full, "");
 
 	Point x0;

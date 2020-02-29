@@ -105,6 +105,10 @@ void SolverXPRESS::init(std::string const& path_to_mps) {
 
 void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
 {
+	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
+	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
 	XPRSloadlp(_xprs, probname, ncol, nrow, qrtype, rhs, range, obj, mstart, mnel, mrwind, dmatval, dlb, dub);
 }
 
@@ -224,7 +228,8 @@ void SolverXPRESS::del_rows(int nrows, const int* mindex) {
 
 void SolverXPRESS::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
 	const double* range, const int* mstart, const int* mclind, const double* dmatval) {
-	XPRSaddrows(_xprs, newrows, newnz, qrtype, rhs, range, mstart, mclind, dmatval);
+	int status = XPRSaddrows(_xprs, newrows, newnz, qrtype, rhs, range, mstart, mclind, dmatval);
+	std::cout << "SATUS ADD ROWS " << status << std::endl;
 }
 
 void SolverXPRESS::add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
