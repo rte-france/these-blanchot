@@ -1,5 +1,4 @@
 #include "launcher.h"
-//#include "xprs.h"
 #include "Benders.h"
 #include "Timer.h"
 
@@ -81,7 +80,7 @@ void sequential_launch(BendersOptions const & options) {
 	Benders benders(input, options);
 	benders.run(std::cout);
 	benders.free();
-	XPRSfree();
+	//XPRSfree();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 }
 

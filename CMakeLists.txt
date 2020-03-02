@@ -93,12 +93,6 @@ IF( USE_MPI )
 ENDIF( USE_MPI )
 
 ####################################################################
-# EXECUTABLE : test_sur_les_set
-####################################################################
-ADD_EXECUTABLE(test_sur_les_set ./src_enzo_test/test_sur_les_set.cpp)
-TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
-
-####################################################################
 # EXECUTABLE : merge_mps
 ####################################################################
 ADD_EXECUTABLE(merge_mps ./exe_cpp/merge_mps.cpp)
@@ -161,3 +155,34 @@ ELSE( USE_MPI )
 		ENDIF(WIN32)
 	ENDIF(CPLEX)
 ENDIF( USE_MPI )
+
+####################################################################
+# EXECUTABLE : test_benders
+####################################################################
+ADD_EXECUTABLE(test_benders ./src_test/test_benders.cpp)
+TARGET_LINK_LIBRARIES(test_benders sequentialcore)
+IF(USE_MPI)
+	TARGET_LINK_LIBRARIES(test_benders mpicore)
+	IF(WIN32)
+		TARGET_LINK_LIBRARIES(test_benders msmpi 
+			debug		libboost_serialization-vc142-mt-gd-x64-1_72 
+			optimized	libboost_serialization-vc142-mt-x64-1_72
+		)
+	ELSE(WIN32)
+		
+	ENDIF(WIN32)
+ENDIF(USE_MPI)
+IF(XPRESS)
+	TARGET_LINK_LIBRARIES(test_benders xprs)
+ENDIF(XPRES)
+IF(CPLEX)
+	IF(WIN32)
+		TARGET_LINK_LIBRARIES(test_benders
+			debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
+			optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
+		)
+		
+	ELSE(WIN32)
+		# /!\ CPLEX pas ajoute pour linux
+	ENDIF(WIN32)
+ENDIF(CPLEX)
