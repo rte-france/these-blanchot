@@ -80,7 +80,6 @@ void sequential_launch(BendersOptions const & options) {
 	Benders benders(input, options);
 	benders.run(std::cout);
 	benders.free();
-	//XPRSfree();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 }
 

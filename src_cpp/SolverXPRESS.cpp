@@ -119,15 +119,27 @@ void SolverXPRESS::write_prob(const char* name, const char* flags) const {
 void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 	int status = XPRSlpoptimize(_xprs, "");
 
-	status = XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &lp_status);
-	if (lp_status != XPRS_LP_OPTIMAL) {
-		std::cout << "lp_status is : " << lp_status << std::endl;
+	int xprs_status(0);
+	status = XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
+	
+	if (xprs_status == XPRS_LP_OPTIMAL) {
+		lp_status = OPTIMAL;
+	}
+	else if (xprs_status == XPRS_LP_INFEAS) {
+		lp_status = INFEASIBLE;
+	}
+	else if (xprs_status == XPRS_LP_UNBOUNDED) {
+		lp_status = UNBOUNDED;
+	}
+	
+	if (xprs_status != XPRS_LP_OPTIMAL) {
+		std::cout << "lp_status is : " << xprs_status << std::endl;
 		std::stringstream buffer;
 
 		buffer << path_to_mps << "_lp_status_";
-		buffer << XPRS_LP_STATUS[lp_status];
+		buffer << XPRS_LP_STATUS[xprs_status];
 		buffer << ".mps";
-		std::cout << "lp_status is : " << XPRS_LP_STATUS[lp_status] << std::endl;
+		std::cout << "lp_status is : " << XPRS_LP_STATUS[xprs_status] << std::endl;
 		std::cout << "written in " << buffer.str() << std::endl;
 		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
 		std::exit(0);
@@ -141,15 +153,28 @@ void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps)
 	int status(0);
 	status = XPRSmipoptimize(_xprs, "");
 
-	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &lp_status);
-	if (lp_status != XPRS_MIP_OPTIMAL && lp_status != XPRS_LP_OPTIMAL) {
-		std::cout << "lp_status is : " << lp_status << std::endl;
+	int xprs_status(0);
+	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &xprs_status);
+
+	if (xprs_status == XPRS_MIP_OPTIMAL) {
+		lp_status = OPTIMAL;
+	}
+	else if (xprs_status == XPRS_MIP_INFEAS) {
+		lp_status = INFEASIBLE;
+	}
+	else if (xprs_status == XPRS_MIP_UNBOUNDED) {
+		lp_status = UNBOUNDED;
+	}
+
+
+	if (xprs_status != XPRS_MIP_OPTIMAL && xprs_status != XPRS_LP_OPTIMAL) {
+		std::cout << "lp_status is : " << xprs_status << std::endl;
 		std::stringstream buffer;
 
 		buffer << path_to_mps << "_lp_status_";
-		buffer << XPRS_LP_STATUS[lp_status];
+		buffer << XPRS_LP_STATUS[xprs_status];
 		buffer << ".mps";
-		std::cout << "lp_status is : " << XPRS_LP_STATUS[lp_status] << std::endl;
+		std::cout << "lp_status is : " << XPRS_LP_STATUS[xprs_status] << std::endl;
 		std::cout << "written in " << buffer.str() << std::endl;
 		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
 		std::exit(0);

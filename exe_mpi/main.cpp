@@ -27,7 +27,6 @@ int main(int argc, char** argv)
 	}
 	else {
 		Timer timer;
-		XPRSinit("");
 		CouplingMap input;
 		build_input(options, input);
 		world.barrier();
@@ -38,7 +37,6 @@ int main(int argc, char** argv)
 		bendersMpi.run(env, world, std::cout);
 		world.barrier();
 		bendersMpi.free(env, world);
-		XPRSfree();
 		world.barrier();
 		if (world.rank() == 0) {
 			std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

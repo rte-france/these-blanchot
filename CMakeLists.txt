@@ -4,7 +4,7 @@ PROJECT(ANTARESXPANSION_V2)
 SET(EXECUTABLE_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 SET(   LIBRARY_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 
-SET(USE_MPI FALSE)
+SET(USE_MPI TRUE)
 SET(XPRESS	TRUE)
 SET(CPLEX	TRUE)
 
@@ -62,7 +62,7 @@ IF( USE_MPI )
 ENDIF( USE_MPI )
 
 # Ajout du dossier de XPRESS mais pas cplex
-# Pour CPLEX, chemin complet donne apres car dependant de la machine
+# Pour CPLEX, chemin complet donne a l'executable car dependant de la machine
 IF(XPRESS)
 	LINK_DIRECTORIES( $ENV{XPRESSDIR}/lib )
 ENDIF(XPRESS)
