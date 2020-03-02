@@ -39,16 +39,19 @@ MESSAGE("CMAKE_CXX_COMPILER_VERSION : ${CMAKE_CXX_COMPILER_VERSION}")
 MESSAGE("XPRESSDIR is $ENV{XPRESSDIR}")
 MESSAGE("BOOSTDIR  is $ENV{BOOSTDIR}")
 MESSAGE("CPLEXDIR  is $ENV{CPLEX_STUDIO_DIR129}")
-INCLUDE_DIRECTORIES(
-	./src_cpp
-	IF(XPRESS)
-		$ENV{XPRESSDIR}/include
-	ENDIF(XPRESS)
-	IF(CPLEX)
-		$ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex
-	ENDIF(CPLEX)
-	)
+
+
+INCLUDE_DIRECTORIES(./src_cpp)
+IF(XPRESS)
+	INCLUDE_DIRECTORIES( $ENV{XPRESSDIR}/include )
+ENDIF(XPRESS)
+IF(CPLEX)
+	INCLUDE_DIRECTORIES( $ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex ) 
+ENDIF(CPLEX)
+
+
 IF( USE_MPI )
+	
 	IF(WIN32)
 		INCLUDE_DIRECTORIES(
 			$ENV{BOOSTDIR} 
@@ -57,23 +60,22 @@ IF( USE_MPI )
 			$ENV{MSMPI_INC}/x64
 		)
 		LINK_DIRECTORIES(
-			IF(XPRESS)
-				$ENV{XPRESSDIR}/lib 
-			ENDIF(XPRESS)
 			$ENV{BOOSTDIR}/stage/lib 
 			$ENV{MSMPI_LIB64} 
 		)
+		IF(XPRESS)
+			LINK_DIRECTORIES( $ENV{XPRESSDIR}/lib )
+		ENDIF(XPRESS)
+
 	ELSE(WIN32)
 		INCLUDE_DIRECTORIES(
 			$ENV{BOOSTDIR} 
 			./src_mpi
 		)
-		LINK_DIRECTORIES(
-			IF(XPRESS)
-				$ENV{XPRESSDIR}/lib 
-			ENDIF(XPRESS)
-			$ENV{BOOSTDIR}/stage/lib
-		)
+		LINK_DIRECTORIES( $ENV{BOOSTDIR}/stage/lib )
+		IF(XPRESS)
+			LINK_DIRECTORIES( $ENV{XPRESSDIR}/lib )
+		ENDIF(XPRESS)
 	ENDIF(WIN32)
 ENDIF( USE_MPI )
 
@@ -105,35 +107,38 @@ ADD_EXECUTABLE(test_sur_les_set ./src_enzo_test/test_sur_les_set.cpp)
 TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
 
 ADD_EXECUTABLE(merge_mps ./exe_cpp/merge_mps.cpp)
-TARGET_LINK_LIBRARIES(merge_mps sequentialcore xprs
-	IF(CPLEX)
+TARGET_LINK_LIBRARIES( merge_mps sequentialcore xprs )
+IF(CPLEX)
+	TARGET_LINK_LIBRARIES(merge_mps sequentialcore 
 		debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
 		optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
-	ENDIF(CPLEX)
 	)
+ENDIF(CPLEX)
 
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
 	IF(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi 
-			sequentialcore mpicore xprs msmpi
-			IF(CPLEX)
-				debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
-				optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
-			ENDIF(CPLEX)
+		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi 
 			debug		libboost_serialization-vc142-mt-gd-x64-1_72 
 			optimized	libboost_serialization-vc142-mt-x64-1_72
+		)
+		IF(CPLEX)
+			TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore 
+				debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
+				optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
 			)
+		ENDIF(CPLEX)
 	ELSE(WIN32)
 		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs boost_serialization boost_mpi-mt.so)
 	ENDIF(WIN32)
 	
 ELSE( USE_MPI )
 	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
-	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs 
-		IF(CPLEX)
+	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs )
+	IF(CPLEX)
+		TARGET_LINK_LIBRARIES(benderssequential sequentialcore 
 			debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
 			optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
-		ENDIF(CPLEX)
-	)
+		)
+	ENDIF(CPLEX)
 ENDIF( USE_MPI )
