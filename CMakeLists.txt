@@ -51,36 +51,21 @@ ENDIF(CPLEX)
 
 
 IF( USE_MPI )
+	INCLUDE_DIRECTORIES( $ENV{BOOSTDIR} ./src_mpi )
+	LINK_DIRECTORIES( $ENV{BOOSTDIR}/stage/lib )
 	
 	IF(WIN32)
-		INCLUDE_DIRECTORIES(
-			$ENV{BOOSTDIR} 
-			./src_mpi 
-			$ENV{MSMPI_INC} 
-			$ENV{MSMPI_INC}/x64
-		)
-		LINK_DIRECTORIES(
-			$ENV{BOOSTDIR}/stage/lib 
-			$ENV{MSMPI_LIB64} 
-		)
-		IF(XPRESS)
-			LINK_DIRECTORIES( $ENV{XPRESSDIR}/lib )
-		ENDIF(XPRESS)
-
-	ELSE(WIN32)
-		INCLUDE_DIRECTORIES(
-			$ENV{BOOSTDIR} 
-			./src_mpi
-		)
-		LINK_DIRECTORIES( $ENV{BOOSTDIR}/stage/lib )
-		IF(XPRESS)
-			LINK_DIRECTORIES( $ENV{XPRESSDIR}/lib )
-		ENDIF(XPRESS)
+		INCLUDE_DIRECTORIES(	$ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64 )
+		LINK_DIRECTORIES(		$ENV{MSMPI_LIB64} )
 	ENDIF(WIN32)
+
 ENDIF( USE_MPI )
 
-LINK_DIRECTORIES($ENV{XPRESSDIR}/lib)
-
+# Ajout du dossier de XPRESS mais pas cplex
+# Pour CPLEX, chemin complet donne apres car dependant de la machine
+IF(XPRESS)
+	LINK_DIRECTORIES( $ENV{XPRESSDIR}/lib )
+ENDIF(XPRESS)
 
 FILE(
 	GLOB
@@ -117,26 +102,38 @@ ENDIF(CPLEX)
 
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
+	TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore)
+	
+	IF(XPRESS)
+		TARGET_LINK_LIBRARIES(bendersmpi  xprs)
+	ENDIF(XPRESS)
+
 	IF(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs msmpi 
+		TARGET_LINK_LIBRARIES(bendersmpi msmpi 
 			debug		libboost_serialization-vc142-mt-gd-x64-1_72 
 			optimized	libboost_serialization-vc142-mt-x64-1_72
 		)
 		IF(CPLEX)
-			TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore 
+			TARGET_LINK_LIBRARIES(bendersmpi 
 				debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
 				optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
 			)
 		ENDIF(CPLEX)
+
 	ELSE(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore xprs boost_serialization boost_mpi-mt.so)
+		TARGET_LINK_LIBRARIES(bendersmpi boost_serialization boost_mpi-mt.so)
+		# /!\ CPLEX pas ajoute pour linux
+
 	ENDIF(WIN32)
-	
 ELSE( USE_MPI )
 	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
-	TARGET_LINK_LIBRARIES(benderssequential sequentialcore xprs )
+	TARGET_LINK_LIBRARIES(benderssequential sequentialcore )
+	IF(XPRESS)
+		TARGET_LINK_LIBRARIES(benderssequential xprs)
+	ENDIF(XPRESS)
+	
 	IF(CPLEX)
-		TARGET_LINK_LIBRARIES(benderssequential sequentialcore 
+		TARGET_LINK_LIBRARIES(benderssequential
 			debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
 			optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
 		)
