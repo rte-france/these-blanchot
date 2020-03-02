@@ -75,6 +75,10 @@ FILE(
 	./src_cpp/*.h  
 	./src_cpp/*.hxx
 )
+
+####################################################################
+# LIBRARY : sequentialcore / mpicore
+####################################################################
 ADD_LIBRARY(sequentialcore STATIC ${SEQUENTIAL_FILES} )
 IF( USE_MPI )
 	FILE(
@@ -88,9 +92,15 @@ IF( USE_MPI )
 	ADD_LIBRARY(mpicore STATIC ${MPI_FILES} )
 ENDIF( USE_MPI )
 
+####################################################################
+# EXECUTABLE : test_sur_les_set
+####################################################################
 ADD_EXECUTABLE(test_sur_les_set ./src_enzo_test/test_sur_les_set.cpp)
 TARGET_LINK_LIBRARIES(test_sur_les_set sequentialcore)
 
+####################################################################
+# EXECUTABLE : merge_mps
+####################################################################
 ADD_EXECUTABLE(merge_mps ./exe_cpp/merge_mps.cpp)
 TARGET_LINK_LIBRARIES( merge_mps sequentialcore xprs )
 IF(CPLEX)
@@ -100,6 +110,9 @@ IF(CPLEX)
 	)
 ENDIF(CPLEX)
 
+####################################################################
+# EXECUTABLE : bendersmpi
+####################################################################
 IF( USE_MPI )
 	ADD_EXECUTABLE(bendersmpi  exe_mpi/main.cpp)
 	TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore)
@@ -125,6 +138,10 @@ IF( USE_MPI )
 		# /!\ CPLEX pas ajoute pour linux
 
 	ENDIF(WIN32)
+
+####################################################################
+# EXECUTABLE : benderssequential
+####################################################################
 ELSE( USE_MPI )
 	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
 	TARGET_LINK_LIBRARIES(benderssequential sequentialcore )
@@ -133,9 +150,14 @@ ELSE( USE_MPI )
 	ENDIF(XPRESS)
 	
 	IF(CPLEX)
-		TARGET_LINK_LIBRARIES(benderssequential
-			debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
-			optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
-		)
+		IF(WIN32)
+			TARGET_LINK_LIBRARIES(benderssequential
+				debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
+				optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
+			)
+		ELSE(WIN32)
+			# /!\ CPLEX pas ajoute pour linux
+
+		ENDIF(WIN32)
 	ENDIF(CPLEX)
 ENDIF( USE_MPI )
