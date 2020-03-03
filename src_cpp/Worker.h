@@ -46,4 +46,7 @@ public:
 	void solve(int & lp_status);
 	void solve_integer(int& lp_status);
 
+public :
+	void get_MIP_sol(double* x, double* duals);
+	double get_mip_value();
 };

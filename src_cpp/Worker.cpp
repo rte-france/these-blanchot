@@ -107,6 +107,18 @@ void Worker::solve_integer(int& lp_status) {
 	_solver->solve_integer(lp_status, _path_to_mps);
 }
 
+void Worker::get_MIP_sol(double* x, double* duals)
+{
+	_solver->get_MIP_sol(x, duals);
+}
+
+double Worker::get_mip_value()
+{
+	double val(0);
+	_solver->get_mip_value(val);
+	return val;
+}
+
 /*!
 *  \brief Get the number of iteration needed to solve a problem
 *

@@ -59,9 +59,26 @@ WorkerMerge::~WorkerMerge()
 {
 }
 
+void WorkerMerge::free()
+{
+	_solver->free();
+}
+
 void WorkerMerge::read(std::string const& problem_name)
 {
 	_solver->init(problem_name.c_str());
+}
+
+void WorkerMerge::write_prob(std::string const& name, std::string const& flags)
+{
+	_solver->write_prob(name.c_str(), flags.c_str());
+}
+
+void WorkerMerge::fill_mps_id(std::pair<std::string, Str2Int> first_stage_var)
+{
+	for (auto const& x : first_stage_var.second) {
+		_x_mps_id[x.first][first_stage_var.first] = x.second;
+	}
 }
 
 void WorkerMerge::get_obj(DblVector& obj, int first, int last)
@@ -81,7 +98,7 @@ void WorkerMerge::chg_obj(BendersOptions const& options, double weight)
 
 	get_obj(obj, 0, mps_ncols - 1);
 
-	for (auto& c : o) {
+	for (auto& c : obj) {
 		c *= weight;
 	}
 	_solver->chg_obj(mps_ncols, sequence.data(), obj.data());
@@ -92,7 +109,62 @@ void WorkerMerge::set_decalage(std::string const& prb)
 	_decalage[prb] = get_ncols();
 }
 
+void WorkerMerge::add_coupling_constraints()
+{
+	IntVector mstart;
+	IntVector cindex;
+	DblVector values;
+	int nrows(0);
+	int neles(0);
+	size_t neles_reserve(0);
+	size_t nrows_reserve(0);
+	for (auto const& kvp : _x_mps_id) {
+		neles_reserve += kvp.second.size() * (kvp.second.size() - 1);
+		nrows_reserve += kvp.second.size() * (kvp.second.size() - 1) / 2;
+	}
+	std::cout << "About to add " << nrows_reserve << " coupling constraints" << std::endl;
+	values.reserve(neles_reserve);
+	cindex.reserve(neles_reserve);
+	mstart.reserve(nrows_reserve + 1);
+
+	// adding coupling constraints
+	for (auto const& kvp : _x_mps_id) {
+		std::string const name(kvp.first);
+		std::cout << name << std::endl;
+		bool is_first(true);
+		int id1(-1);
+		std::string first_mps;
+		for (auto const& mps : kvp.second) {
+			if (is_first) {
+				is_first = false;
+				first_mps = mps.first;
+				id1 = mps.second + _decalage.find(first_mps)->second;
+			}
+			else {
+				int id2 = mps.second + _decalage.find(mps.first)->second;
+				mstart.push_back(neles);
+				cindex.push_back(id1);
+				values.push_back(1);
+				neles += 1;
+
+				cindex.push_back(id2);
+				values.push_back(-1);
+				neles += 1;
+				nrows += 1;
+			}
+		}
+	}
+	DblVector rhs(nrows, 0);
+	CharVector sense(nrows, 'E');
+	_solver->add_rows(nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
+}
+
 int WorkerMerge::get_ncols()
 {
 	return _solver->get_ncols();
+}
+
+void WorkerMerge::set_threads(int n_threads)
+{
+	_solver->set_threads(n_threads);
 }
