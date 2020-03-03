@@ -96,9 +96,12 @@ ENDIF( USE_MPI )
 # EXECUTABLE : merge_mps
 ####################################################################
 ADD_EXECUTABLE(merge_mps ./exe_cpp/merge_mps.cpp)
-TARGET_LINK_LIBRARIES( merge_mps sequentialcore xprs )
+TARGET_LINK_LIBRARIES(merge_mps sequentialcore)
+IF(XPRESS)
+	TARGET_LINK_LIBRARIES(merge_mps xprs)
+ENDIF(XPRESS)
 IF(CPLEX)
-	TARGET_LINK_LIBRARIES(merge_mps sequentialcore 
+	TARGET_LINK_LIBRARIES(merge_mps 
 		debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
 		optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
 	)
@@ -112,7 +115,7 @@ IF( USE_MPI )
 	TARGET_LINK_LIBRARIES(bendersmpi sequentialcore mpicore)
 	
 	IF(XPRESS)
-		TARGET_LINK_LIBRARIES(bendersmpi  xprs)
+		TARGET_LINK_LIBRARIES(bendersmpi xprs)
 	ENDIF(XPRESS)
 
 	IF(WIN32)

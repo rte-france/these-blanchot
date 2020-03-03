@@ -11,6 +11,29 @@ Worker::Worker() {
 	_is_master = false;
 }
 
+void Worker::declare_solver(std::string const & solver_name)
+{
+	// Declaration du solver
+	if (solver_name == "") {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+#ifdef CPLEX
+	else if (solver_name == "CPLEX") {
+		_solver = std::make_shared< SolverCPLEX>();
+	}
+#endif
+#ifdef XPRESS
+	else if (solver_name == "XPRESS") {
+		_solver = std::make_shared< SolverXPRESS>();
+	}
+#endif
+	else {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+}
+
 Worker::~Worker() {
 }
 
@@ -42,7 +65,11 @@ void Worker::get_value(double & lb) {
 *
 *  \param problem_name : name of the problem
 */
-void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps) {
+void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps, std::string const& solver_name) {
+	
+	// Creation du solver adapte
+	declare_solver(solver_name);
+
 	_path_to_mps = path_to_mps;
 	add_stream(std::cout);
 	_solver->init(path_to_mps);

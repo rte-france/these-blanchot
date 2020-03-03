@@ -24,11 +24,9 @@ public:
 	virtual ~WorkerSlave();
 
 public:
-
 	void write(int it);
 
 	void fix_to(Point const & x0);
-
 	void get_subgradient(Point & s);
 
 	SimplexBasis get_basis();

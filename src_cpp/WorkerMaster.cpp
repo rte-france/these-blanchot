@@ -1,5 +1,4 @@
 #include "WorkerMaster.h"
-#include "xprs.h"
 
 WorkerMaster::WorkerMaster() {
 }
@@ -216,28 +215,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param nslaves : number of slaves
 */
 WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
-
-	// Declaration du solver
-	if (options.SOLVER == "") {
-		std::cout << "SOLVER NON RECONU" << std::endl;
-		std::exit(0);
-	}
-	#ifdef CPLEX
-	else if (options.SOLVER == "CPLEX") {
-		_solver = std::make_shared< SolverCPLEX>();
-	}
-	#endif
-	#ifdef XPRESS
-	else if (options.SOLVER == "XPRESS") {
-		_solver = std::make_shared< SolverXPRESS>();
-	}
-	#endif
-	else {
-		std::cout << "SOLVER NON RECONU" << std::endl;
-		std::exit(0);
-	}
-
-	init(variable_map, path_to_mps);
+	init(variable_map, path_to_mps, options.SOLVER);
 	_is_master = true;
 
 	_solver->set_output_log_level(options.XPRESS_TRACE);
@@ -248,6 +226,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 
 	// add the variable alpha
 	std::string const alpha("alpha");
+	_id_alpha = 0;
 	auto const it(_name_to_id.find(alpha));
 	if (it == _name_to_id.end()) {
 		double lb(-1e10); /*!< Lower Bound */

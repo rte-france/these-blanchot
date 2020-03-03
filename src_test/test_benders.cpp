@@ -3,6 +3,12 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2.hpp"
 
+
+#include "SolverAbstract.h"
+#ifdef XPRESS
+#include "SolverXPRESS.h"
+#endif
+
 unsigned int Factorial(unsigned int number) {
 	return number > 1 ? Factorial(number - 1) * number : 1;
 }
@@ -14,10 +20,6 @@ TEST_CASE("Factorials are computed") {
 	REQUIRE(Factorial(3) == 6);
 	REQUIRE(Factorial(10) == 3628800);
 }
-
-/*TEST_CASE("Benders") {
-	REQUIRE( == 8.7168000000e+04);
-}*/
 
 SCENARIO("vectors can be sized and resized", "[vector]") {
 
@@ -60,4 +62,12 @@ SCENARIO("vectors can be sized and resized", "[vector]") {
 			}
 		}
 	}
+}
+
+TEST_CASE("Small LP") {
+
+	SolverAbstract::Ptr solv;
+
+
+	REQUIRE(0 == 0);
 }
