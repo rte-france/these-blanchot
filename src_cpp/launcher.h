@@ -66,12 +66,12 @@ public:
 		std::get<Attribute::CHAR_VECTOR>(_data).assign(CharVectorAttribute::MAX_CHAR_VECTOR_ATTRIBUTE, CharVector());
 		std::get<Attribute::DBL_VECTOR>(_data).assign(DblVectorAttribute::MAX_DBL_VECTOR_ATTRIBUTE, DblVector());
 	}
-	StandardLp(SolverAbstract::Ptr _solver) {
+	StandardLp(WorkerMerge& prob) {
 		init();
 
-		std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] = _solver->get_ncols();
-		std::get<Attribute::INT>(_data)[IntAttribute::NROWS] = _solver->get_nrows();
-		std::get<Attribute::INT>(_data)[IntAttribute::NELES] = _solver->get_nelems();
+		std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] = prob._solver->get_ncols();
+		std::get<Attribute::INT>(_data)[IntAttribute::NROWS] = prob._solver->get_nrows();
+		std::get<Attribute::INT>(_data)[IntAttribute::NELES] = prob._solver->get_nelems();
 
 		std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].assign(
 			std::get<Attribute::INT>(_data)[IntAttribute::NROWS] + 1, 0);
@@ -99,32 +99,32 @@ public:
 
 		int ncoeffs(0);
 
-		_solver->get_rows(std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].data(),
+		prob._solver->get_rows(std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MSTART].data(),
 			std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MINDEX].data(),
 			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::MVALUE].data(),
 			std::get<Attribute::INT>(_data)[IntAttribute::NELES], &ncoeffs,
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
 
-		_solver->get_row_type(std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(),
+		prob._solver->get_row_type(std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
-		_solver->get_rhs(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(),
+		prob._solver->get_rhs(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
-		_solver->get_rhs_range(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RANGE].data(),
+		prob._solver->get_rhs_range(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RANGE].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NROWS] - 1);
-		_solver->get_col_type(std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::COLTYPE].data(),
+		prob._solver->get_col_type(std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::COLTYPE].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-		_solver->get_lb(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(),
+		prob._solver->get_lb(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-		_solver->get_ub(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::UB].data(),
+		prob._solver->get_ub(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::UB].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
-		_solver->get_obj(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(),
+		prob._solver->get_obj(std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(),
 			0, std::get<Attribute::INT>(_data)[IntAttribute::NCOLS] - 1);
 	}
 
-	int append_in(SolverAbstract::Ptr _solver) const {
+	int append_in(WorkerMerge& prob) const {
 		IntVector newmindex(std::get<Attribute::INT_VECTOR>(_data)[IntVectorAttribute::MINDEX]);
 
-		int ncols = _solver->get_ncols();
+		int ncols = prob.get_ncols();
 		int newcols = std::get<Attribute::INT>(_data)[IntAttribute::NCOLS];
 
 		IntVector newcindex(newcols);
@@ -138,15 +138,15 @@ public:
 			newcindex[i] = i + ncols;
 		}
 
-		_solver->add_cols(std::get<Attribute::INT>(_data)[IntAttribute::NCOLS],
+		prob._solver->add_cols(std::get<Attribute::INT>(_data)[IntAttribute::NCOLS],
 			0, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::OBJ].data(),
 			NULL, NULL, NULL, std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::LB].data(),
 			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::UB].data());
 		
-		_solver->chg_col_type(std::get<Attribute::INT>(_data)[IntAttribute::NCOLS],
+		prob._solver->chg_col_type(std::get<Attribute::INT>(_data)[IntAttribute::NCOLS],
 			newcindex.data(), std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::COLTYPE].data());
 		
-		_solver->add_rows(std::get<Attribute::INT>(_data)[IntAttribute::NROWS],
+		prob._solver->add_rows(std::get<Attribute::INT>(_data)[IntAttribute::NROWS],
 			std::get<Attribute::INT>(_data)[IntAttribute::NELES],
 			std::get<Attribute::CHAR_VECTOR>(_data)[CharVectorAttribute::ROWTYPE].data(),
 			std::get<Attribute::DBL_VECTOR>(_data)[DblVectorAttribute::RHS].data(),

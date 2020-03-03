@@ -4,6 +4,7 @@ int main(int argc, char** argv)
 {
 
 	usage(argc);
+
 	BendersOptions options(build_benders_options(argc, argv));
 	options.print(std::cout);
 
