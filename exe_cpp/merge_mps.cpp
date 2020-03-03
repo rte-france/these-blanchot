@@ -9,50 +9,24 @@ int main(int argc, char** argv)
 
 	CouplingMap input;
 	build_input(options, input);
-	
-	SolverAbstract::Ptr full;
-	declare_solver(full, options);
 
-	// Affichage du solver
-	full->add_stream(std::cout);
-	full->set_output_log_level(options.XPRESS_TRACE);
+	// Declaration du WorkerMerge avec le probleme vide
+	WorkerMerge full(options, input, "full");
 
-	full->load_lp("full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-
-	Str2Int _decalage;
-	int ncols(0);
-	int nslaves(input.size()-1);
-	CouplingMap x_mps_id;
 
 	for (auto const & kvp : input) {
 
+		// Probleme name
 		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
-		ncols = full->get_ncols();
-		_decalage[kvp.first] = ncols;
+		double const weight = options.slave_weight(input.size() - 1, problem_name);
 
-		SolverAbstract::Ptr prob;
-		declare_solver(prob, options);
-
-		prob->init(problem_name.c_str());
+		full.set_decalage(kvp.first);
 		
+		WorkerMerge prob(options);
+		prob.read(problem_name);
+
 		if (kvp.first != options.MASTER_NAME) {
-
-			int mps_ncols = prob->get_ncols();
-			
-			DblVector o(mps_ncols, 0);
-			IntVector sequence(mps_ncols);
-			for (int i(0); i < mps_ncols; ++i) {
-				sequence[i] = i;
-			}
-
-			prob->get_obj(o.data(), 0, mps_ncols - 1);
-
-			double const weigth = options.slave_weight(nslaves, problem_name);
-			for (auto & c : o) {
-				c *= weigth;
-			}
-			prob->chg_obj(mps_ncols, sequence.data(), o.data());
-
+			prob.chg_obj(options, weight);
 		}
 		
 		StandardLp lpData(prob);

@@ -15,6 +15,7 @@ public:
 	int _id_alpha;
 	std::vector<int> _id_alpha_i;
 
+public:
 	WorkerMaster();
 	WorkerMaster(Str2Int const & variable_map, std::string const & problem_name, BendersOptions const & options, int nslaves = 1);
 	virtual ~WorkerMaster();
