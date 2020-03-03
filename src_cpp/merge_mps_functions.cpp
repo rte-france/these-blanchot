@@ -42,7 +42,7 @@ WorkerMerge::WorkerMerge(BendersOptions const& options, CouplingMap const& input
 
 	// Affichage du solver
 	add_stream(std::cout);
-	_solver->set_output_log_level(options.XPRESS_TRACE);
+	_solver->set_output_log_level(1);
 
 	// Charger le probleme vide
 	_solver->load_lp(name.c_str(), 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
