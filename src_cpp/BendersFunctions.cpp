@@ -692,6 +692,7 @@ void dynamic_iteration(WorkerMasterPtr & master, DynamicAggregateCuts & dynamic_
 */
 void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersData const & data, BendersOptions const & options) {
 	int const nite = data.it % options.THRESHOLD_AGGREGATION;
+	
 	if (nite == 1) {
 		for (int i(0); i < options.THRESHOLD_AGGREGATION; i++) {
 			std::get<0>(dynamic_cuts[i]).clear();
@@ -699,6 +700,7 @@ void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, AllCutPack
 			std::get<2>(dynamic_cuts[i]) = 0;
 		}
 	}
+
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));

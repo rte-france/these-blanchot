@@ -23,6 +23,7 @@ public:
 
 public:
 	std::list<std::ostream*>& get_stream() { return _stream; };
+	void add_stream(std::ostream& stream) { get_stream().push_back(&stream); };
 
 // General methods
 public:

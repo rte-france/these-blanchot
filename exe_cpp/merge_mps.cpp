@@ -40,6 +40,10 @@ int main(int argc, char** argv)
 	SolverAbstract::Ptr full;
 	declare_solver(full, options);
 
+	// Affichage du solver
+	full->add_stream(std::cout);
+	full->set_output_log_level(options.XPRESS_TRACE);
+
 	full->load_lp("full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 	Str2Int _decalage;
@@ -141,7 +145,7 @@ int main(int argc, char** argv)
 	full->add_rows(nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 
 	std::cout << "Solving" << std::endl;
-	
+
 	// Resolution sequentielle
 	full->set_threads(1);
 
