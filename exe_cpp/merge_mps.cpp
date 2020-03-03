@@ -6,6 +6,27 @@
 #include "BendersFunctions.h"
 
 
+void declare_solver(SolverAbstract::Ptr& solv, BendersOptions& options) {
+	if (options.SOLVER == "") {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+	#ifdef CPLEX
+	else if (options.SOLVER == "CPLEX") {
+		solv = std::make_shared< SolverCPLEX>();
+	}
+	#endif
+	#ifdef XPRESS
+	else if (options.SOLVER == "XPRESS") {
+		solv = std::make_shared< SolverXPRESS>();
+	}
+	#endif
+	else {
+		std::cout << "SOLVER NON RECONU" << std::endl;
+		std::exit(0);
+	}
+}
+
 int main(int argc, char** argv)
 {
 
@@ -17,30 +38,13 @@ int main(int argc, char** argv)
 	build_input(options, input);
 	
 	SolverAbstract::Ptr full;
-	if (options.SOLVER == "") {
-		std::cout << "SOLVER NON RECONU" << std::endl;
-		std::exit(0);
-	}
-	#ifdef CPLEX
-	else if (options.SOLVER == "CPLEX") {
-		full = std::make_shared< SolverCPLEX>();
-	}
-	#endif
-	#ifdef XPRESS
-	else if (options.SOLVER == "XPRESS") {
-		full = std::make_shared< SolverXPRESS>();
-	}
-	#endif
-	else {
-		std::cout << "SOLVER NON RECONU" << std::endl;
-		std::exit(0);
-	}
+	declare_solver(full, options);
 
 	full->load_lp("full", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 	Str2Int _decalage;
 	int ncols(0);
-	int nslaves(input.size());
+	int nslaves(input.size()-1);
 	CouplingMap x_mps_id;
 
 	for (auto const & kvp : input) {
@@ -50,24 +54,7 @@ int main(int argc, char** argv)
 		_decalage[kvp.first] = ncols;
 
 		SolverAbstract::Ptr prob;
-		if (options.SOLVER == "") {
-			std::cout << "SOLVER NON RECONU" << std::endl;
-			std::exit(0);
-		}
-		#ifdef CPLEX
-		else if (options.SOLVER == "CPLEX") {
-			prob = new SolverCPLEX();
-		}
-		#endif
-		#ifdef XPRESS
-		else if (options.SOLVER == "XPRESS") {
-			prob = std::make_shared< SolverXPRESS>();
-		}
-		#endif
-		else {
-			std::cout << "SOLVER NON RECONU" << std::endl;
-			std::exit(0);
-		}
+		declare_solver(prob, options);
 
 		prob->init(problem_name.c_str());
 		
@@ -80,12 +67,15 @@ int main(int argc, char** argv)
 			for (int i(0); i < mps_ncols; ++i) {
 				sequence[i] = i;
 			}
+
 			prob->get_obj(o.data(), 0, mps_ncols - 1);
+
 			double const weigth = options.slave_weight(nslaves, problem_name);
 			for (auto & c : o) {
 				c *= weigth;
 			}
 			prob->chg_obj(mps_ncols, sequence.data(), o.data());
+
 		}
 		
 		StandardLp lpData(prob);
@@ -166,6 +156,11 @@ int main(int argc, char** argv)
 	for (auto const & kvp : input[options.MASTER_NAME]) {
 		x0[kvp.first] = ptr[kvp.second];
 	}
+
+	double val(0);
+	full->get_mip_value(val);
+	std::cout << "Optimal value " << val << std::endl;
+
 	print_solution(std::cout, x0, true);
 
 	full->free();

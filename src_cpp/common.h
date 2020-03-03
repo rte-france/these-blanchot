@@ -87,9 +87,11 @@ struct Predicate {
 };
 
 // Definition of optimality codes
-#define OPTIMAL		0
-#define INFEASIBLE	1
-#define UNBOUNDED	2
+enum SOLVER_STATUS {
+	OPTIMAL,
+	INFEASIBLE,
+	UNBOUNDED,
+};
 
 
 /*!
