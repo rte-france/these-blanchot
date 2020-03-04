@@ -3,11 +3,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2.hpp"
 
-
-#include "SolverAbstract.h"
-#ifdef XPRESS
-#include "SolverXPRESS.h"
-#endif
+#include "merge_mps_functions.h"
 
 unsigned int Factorial(unsigned int number) {
 	return number > 1 ? Factorial(number - 1) * number : 1;
