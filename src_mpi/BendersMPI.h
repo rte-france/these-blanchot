@@ -6,7 +6,6 @@
 #include "Worker.h"
 #include "WorkerSlave.h"
 #include "WorkerMaster.h"
-#include "WorkerTrace.h"
 #include "BendersFunctions.h"
 
 /*!
@@ -31,7 +30,6 @@ public:
 	StrVector _slaves;
 
 	AllCutStorage _all_cuts_storage;
-	BendersTrace _trace;
 	DynamicAggregateCuts _dynamic_aggregate_cuts;
 
 	SimplexBasisStorage _basis;

@@ -156,7 +156,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		gather(world, slave_cut_package, all_package, 0);
 		_data.timer_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
-		build_cut_full(_master, all_package, _problem_to_id, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+		build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	}
 	else {
 		if (_options.RAND_AGGREGATION) {
@@ -184,7 +184,6 @@ void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
 		AllBasisPackage all_basis_package;
 		gather(world, slave_basis_package, all_basis_package, 0);
 		all_basis_package.erase(all_basis_package.begin());
-		sort_basis(all_basis_package, _problem_to_id, _basis, _data);
 	}
 	else {
 		get_slave_basis(slave_basis_package, _map_slaves);
@@ -244,9 +243,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 		if (world.rank() == 0) {
 			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
-			if (_options.TRACE) {
-				update_trace(_trace, _data);
-			}
 			_data.timer_master = timer_master.elapsed();
 			print_log(stream, _data, _options.LOG_LEVEL);
 			_data.stop = stopping_criterion(_data,_options);
