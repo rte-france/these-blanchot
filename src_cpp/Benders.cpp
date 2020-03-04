@@ -70,14 +70,7 @@ void Benders::build_cut() {
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
-	build_cut_full(_master, all_package, _problem_to_id, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
-	if (_options.BASIS) {
-		SimplexBasisPackage slave_basis_package;
-		AllBasisPackage all_basis_package;
-		get_slave_basis(slave_basis_package, _map_slaves);
-		all_basis_package.push_back(slave_basis_package);
-		sort_basis(all_basis_package, _problem_to_id, _basis, _data);
-	}
+	build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 }
 
 /*!
@@ -103,25 +96,17 @@ void Benders::run(std::ostream & stream) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
 
-		if (_options.TRACE) {
-			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-		}
 		build_cut();
 
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
-		if (_options.TRACE) {
-			update_trace(_trace, _data);
-		}
 		_data.timer_master = timer_master.elapsed();
 		print_log(stream, _data, _options.LOG_LEVEL);
 		_data.stop = stopping_criterion(_data, _options);
 	}
 	
 	print_solution(stream, _data.bestx, true);
-	if (_options.TRACE) {
-		print_csv(_trace, _problem_to_id, _data, _options);
-	}
+
 	if (_options.ACTIVECUTS) {
 		print_active_cut(_active_cuts,_options);
 	}

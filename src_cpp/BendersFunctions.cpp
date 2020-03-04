@@ -93,79 +93,6 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 }
 
 /*!
-*  \brief Print the trace of the Benders algorithm in a csv file
-*
-*  Method to print trace of the Benders algorithm in a csv file
-*
-* \param stream : stream to print the output
-*
-* \param problem_to_id : map linking each problem name to its id
-*
-* \param data : set of Benders data
-*
-* \param options : set of parameters
-*/
-void print_csv(BendersTrace & trace, Str2Int & problem_to_id, BendersData const & data, BendersOptions const & options) {
-	std::string const output(options.OUTPUTROOT + PATH_SEPARATOR + options.CSV_NAME + ".csv");
-	std::ofstream file(output, std::ios::out | std::ios::trunc);
-	if (file)
-	{
-		file << "Ite;Worker;Problem;Id;UB;LB;bestUB;simplexiter;jump;alpha_i;deletedcut;time;basis;" << std::endl;
-		Point xopt;
-		int const nite(data.it);
-		xopt = trace[nite - 1]->get_point();
-		file << 1 << ";";
-		print_master_csv(file, trace[0], xopt, options.MASTER_NAME, data.nslaves);
-		for (auto & kvp : trace[0]->_cut_trace) {
-			SlaveCutDataHandler const handler(kvp.second);
-			file << 1 << ";";
-			print_cut_csv(file, handler, kvp.first, problem_to_id[kvp.first]);
-		}
-		for (int i(1); i < nite; i++) {
-			file << i + 1 << ";";
-			print_master_csv(file, trace[i], trace[i - 1]->get_point(), options.MASTER_NAME, data.nslaves);
-			for (auto & kvp : trace[i]->_cut_trace) {
-				SlaveCutDataHandler const handler(kvp.second);
-				file << i + 1 << ";";
-				print_cut_csv(file, handler, kvp.first, problem_to_id[kvp.first]);
-			}
-		}
-		file.close();
-	}
-	else {
-		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-	}
-}
-
-/*!
-*  \brief Print in a file master's information
-*
-*  \param stream : output stream
-*
-*  \param trace : storage of problem data
-*
-*  \param xopt : final optimal value
-*
-*  \param name : master name
-*
-*  \param nslaves : number of slaves
-*/
-void print_master_csv(std::ostream&stream, WorkerMasterDataPtr & trace, Point const & xopt, std::string const & name, int const nslaves) {
-	stream << "Master" << ";";
-	stream << name << ";";
-	stream << nslaves << ";";
-	stream << trace->_ub << ";";
-	stream << trace->_lb << ";";
-	stream << trace->_bestub << ";";
-	stream << ";";
-	stream << norm_point(xopt, trace->get_point()) << ";";
-	stream << ";";
-	stream << trace->_deleted_cut << ";";
-	stream << trace->_time << ";";
-	stream << trace->_nbasis << ";" << std::endl;
-}
-
-/*!
 *  \brief Print in a file slave's information
 *
 *  \param stream : output stream
@@ -303,26 +230,6 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 }
 
 /*!
-*  \brief Update trace of the Benders for the current iteration
-*
-*  Fonction to store the current Benders data in the trace
-*
-*  \param trace : vector keeping data for each iteration
-*
-*  \param data : data to store
-*/
-void update_trace(BendersTrace & trace, BendersData const & data) {
-	trace[data.it - 1]->_lb = data.lb;
-	trace[data.it - 1]->_ub = data.ub;
-	trace[data.it - 1]->_bestub = data.best_ub;
-	trace[data.it - 1]->_x0 = PointPtr(new Point(data.x0));
-	trace[data.it - 1]->_deleted_cut = data.deletedcut;
-	trace[data.it - 1]->_time = data.timer_master;
-	trace[data.it - 1]->_nbasis = data.nbasis;
-
-}
-
-/*!
 *  \brief Check if every slave has been solved to optimality
 *
 *  \param all_package : storage of each slaves status
@@ -356,9 +263,7 @@ void check_status(AllCutPackage const & all_package, BendersData const & data) {
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
-	if (options.BOUND_ALPHA) {
-		master->fix_alpha(data.best_ub);
-	}
+
 	master->solve_integer(data.master_status);
 	//master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
@@ -393,9 +298,7 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 		ptr->fix_to(data.x0);
 		ptr->solve(handler->get_int(LPSTATUS));
-		if (options.BASIS) {
-			ptr->get_basis();
-		}
+
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
@@ -426,9 +329,7 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 		ptr->fix_to(data.x0);
 		ptr->solve(handler->get_int(LPSTATUS));
-		if (options.BASIS) {
-			ptr->get_basis();
-		}
+
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
 			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
@@ -459,7 +360,7 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 *  \param options : set of parameters
 *
 */
-void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, BendersTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
+void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -477,9 +378,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				}
 				all_cuts_storage[itmap.first].insert(cut);
 			}
-			if (options.TRACE) {
-				trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-			}
+
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
 	}
@@ -504,7 +403,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 *
 *  \param options : set of parameters
 */
-void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, BendersTrace & trace, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
 	Point s;
 	double rhs(0);
 	for (int i(0); i < all_package.size(); i++) {
@@ -521,9 +420,7 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 				data.deletedcut++;
 			}
 			all_cuts_storage.find(itmap.first)->second.insert(cut);
-			if (options.TRACE) {
-				trace[data.it - 1]->_cut_trace[itmap.first] = slave_cut_data;
-			}
+
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
 	}
@@ -548,7 +445,7 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 *
 *  \param data : set of benders data
 */
-void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersTrace & trace, BendersOptions & options, BendersData & data) {
+void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersOptions & options, BendersData & data) {
 	int nboundslaves(0);
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
@@ -560,9 +457,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			if (handler->get_dbl(SLAVE_COST) <= options.GAP + handler->get_dbl(ALPHA_I)) {
 				nboundslaves++;
 			}
-			if (options.TRACE) {
-				trace[data.it - 1]->_cut_trace[kvp.first] = slave_cut_data;
-			}
+
 		}
 	}
 	if (nboundslaves == options.RAND_AGGREGATION) {
@@ -594,188 +489,16 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 *
 *  \param data : set of benders data
 */
-void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersTrace & trace, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
+void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
 	check_status(all_package, data);
 	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
-		sort_cut_slave(all_package, master, problem_to_id, trace, all_cuts_storage, data, options, slave_cut_id);
+		sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
 	}
 	else if (options.AGGREGATION) {
-		sort_cut_slave_aggregate(all_package, master, problem_to_id, trace, all_cuts_storage, data, options);
+		sort_cut_slave_aggregate(all_package, master, problem_to_id, all_cuts_storage, data, options);
 	}
 	else if (options.RAND_AGGREGATION) {
-		add_random_cuts(master, all_package, problem_to_id, trace, options, data);
-	}
-	if (options.THRESHOLD_AGGREGATION > 1) {
-		dynamic_aggregation(master, dynamic_aggregate_cuts, all_package, problem_to_id, data, options);
-	}
-	if (options.THRESHOLD_ITERATION > 1) {
-		dynamic_iteration(master, dynamic_aggregate_cuts, all_package, problem_to_id, data, options);
-	}
-}
-
-/*!
-*  \brief Store and gather cuts for dynamic aggregation
-*
-*  \param master : pointer to master problem
-*
-*  \param dynamic_aggregate_cuts : vector of tuple storing cut information (s, s*x0, rhs)
-*
-*  \param all_package : storage of every slave information
-*
-*  \param problem_to_id : map linking each problem to its id
-*
-*  \param data : set of Benders data
-*
-*  \param options : set of Benders options
-*/
-void dynamic_aggregation(WorkerMasterPtr & master, DynamicAggregateCuts & dynamic_aggregate_cuts, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersData const & data, BendersOptions const & options) {
-	if (data.it == 1) {
-		for (int i(0); i < options.THRESHOLD_AGGREGATION; i++) {
-			Point s;
-			double sx0(0);
-			double rhs(0);
-			dynamic_aggregate_cuts.push_back(std::tuple<Point, double, double>(s, sx0, rhs));
-		}
-	}
-	store_current_aggregate_cut(dynamic_aggregate_cuts, all_package, problem_to_id, data, options);
-	if (data.it % options.THRESHOLD_AGGREGATION == 0) {
-		gather_cut(dynamic_aggregate_cuts, master, options, options.THRESHOLD_AGGREGATION * data.nslaves, problem_to_id);
-	}
-}
-
-/*!
-*  \brief Store and gather cuts for dynamic aggregation by iteration
-*
-*  \param master : pointer to master problem
-*
-*  \param dynamic_aggregate_cuts : vector of tuple storing cut information (s, s*x0, rhs)
-*
-*  \param all_package : storage of every slave information
-*
-*  \param problem_to_id : map linking each problem to its id
-*
-*  \param data : set of Benders data
-*
-*  \param options : set of Benders options
-*/
-void dynamic_iteration(WorkerMasterPtr & master, DynamicAggregateCuts & dynamic_aggregate_cuts, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersData const & data, BendersOptions const & options) {
-	if (data.it == 1) {
-		for (int i(0); i < data.nslaves; i++) {
-			Point s;
-			double sx0(0);
-			double rhs(0);
-			dynamic_aggregate_cuts.push_back(std::tuple<Point, double, double>(s, sx0, rhs));
-		}
-	}
-	store_iter_aggregate_cut(dynamic_aggregate_cuts, all_package, problem_to_id, data.x0, data, options);
-	if (data.it % options.THRESHOLD_ITERATION == 0) {
-		gather_cut(dynamic_aggregate_cuts, master, options, options.THRESHOLD_ITERATION * data.nslaves, problem_to_id);
-	}
-}
-
-/*!
-*  \brief Store the current aggregate cuts for further aggregation
-*
-*	Store the current aggregate cuts in case of partial aggregation
-*
-*  \param dynamic_cuts : vector of tuple storing cut information (s, s*x0, rhs)
-*
-*  \param all_package : storage of every slave information
-*
-*  \param problem_to_id : map linking each problem to its id
-*
-*  \param x0 : trial values fixed in each slave
-*
-*  \param data : set of Benders data
-*
-*  \param options : set of Benders options
-*/
-void store_current_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersData const & data, BendersOptions const & options) {
-	int const nite = data.it % options.THRESHOLD_AGGREGATION;
-	
-	if (nite == 1) {
-		for (int i(0); i < options.THRESHOLD_AGGREGATION; i++) {
-			std::get<0>(dynamic_cuts[i]).clear();
-			std::get<1>(dynamic_cuts[i]) = 0;
-			std::get<2>(dynamic_cuts[i]) = 0;
-		}
-	}
-
-	for (int i(0); i < all_package.size(); i++) {
-		for (auto const & itmap : all_package[i]) {
-			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
-			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
-			for (auto const & kvp : data.x0) {
-				std::get<0>(dynamic_cuts[nite])[kvp.first] += handler->get_subgradient()[kvp.first];
-				std::get<1>(dynamic_cuts[nite]) += handler->get_subgradient()[kvp.first] * kvp.second;
-			}
-			std::get<2>(dynamic_cuts[nite]) += handler->get_dbl(SLAVE_COST);
-		}
-	}
-}
-
-/*!
-*  \brief Store the current aggregate cuts for further aggregation by iteration
-*
-*	Store the current aggregate cuts in case of partial aggregation
-*
-*  \param dynamic_cuts : vector of tuple storing cut information (s, s*x0, rhs)
-*
-*  \param all_package : storage of every slave information
-*
-*  \param problem_to_id : map linking each problem to its id
-*
-*  \param x0 : trial values fixed in each slave
-*
-*  \param data : set of Benders data
-*
-*  \param options : set of Benders options
-*/
-void store_iter_aggregate_cut(DynamicAggregateCuts & dynamic_cuts, AllCutPackage const & all_package, Str2Int & problem_to_id, Point const & x0, BendersData const & data, BendersOptions const & options) {
-	if (data.it % options.THRESHOLD_ITERATION == 1) {
-		for (int i(0); i < data.nslaves; i++) {
-			std::get<0>(dynamic_cuts[i]).clear();
-			std::get<1>(dynamic_cuts[i]) = 0;
-			std::get<2>(dynamic_cuts[i]) = 0;
-		}
-	}
-	for (int i(0); i < all_package.size(); i++) {
-		for (auto const & itmap : all_package[i]) {
-			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
-			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
-			for (auto const & kvp : handler->get_subgradient()) {
-				std::get<0>(dynamic_cuts[problem_to_id[itmap.first]])[kvp.first] += kvp.second / options.THRESHOLD_ITERATION;
-				std::get<1>(dynamic_cuts[problem_to_id[itmap.first]]) += kvp.second * x0.find(kvp.first)->second / options.THRESHOLD_ITERATION;
-			}
-			std::get<2>(dynamic_cuts[problem_to_id[itmap.first]]) += handler->get_dbl(SLAVE_COST) / options.THRESHOLD_ITERATION;
-		}
-	}
-}
-
-/*!
-*  \brief Add all the stored cuts in case of partial aggregation
-*
-*	Delete every previous simple cut and replace them with the aggregated ones
-*
-*  \param dynamic_cuts : vector of tuple storing cut information (rhs, x0, subgradient)
-*
-*  \param master : pointer to master problem
-*
-*  \param it : number of iteration
-*
-*  \param nconstraints : number of previous added constraints to delete
-*/
-void gather_cut(DynamicAggregateCuts & dynamic_cuts, WorkerMasterPtr & master, BendersOptions const & options, int const nconstraints, Str2Int const & problem_to_id) {
-	master->delete_constraint(nconstraints);
-	if (options.THRESHOLD_AGGREGATION > 1) {
-		for (int i(0); i < dynamic_cuts.size(); i++) {
-			master->add_dynamic_cut(std::get<0>(dynamic_cuts[i]), std::get<1>(dynamic_cuts[i]), std::get<2>(dynamic_cuts[i]));
-		}
-	}
-	else if (options.THRESHOLD_ITERATION > 1) {
-		for (auto const & kvp : problem_to_id) {
-			master->add_cut_by_iter(kvp.second, std::get<0>(dynamic_cuts[kvp.second]), std::get<1>(dynamic_cuts[kvp.second]), std::get<2>(dynamic_cuts[kvp.second]));
-		}
+		add_random_cuts(master, all_package, problem_to_id, options, data);
 	}
 }
 
@@ -793,30 +516,6 @@ void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr &
 		WorkerSlavePtr & ptr(kvp.second);
 		simplex_basis_package[kvp.first] = ptr->get_basis();
 	}
-}
-
-/*!
-*  \brief Store all slaves basis in a set
-*
-*  Fonction to store and sort all slaves basis in a set
-*
-*  \param all_basis_package : vector of slaves basis
-*
-*  \param problem_to_id : map linking each problem name to its id
-*
-*  \param basis_storage : set storing every basis
-*
-*  \param data : set of Benders data
-*/
-void sort_basis(AllBasisPackage const & all_basis_package, Str2Int & problem_to_id, SimplexBasisStorage & basis_storage, BendersData & data) {
-	for (int i(0); i < all_basis_package.size(); i++) {
-		for (auto const & itmap : all_basis_package[i]) {
-			SimplexBasisPtr basis(new SimplexBasis(itmap.second));
-			SimplexBasisHandler handler(basis);
-			basis_storage.insert(handler);
-		}
-	}
-	data.nbasis = basis_storage.size();
 }
 
 /*!

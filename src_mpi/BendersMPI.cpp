@@ -127,9 +127,6 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0)
 	{
 		get_master_value(_master, _data, _options);
-		if (_options.TRACE) {
-			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
-		}
 		if (_options.ACTIVECUTS) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
@@ -245,10 +242,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		/*Gather cut from each slave in master thread and add them to Master problem*/
 		step_2(env, world);
 
-		if (_options.BASIS) {
-			step_3(env, world);
-		}
-
 		if (world.rank() == 0) {
 			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 			if (_options.TRACE) {
@@ -265,9 +258,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 	if (world.rank() == 0) {
 		print_solution(stream, _data.bestx, true);
-		if (_options.TRACE) {
-			print_csv(_trace,_problem_to_id,_data,_options);
-		}
+
 		if (_options.ACTIVECUTS) {
 			print_active_cut(_active_cuts, _options);
 		}

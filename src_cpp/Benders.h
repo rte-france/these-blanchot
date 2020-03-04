@@ -1,7 +1,6 @@
 #pragma once
 
 #include "WorkerMaster.h"
-#include "WorkerTrace.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
 #include "SimplexBasis.h"
@@ -24,7 +23,6 @@ public:
 	BendersOptions _options;
 	StrVector _slaves;
 
-	BendersTrace _trace;
 	AllCutStorage _all_cuts_storage;
 	DynamicAggregateCuts _dynamic_aggregate_cuts;
 

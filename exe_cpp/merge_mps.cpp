@@ -33,10 +33,6 @@ int main(int argc, char** argv)
 		StandardLp lpData(prob);
 		lpData.append_in(full);
 
-		if (kvp.first == options.MASTER_NAME) {
-			full.write_prob("full.lp", "l");
-		}
-
 		prob.free();
 		full.fill_mps_id(kvp);
 	}

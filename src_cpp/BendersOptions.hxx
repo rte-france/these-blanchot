@@ -13,9 +13,6 @@ BENDERS_OPTIONS_MACRO(AGGREGATION, bool, false)
 //Path to the folder where output files should be printed 
 BENDERS_OPTIONS_MACRO(OUTPUTROOT, std::string, ".")
 
-//True if a trace should be built, false otherwise 
-BENDERS_OPTIONS_MACRO(TRACE, bool, false)
-
 //True if similar cuts should be deleted, false otherwise 
 BENDERS_OPTIONS_MACRO(DELETE_CUT, bool, false)
 
@@ -40,29 +37,14 @@ BENDERS_OPTIONS_MACRO(STRUCTURE_FILE, std::string, "structure.txt")
 //Path to the folder where input files are stored 
 BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
 
-//True if simplex bases need to be stored, false otherwise 
-BENDERS_OPTIONS_MACRO(BASIS, bool, false)
-
 //True if a statement of active cuts need to be done, false otherwise 
 BENDERS_OPTIONS_MACRO(ACTIVECUTS, bool, false)
-
-//Number of iterations before aggregation of all previous cuts, set to 0 if no aggregation needed 
-BENDERS_OPTIONS_MACRO(THRESHOLD_AGGREGATION, int, 0)
-
-//Number of iterations before aggregation of all previous cuts by iteration, set to 0 if no aggregation needed 
-BENDERS_OPTIONS_MACRO(THRESHOLD_ITERATION, int, 0)
 
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 
 //Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER) 
 BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
-
-//Name of the csv output file 
-BENDERS_OPTIONS_MACRO(CSV_NAME, std::string, "benders_output_trace")
-
-//True if alpha needs to be bounded by best upper bound, false otherwise 
-BENDERS_OPTIONS_MACRO(BOUND_ALPHA, bool, true)
 
 //Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
 BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
