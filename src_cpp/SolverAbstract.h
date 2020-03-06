@@ -4,15 +4,31 @@
 #include <iostream>
 #include "common.h"
 #include "BendersOptions.h"
-//#include "SlaveCut.h"
-//#include "SimplexBasis.h"
+
+
+// Definition of optimality codes
+enum SOLVER_STATUS {
+	OPTIMAL,
+	INFEASIBLE,
+	UNBOUNDED,
+	UNKNOWN,
+};
+
 
 /*!
 * \class class SolverAbstract
 * \brief Virtual class to implement solvers methods
 */
-
 class SolverAbstract {
+
+public :
+	StrVector SOLVER_STRING_STATUS = {
+	"OPTIMAL",
+	"INFEASIBLE",
+	"UNBOUNDED",
+	"UNKNOWN"
+	};
+
 public:
 	std::string _name;
 	typedef std::shared_ptr<SolverAbstract> Ptr;

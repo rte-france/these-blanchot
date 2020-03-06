@@ -86,16 +86,6 @@ struct Predicate {
 	}
 };
 
-// Definition of optimality codes
-enum SOLVER_STATUS {
-	OPTIMAL,
-	INFEASIBLE,
-	UNBOUNDED,
-	UNKNOWN,
-};
-
-
-
 
 /*!
 *  \brief Stream output overloading for point

@@ -135,18 +135,18 @@ void SolverXPRESS::write_errored_prob(int status, BendersOptions const& options,
 
 		std::string optim_status = "";
 		if (status == OPTIMAL) {
-			optim_status = "OPTIMAL";
+			optim_status = SOLVER_STRING_STATUS[OPTIMAL];
 		}else if(status == INFEASIBLE) {
-			optim_status = "INFEASIBLE";
+			optim_status = SOLVER_STRING_STATUS[INFEASIBLE];
 		}
 		else if (status == UNBOUNDED) {
-			optim_status = "UNBOUNDED";
+			optim_status = SOLVER_STRING_STATUS[UNBOUNDED];
 		}
 		else if (status == UNKNOWN) {
-			optim_status = "UNKNOWN";
+			optim_status = SOLVER_STRING_STATUS[UNKNOWN];
 		}
 		else {
-			optim_status = "OTHER";
+			optim_status = SOLVER_STRING_STATUS[UNKNOWN];
 		}
 
 		if (options.WRITE_ERRORED_PROB) {
