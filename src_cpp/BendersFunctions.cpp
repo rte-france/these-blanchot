@@ -19,6 +19,9 @@ void init(BendersData & data) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+	data.global_prb_status = 0;
+	data.master_status = 0;
+	data.slave_status = 0;
 }
 
 /*!
@@ -332,8 +335,6 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
 	}
-
-	std::cout << slaves_worth_status << std::endl;
 	return slaves_worth_status;
 }
 

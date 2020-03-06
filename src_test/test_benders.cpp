@@ -4,7 +4,7 @@
 #include "catch2.hpp"
 
 #include "merge_mps_functions.h"
-#include "BendersMPI.h"
+//#include "BendersMPI.h"
 #include "Benders.h"
 
 TEST_CASE("Lecture LP et MPS") {

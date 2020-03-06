@@ -183,6 +183,9 @@ void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 	else if (xprs_status == XPRS_LP_UNBOUNDED) {
 		lp_status = UNBOUNDED;
 	}
+	else {
+		lp_status = UNKNOWN;
+	}
 }
 
 void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps) {
