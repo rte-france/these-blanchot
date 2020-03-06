@@ -35,3 +35,8 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 
 void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves);
 void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts, SlaveCutId & cut_id, int const it);
+
+// in-out stabilisation
+void compute_x_cut(BendersOptions const& options, BendersData& data);
+void update_in_out_stabilisation(BendersData& data);
+void compute_ub(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options);

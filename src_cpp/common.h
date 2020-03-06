@@ -144,6 +144,13 @@ struct BendersData {
 	int master_status;
 	int slave_status;
 	int global_prb_status;
+
+	// Stabilisation in-out
+	// Point in which we derive the cut
+	Point x_cut;
+	// Stability center
+	Point x_stab;
+	double stab_value;
 };
 
 double norm_point(Point const & x0, Point const & x1);

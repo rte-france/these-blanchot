@@ -96,8 +96,11 @@ void Benders::run(std::ostream & stream) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
 
+		compute_x_cut(_options, _data);
 		build_cut();
 
+		compute_ub(_master, _data, _options);
+		update_in_out_stabilisation(_data);
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 		_data.timer_master = timer_master.elapsed();

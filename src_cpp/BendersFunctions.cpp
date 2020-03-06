@@ -19,9 +19,14 @@ void init(BendersData & data) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+	
+	// Solver status
 	data.global_prb_status = 0;
 	data.master_status = 0;
 	data.slave_status = 0;
+
+	// in-out stab
+	data.stab_value = 0.5;
 }
 
 /*!
@@ -293,10 +298,11 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 
-	data.invest_cost = data.lb - data.alpha;
+	/*data.invest_cost = data.lb - data.alpha;
+	
 	if (!options.RAND_AGGREGATION) {
 		data.ub = data.invest_cost;
-	}
+	}*/
 	data.timer_master = timer_master.elapsed();
 }
 
@@ -324,7 +330,7 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 		WorkerSlavePtr & ptr(kvp.second);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-		ptr->fix_to(data.x0);
+		ptr->fix_to(data.x_cut);
 		ptr->solve(handler->get_int(LPSTATUS), options, kvp.first);
 
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
@@ -361,7 +367,7 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 		WorkerSlavePtr & ptr(map_slaves[name_slave]);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-		ptr->fix_to(data.x0);
+		ptr->fix_to(data.x_cut);
 		ptr->solve(handler->get_int(LPSTATUS), options, name_slave);
 
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
@@ -404,7 +410,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
 			data.ub += handler->get_dbl(SLAVE_COST);
-			SlaveCutTrimmer cut(handler, data.x0);
+			SlaveCutTrimmer cut(handler, data.x_cut);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
@@ -449,10 +455,10 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			data.ub += handler->get_dbl(SLAVE_COST);
 			rhs += handler->get_dbl(SLAVE_COST);
-			for (auto const & var : data.x0) {
+			for (auto const & var : data.x_cut) {
 				s[var.first] += handler->get_subgradient()[var.first];
 			}
-			SlaveCutTrimmer cut(handler, data.x0);
+			SlaveCutTrimmer cut(handler, data.x_cut);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
@@ -578,5 +584,30 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 			//}
 		}
 	}
+}
+
+void compute_x_cut(BendersOptions const& options, BendersData& data)
+{
+	// initialisation
+	if (data.it == 1) {
+		data.x_stab = data.x0;
+		data.x_cut	= data.x0;
+	}
+	else {
+		for (auto const& kvp : data.x0) {
+			data.x_cut[kvp.first] = data.stab_value * data.x0[kvp.first] + 
+				(1-data.stab_value) * data.x_stab[kvp.first];
+		}
+	}
+	
+	data.ub = 0;
+}
+
+void compute_ub(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options) {
+
+}
+
+void update_in_out_stabilisation(BendersData & data) {
+	
 }
 
