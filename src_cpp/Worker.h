@@ -45,6 +45,7 @@ public:
 
 	void solve(int & lp_status);
 	void solve_integer(int& lp_status);
+	void write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const;
 
 public :
 	void get_MIP_sol(double* x, double* duals);

@@ -14,30 +14,8 @@ int main(int argc, char** argv)
 	// Declaration du WorkerMerge avec le probleme vide
 	WorkerMerge full(options, input, "full");
 
-
-	for (auto const & kvp : input) {
-
-		// Probleme name
-		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
-		double const weight = options.slave_weight(input.size() - 1, problem_name);
-
-		full.set_decalage(kvp.first);
-		
-		WorkerMerge prob(options);
-		prob.read(problem_name);
-
-		if (kvp.first != options.MASTER_NAME) {
-			prob.chg_obj(options, weight);
-		}
-		
-		StandardLp lpData(prob);
-		lpData.append_in(full);
-
-		prob.free();
-		full.fill_mps_id(kvp);
-	}
-
-	full.add_coupling_constraints();
+	// Lecture et ajout de tous les problemes dans full
+	full.merge_problems(input, options);
 
 	std::cout << "Solving" << std::endl;
 
@@ -46,16 +24,12 @@ int main(int argc, char** argv)
 
 	int status = 0;
 	full.solve_integer(status);
+	full.write_errored_prob(status, options, "full");
 
 	Point x0;
-	DblVector ptr(full.get_ncols(), 0);
-	full.get_MIP_sol(ptr.data(), NULL);
-	
-	for (auto const & kvp : input[options.MASTER_NAME]) {
-		x0[kvp.first] = ptr[kvp.second];
-	}
+	double val(0);
+	full.get_optimal_point_and_value(x0, val, input, options);
 
-	double val = full.get_mip_value();
 	std::cout << "Optimal value " << val << std::endl;
 
 	print_solution(std::cout, x0, true);

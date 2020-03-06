@@ -29,14 +29,14 @@ void build_SlaveCutData(SlaveCutData &);
 enum SlaveCutInt {
 	SIMPLEXITER = 0,
 	LPSTATUS,
-	MAXINT
+	MAXINT_VALUE,
 };
 
 enum SlaveCutDbl {
 	SLAVE_COST = 0,
 	ALPHA_I,
 	SLAVE_TIMER,
-	MAXDBL 
+	MAXDBL_VALUE,
 };
 
 enum SlaveCutStr {

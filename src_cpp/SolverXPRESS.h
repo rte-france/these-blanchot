@@ -27,6 +27,8 @@ public:
 		const double* obj, const int* mstart, const int* mnel, const int* mrwind,
 		const double* dmatval, const double* dlb, const double* dub);
 	virtual void write_prob(const char* name, const char* flags) const;
+	virtual void write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const;
+	virtual void read_prob(const char* prob_name, const char* flags);
 	virtual void solve(int& lp_status, std::string const& path_to_mps);
 	virtual void solve_integer(int& lp_status, std::string const& path_to_mps);
 	virtual void get_obj(double* obj, int first, int last) const;

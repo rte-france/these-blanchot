@@ -13,6 +13,18 @@ StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_NONCONVEX"
 };
 
+StrVector XPRS_MIP_STATUS = {
+	"XPRS_MIP_NOT_LOADED",
+	"XPRS_MIP_LP_NOT_OPTIMAL",
+	"XPRS_MIP_LP_OPTIMAL",
+	"XPRS_MIP_NO_SOL_FOUND",
+	"XPRS_MIP_SOLUTION",
+	"XPRS_MIP_INFEAS",
+	"XPRS_MIP_OPTIMAL",
+	"XPRS_MIP_UNBOUNDED",
+};
+
+
 /************************************************************************************\
 * Name:         optimizermsg                                                         *
 * Purpose:      Display Optimizer error messages and warnings.                       *
@@ -99,7 +111,6 @@ void SolverXPRESS::init(std::string const& path_to_mps) {
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
-	XPRSreadprob(_xprs, path_to_mps.c_str(), "");
 }
 
 void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
@@ -111,6 +122,51 @@ void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char*
 
 void SolverXPRESS::write_prob(const char* name, const char* flags) const {
 	XPRSwriteprob(_xprs, name, flags);
+}
+
+void SolverXPRESS::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
+	
+	int xprs_status(0);
+	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
+
+	if (status != OPTIMAL) {
+		std::cout << "status is : " << status << std::endl;
+		std::stringstream buffer;
+
+		std::string optim_status = "";
+		if (status == OPTIMAL) {
+			optim_status = "OPTIMAL";
+		}else if(status == INFEASIBLE) {
+			optim_status = "INFEASIBLE";
+		}
+		else if (status == UNBOUNDED) {
+			optim_status = "UNBOUNDED";
+		}
+		else if (status == UNKNOWN) {
+			optim_status = "UNKNOWN";
+		}
+		else {
+			optim_status = "OTHER";
+		}
+
+		if (options.WRITE_ERRORED_PROB) {
+			buffer << path_to_mps << "status_";
+			buffer << optim_status;
+			buffer << ".mps";
+			std::cout << "status is : " << optim_status << std::endl;
+			std::cout << "written in " << buffer.str() << std::endl;
+			XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
+		}
+		std::exit(0);
+	}
+	/*else if (status) {
+		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
+	}*/
+}
+
+void SolverXPRESS::read_prob(const char* prob_name, const char* flags)
+{
+	XPRSreadprob(_xprs, prob_name, flags);
 }
 
 void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
@@ -127,22 +183,6 @@ void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 	}
 	else if (xprs_status == XPRS_LP_UNBOUNDED) {
 		lp_status = UNBOUNDED;
-	}
-	
-	if (xprs_status != XPRS_LP_OPTIMAL) {
-		std::cout << "lp_status is : " << xprs_status << std::endl;
-		std::stringstream buffer;
-
-		buffer << path_to_mps << "_lp_status_";
-		buffer << XPRS_LP_STATUS[xprs_status];
-		buffer << ".mps";
-		std::cout << "lp_status is : " << XPRS_LP_STATUS[xprs_status] << std::endl;
-		std::cout << "written in " << buffer.str() << std::endl;
-		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
-		std::exit(0);
-	}
-	else if (status) {
-		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
 	}
 }
 
@@ -162,22 +202,8 @@ void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps)
 	else if (xprs_status == XPRS_MIP_UNBOUNDED) {
 		lp_status = UNBOUNDED;
 	}
-
-
-	if (xprs_status != XPRS_MIP_OPTIMAL && xprs_status != XPRS_LP_OPTIMAL) {
-		std::cout << "lp_status is : " << xprs_status << std::endl;
-		std::stringstream buffer;
-
-		buffer << path_to_mps << "_lp_status_";
-		buffer << XPRS_LP_STATUS[xprs_status];
-		buffer << ".mps";
-		std::cout << "lp_status is : " << XPRS_LP_STATUS[xprs_status] << std::endl;
-		std::cout << "written in " << buffer.str() << std::endl;
-		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
-		std::exit(0);
-	}
-	else if (status) {
-		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
+	else {
+		lp_status = UNKNOWN;
 	}
 }
 

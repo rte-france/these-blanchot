@@ -64,9 +64,10 @@ void WorkerMerge::free()
 	_solver->free();
 }
 
-void WorkerMerge::read(std::string const& problem_name)
+void WorkerMerge::read(std::string const& problem_name, std::string const& flags)
 {
 	_solver->init(problem_name.c_str());
+	_solver->read_prob(problem_name.c_str(), flags.c_str());
 }
 
 void WorkerMerge::write_prob(std::string const& name, std::string const& flags)
@@ -81,9 +82,48 @@ void WorkerMerge::fill_mps_id(std::pair<std::string, Str2Int> first_stage_var)
 	}
 }
 
+void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const& options) {
+
+	for (auto const& kvp : input) {
+
+		// Probleme name
+		std::string problem_name(options.INPUTROOT + PATH_SEPARATOR + kvp.first);
+		double const weight = options.slave_weight(input.size() - 1, problem_name);
+
+		set_decalage(kvp.first);
+
+		WorkerMerge prob(options);
+		std::cout << problem_name << std::endl;
+		prob.read(problem_name, "");
+
+		if (kvp.first != options.MASTER_NAME) {
+			prob.chg_obj(options, weight);
+		}
+
+		StandardLp lpData(prob);
+		lpData.append_in(*this);
+
+		prob.free();
+		fill_mps_id(kvp);
+	}
+
+	add_coupling_constraints();
+}
+
 void WorkerMerge::get_obj(DblVector& obj, int first, int last)
 {
 	_solver->get_obj(obj.data(), first, last);
+}
+
+void WorkerMerge::get_optimal_point_and_value(Point& x0, double& val, CouplingMap & input, BendersOptions const& options) {
+	DblVector ptr(get_ncols(), 0);
+	get_MIP_sol(ptr.data(), NULL);
+
+	for (auto const& kvp : input[options.MASTER_NAME]) {
+		x0[kvp.first] = ptr[kvp.second];
+	}
+
+	val = get_mip_value();
 }
 
 void WorkerMerge::chg_obj(BendersOptions const& options, double weight)

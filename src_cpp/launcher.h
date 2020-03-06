@@ -14,13 +14,11 @@ void sequential_launch(BendersOptions const &options);
 
 void usage(int argc);
 
-
-
 enum Attribute {
-	INT,
-	INT_VECTOR,
-	CHAR_VECTOR,
-	DBL_VECTOR,
+	INT_INDEX,
+	INT_VECTOR_INDEX,
+	CHAR_VECTOR_INDEX,
+	DBL_VECTOR_INDEX,
 	MAX_ATTRIBUTE
 };
 
@@ -52,6 +50,7 @@ enum DblVectorAttribute {
 	UB,
 	MAX_DBL_VECTOR_ATTRIBUTE
 };
+
 typedef std::tuple<IntVector, std::vector<IntVector>, std::vector<CharVector>, 
 	std::vector<DblVector> > raw_standard_lp_data;
 

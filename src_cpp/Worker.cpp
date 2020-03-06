@@ -73,6 +73,7 @@ void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps,
 	_path_to_mps = path_to_mps;
 	add_stream(std::cout);
 	_solver->init(path_to_mps);
+	_solver->read_prob(path_to_mps.c_str(), "");
 
 	//std::ifstream file(_path_to_mapping.c_str());
 	_name_to_id = variable_map;
@@ -105,6 +106,10 @@ void Worker::solve(int & lp_status) {
 */
 void Worker::solve_integer(int& lp_status) {
 	_solver->solve_integer(lp_status, _path_to_mps);
+}
+
+void Worker::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
+	_solver->write_errored_prob(status, options, path_to_mps);
 }
 
 void Worker::get_MIP_sol(double* x, double* duals)

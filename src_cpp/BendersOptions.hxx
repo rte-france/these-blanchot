@@ -51,3 +51,7 @@ BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 
 //Choice of the solver to use (XPRESS only for now)
 BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
+
+//Bool to say if non optimal problem should be written in a file before exit
+BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
+

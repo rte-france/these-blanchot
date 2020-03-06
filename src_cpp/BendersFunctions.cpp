@@ -265,6 +265,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	data.alpha_i.resize(data.nslaves);
 
 	master->solve_integer(data.master_status);
+	master->write_errored_prob(data.master_status, options, "full");
 	//master->solve(data.master_status);
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/

@@ -4,66 +4,212 @@
 #include "catch2.hpp"
 
 #include "merge_mps_functions.h"
+#include "BendersMPI.h"
+#include "Benders.h"
 
-unsigned int Factorial(unsigned int number) {
-	return number > 1 ? Factorial(number - 1) * number : 1;
+TEST_CASE("Lecture LP et MPS") {
+
+	BendersOptions options;
+	REQUIRE(options.SLAVE_NUMBER == -1); // Options declarees
+
+	// Declaration d'un Worker
+	WorkerMerge prob(options);
+	// 0 Variables au debut
+	REQUIRE(prob.get_ncols() == 0); // Probleme initialise
+	prob.read("small_MPS", "");
+	REQUIRE(prob.get_ncols() == 1);
+	prob.read("small_LP", "l");
+	REQUIRE(prob.get_ncols() == 2);
+
+	int lp_status(0);
+	prob.solve_integer(lp_status);
+	REQUIRE(lp_status == 0);
+	
+	DblVector ptr(prob.get_ncols(), 0);;
+	prob.get_MIP_sol(ptr.data(), NULL);
+
+	for (auto const& elt : ptr) {
+		std::cout << elt << std::endl;
+	}
+
+	REQUIRE(ptr[0] == 0.0);
+	REQUIRE(ptr[1] == 2);
+
+	prob.free();
+	REQUIRE(prob.get_ncols() == 0);
 }
 
-TEST_CASE("Factorials are computed") {
-	REQUIRE(Factorial(0) == 1);
-	REQUIRE(Factorial(1) == 1);
-	REQUIRE(Factorial(2) == 2);
-	REQUIRE(Factorial(3) == 6);
-	REQUIRE(Factorial(10) == 3628800);
-}
+SCENARIO("Resolution instance LP") {
+	GIVEN("A LP instance") {
 
-SCENARIO("vectors can be sized and resized", "[vector]") {
+		BendersOptions options;
+		options.INPUTROOT = "./mini_instance_LP/";
+		options.print(std::cout);
 
-	GIVEN("A vector with some items") {
-		std::vector<int> v(5);
+		WHEN("Solving with merge_mps") {
 
-		REQUIRE(v.size() == 5);
-		REQUIRE(v.capacity() >= 5);
+			CouplingMap input;
+			build_input(options, input);
 
-		WHEN("the size is increased") {
-			v.resize(10);
+			// Declaration du WorkerMerge avec le probleme vide
+			WorkerMerge full(options, input, "full");
 
-			THEN("the size and capacity change") {
-				REQUIRE(v.size() == 10);
-				REQUIRE(v.capacity() >= 10);
+			// Lecture et ajout de tous les problemes dans full
+			full.merge_problems(input, options);
+			REQUIRE(full.get_ncols() == 5); // Toutes les colonnes sont bien ajoutees
+
+			// Resolution sequentielle
+			full.set_threads(1);
+
+			int status = 0;
+			full.solve_integer(status);
+
+			Point x0;
+			double val(0);
+			full.get_optimal_point_and_value(x0, val, input, options);
+			
+			full.free();
+
+			THEN("the optimal solution is found.") {
+				REQUIRE(status == 0); // OPITMAL
+				REQUIRE(val == 3.25); // Valeur optimale
+				REQUIRE(x0["x"] == 1.5); // Solution optimale fractionnaire
 			}
 		}
-		WHEN("the size is reduced") {
-			v.resize(0);
 
-			THEN("the size changes but not capacity") {
-				REQUIRE(v.size() == 0);
-				REQUIRE(v.capacity() >= 5);
-			}
-		}
-		WHEN("more capacity is reserved") {
-			v.reserve(10);
+		WHEN("Solving with benderssequential") {
 
-			THEN("the capacity changes but not the size") {
-				REQUIRE(v.size() == 5);
-				REQUIRE(v.capacity() >= 10);
-			}
-		}
-		WHEN("less capacity is reserved") {
-			v.reserve(0);
+			CouplingMap input;
+			build_input(options, input);
+			Benders benders(input, options);
+			benders.run(std::cout);
 
-			THEN("neither size nor capacity are changed") {
-				REQUIRE(v.size() == 5);
-				REQUIRE(v.capacity() >= 5);
+			THEN("the optimal solution in found.") {
+				REQUIRE(benders._data.lb == 3.25); // Valeur optimale
+				REQUIRE(benders._data.x0["x"] == 1.5); // Solution optimale fractionnaire
 			}
+
+			benders.free();
 		}
 	}
 }
 
-TEST_CASE("Small LP") {
+SCENARIO("Resolution instance MIP") {
+	GIVEN("A LP instance") {
 
-	SolverAbstract::Ptr solv;
+		BendersOptions options;
+		options.INPUTROOT = "./mini_instance_MIP/";
+		options.print(std::cout);
+
+		WHEN("Solving with merge_mps") {
+
+			CouplingMap input;
+			build_input(options, input);
+
+			// Declaration du WorkerMerge avec le probleme vide
+			WorkerMerge full(options, input, "full");
+
+			// Lecture et ajout de tous les problemes dans full
+			full.merge_problems(input, options);
+			REQUIRE(full.get_ncols() == 5); // Toutes les colonnes sont bien ajoutees
+
+			// Resolution sequentielle
+			full.set_threads(1);
+
+			int status = 0;
+			full.solve_integer(status);
+
+			Point x0;
+			double val(0);
+			full.get_optimal_point_and_value(x0, val, input, options);
+
+			full.free();
+
+			THEN("the optimal solution is found.") {
+				REQUIRE(status == 0); // OPITMAL
+				REQUIRE(val == 3.5); // Valeur optimale
+				REQUIRE(x0["x"] == 2); // Solution optimale entiere
+			}
+		}
+
+		WHEN("Solving with benderssequential") {
+
+			CouplingMap input;
+			build_input(options, input);
+			Benders benders(input, options);
+			benders.run(std::cout);
+
+			THEN("the optimal solution in found.") {
+				REQUIRE(benders._data.lb == 3.5); // Valeur optimale
+				REQUIRE(benders._data.x0["x"] == 2); // Solution optimale entiere
+			}
+
+			benders.free();
+		}
+	}
+}
+
+SCENARIO("Resolution instance INFEASIBLE") {
+	GIVEN("An infeasible instance") {
+
+		BendersOptions options;
+		options.INPUTROOT = "./mini_instance_INFEAS/";
+		options.WRITE_ERRORED_PROB = false;
+		options.print(std::cout);
+
+		WHEN("Solving with merge_mps") {
+
+			CouplingMap input;
+			build_input(options, input);
+
+			// Declaration du WorkerMerge avec le probleme vide
+			WorkerMerge full(options, input, "full");
+
+			// Lecture et ajout de tous les problemes dans full
+			full.merge_problems(input, options);
+			REQUIRE(full.get_ncols() == 4); // Toutes les colonnes sont bien ajoutees
+
+			// Resolution sequentielle
+			full.set_threads(1);
+
+			int status = 0;
+			full.solve_integer(status);
+
+			Point x0;
+			double val(0);
+			full.get_optimal_point_and_value(x0, val, input, options);
+
+			THEN("the optimal solution is found.") {
+				REQUIRE(1 == 1); // OPITMAL
+			}
+
+			full.write_errored_prob(status, options, "full");
+			full.free();
+		}
+
+		WHEN("Solving with benderssequential") {
+
+			CouplingMap input;
+			build_input(options, input);
+			Benders benders(input, options);
+			benders.run(std::cout);
 
 
-	REQUIRE(0 == 0);
+			THEN("the optimal solution in found.") {
+				REQUIRE(0 == 0); // OPITMAL
+			}
+
+			benders.free();
+		}
+	}
+}
+
+SCENARIO("Resolution instance UNBOUDED") {
+	GIVEN("An unbounded instance") {
+
+		BendersOptions options;
+		options.INPUTROOT = "./mini_instance_UNBOUNDED/";
+		options.print(std::cout);
+
+	}
 }

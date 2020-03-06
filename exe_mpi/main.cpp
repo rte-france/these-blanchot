@@ -8,6 +8,10 @@
 
 int main(int argc, char** argv)
 {
+
+	std::cout << "ARGC " << argc << std::endl;
+	
+
 	mpi::environment env(argc, argv);
 	mpi::communicator world;
 

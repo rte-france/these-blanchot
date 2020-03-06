@@ -91,7 +91,10 @@ enum SOLVER_STATUS {
 	OPTIMAL,
 	INFEASIBLE,
 	UNBOUNDED,
+	UNKNOWN,
 };
+
+
 
 
 /*!
@@ -148,6 +151,8 @@ struct BendersData {
 	double dnslaves;
 	int master_status;
 	int nrandom;
+
+	int global_prb_status;
 };
 
 double norm_point(Point const & x0, Point const & x1);
