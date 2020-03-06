@@ -149,9 +149,10 @@ struct BendersData {
 	Point x0;
 	int nslaves;
 	double dnslaves;
-	int master_status;
 	int nrandom;
 
+	int master_status;
+	int slave_status;
 	int global_prb_status;
 };
 

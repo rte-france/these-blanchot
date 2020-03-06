@@ -22,7 +22,7 @@ TEST_CASE("Lecture LP et MPS") {
 	REQUIRE(prob.get_ncols() == 2);
 
 	int lp_status(0);
-	prob.solve_integer(lp_status);
+	prob.solve_integer(lp_status, options, "");
 	REQUIRE(lp_status == 0);
 	
 	DblVector ptr(prob.get_ncols(), 0);;
@@ -44,7 +44,6 @@ SCENARIO("Resolution instance LP") {
 
 		BendersOptions options;
 		options.INPUTROOT = "./mini_instance_LP/";
-		options.print(std::cout);
 
 		WHEN("Solving with merge_mps") {
 
@@ -62,7 +61,7 @@ SCENARIO("Resolution instance LP") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status);
+			full.solve_integer(status, options, "");
 
 			Point x0;
 			double val(0);
@@ -99,7 +98,6 @@ SCENARIO("Resolution instance MIP") {
 
 		BendersOptions options;
 		options.INPUTROOT = "./mini_instance_MIP/";
-		options.print(std::cout);
 
 		WHEN("Solving with merge_mps") {
 
@@ -117,7 +115,7 @@ SCENARIO("Resolution instance MIP") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status);
+			full.solve_integer(status, options, "");
 
 			Point x0;
 			double val(0);
@@ -155,7 +153,6 @@ SCENARIO("Resolution instance INFEASIBLE") {
 		BendersOptions options;
 		options.INPUTROOT = "./mini_instance_INFEAS/";
 		options.WRITE_ERRORED_PROB = false;
-		options.print(std::cout);
 
 		WHEN("Solving with merge_mps") {
 
@@ -173,17 +170,16 @@ SCENARIO("Resolution instance INFEASIBLE") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status);
+			full.solve_integer(status, options, "");
 
 			Point x0;
 			double val(0);
 			full.get_optimal_point_and_value(x0, val, input, options);
 
 			THEN("the optimal solution is found.") {
-				REQUIRE(1 == 1); // OPITMAL
+				REQUIRE(status == INFEASIBLE); // problem infeasible
 			}
 
-			full.write_errored_prob(status, options, "full");
 			full.free();
 		}
 
@@ -196,7 +192,7 @@ SCENARIO("Resolution instance INFEASIBLE") {
 
 
 			THEN("the optimal solution in found.") {
-				REQUIRE(0 == 0); // OPITMAL
+				REQUIRE(benders._data.global_prb_status == INFEASIBLE); // problem infeasible
 			}
 
 			benders.free();
@@ -209,7 +205,49 @@ SCENARIO("Resolution instance UNBOUDED") {
 
 		BendersOptions options;
 		options.INPUTROOT = "./mini_instance_UNBOUNDED/";
-		options.print(std::cout);
 
+		WHEN("Solving with merge_mps") {
+
+			CouplingMap input;
+			build_input(options, input);
+
+			// Declaration du WorkerMerge avec le probleme vide
+			WorkerMerge full(options, input, "full");
+
+			// Lecture et ajout de tous les problemes dans full
+			full.merge_problems(input, options);
+			REQUIRE(full.get_ncols() == 5); // Toutes les colonnes sont bien ajoutees
+
+			// Resolution sequentielle
+			full.set_threads(1);
+
+			int status = 0;
+			full.solve_integer(status, options, "");
+
+			Point x0;
+			double val(0);
+			full.get_optimal_point_and_value(x0, val, input, options);
+
+			THEN("the optimal solution is found.") {
+				REQUIRE(status == UNBOUNDED); // problem unbounded
+			}
+
+			full.free();
+		}
+
+		WHEN("Solving with benderssequential") {
+
+			CouplingMap input;
+			build_input(options, input);
+			Benders benders(input, options);
+			benders.run(std::cout);
+
+
+			THEN("the optimal solution in found.") {
+				REQUIRE(benders._data.global_prb_status == UNBOUNDED); // problem unbounded
+			}
+
+			benders.free();
+		}
 	}
 }

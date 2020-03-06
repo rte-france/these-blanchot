@@ -253,7 +253,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	}
 
 	if (world.rank() == 0) {
-		print_solution(stream, _data.bestx, true);
+		print_solution(stream, _data.bestx, true, _data.global_prb_status);
 
 		if (_options.ACTIVECUTS) {
 			print_active_cut(_active_cuts, _options);

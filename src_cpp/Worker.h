@@ -43,8 +43,8 @@ public:
 
 	std::list<std::ostream *> & get_stream();
 
-	void solve(int & lp_status);
-	void solve_integer(int& lp_status);
+	void solve(int & lp_status, BendersOptions const& options, std::string const& path_to_mps);
+	void solve_integer(int& lp_status, BendersOptions const& options, std::string const& path_to_mps);
 	void write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const;
 
 public :

@@ -63,10 +63,10 @@ void Benders::build_cut() {
 	Timer timer_slaves;
 	if (_options.RAND_AGGREGATION) {
 		std::random_shuffle(_slaves.begin(), _slaves.end());
-		get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data);
+		_data.slave_status = get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data);
 	}
 	else {
-		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+		_data.slave_status = get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
@@ -105,7 +105,7 @@ void Benders::run(std::ostream & stream) {
 		_data.stop = stopping_criterion(_data, _options);
 	}
 	
-	print_solution(stream, _data.bestx, true);
+	print_solution(stream, _data.bestx, true, _data.global_prb_status);
 
 	if (_options.ACTIVECUTS) {
 		print_active_cut(_active_cuts,_options);

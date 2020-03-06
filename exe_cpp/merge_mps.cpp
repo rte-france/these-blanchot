@@ -23,8 +23,7 @@ int main(int argc, char** argv)
 	full.set_threads(1);
 
 	int status = 0;
-	full.solve_integer(status);
-	full.write_errored_prob(status, options, "full");
+	full.solve_integer(status, options, "full");
 
 	Point x0;
 	double val(0);
@@ -32,7 +31,7 @@ int main(int argc, char** argv)
 
 	std::cout << "Optimal value " << val << std::endl;
 
-	print_solution(std::cout, x0, true);
+	print_solution(std::cout, x0, true, status);
 
 	full.free();
 

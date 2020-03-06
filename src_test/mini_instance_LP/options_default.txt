@@ -16,4 +16,5 @@
                  MASTER_METHOD                                           SIMPLEX
                   XPRESS_TRACE                                                 0
                         SOLVER                                            XPRESS
+            WRITE_ERRORED_PROB                                                 1
 

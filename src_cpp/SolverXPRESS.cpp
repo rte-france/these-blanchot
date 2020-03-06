@@ -157,7 +157,6 @@ void SolverXPRESS::write_errored_prob(int status, BendersOptions const& options,
 			std::cout << "written in " << buffer.str() << std::endl;
 			XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
 		}
-		std::exit(0);
 	}
 	/*else if (status) {
 		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
