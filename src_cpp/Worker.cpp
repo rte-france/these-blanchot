@@ -134,3 +134,18 @@ double Worker::get_mip_value()
 void Worker::get_simplex_ite(int & result) {
 	_solver->get_simplex_ite(result);
 }
+
+int Worker::get_ncols()
+{
+	return _solver->get_ncols();
+}
+
+int Worker::get_nrows()
+{
+	return _solver->get_nrows();
+}
+
+void Worker::get_obj(DblVector & obj, int first, int last)
+{
+	_solver->get_obj(obj.data(), first, last);
+}

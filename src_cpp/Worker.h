@@ -33,6 +33,10 @@ public:
 	void get_value(double & lb);
 	void get_simplex_ite(int & result);
 
+	int get_ncols();
+	int get_nrows();
+	void get_obj(DblVector & obj, int first, int last);
+
 	void free();
 public:
 	std::string _path_to_mps;

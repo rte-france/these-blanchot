@@ -98,6 +98,7 @@ void Benders::run(std::ostream & stream) {
 
 		compute_x_cut(_options, _data);
 		build_cut();
+<<<<<<< Updated upstream
 
 		compute_ub(_master, _data, _options);
 		update_in_out_stabilisation(_data);
