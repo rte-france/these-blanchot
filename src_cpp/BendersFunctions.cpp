@@ -298,11 +298,6 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 
-	/*data.invest_cost = data.lb - data.alpha;
-	
-	if (!options.RAND_AGGREGATION) {
-		data.ub = data.invest_cost;
-	}*/
 	data.timer_master = timer_master.elapsed();
 }
 
@@ -415,7 +410,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				data.deletedcut++;
 			}
 			else {
-				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
 				if (options.ACTIVECUTS) {
 					slave_cut_id[itmap.first].push_back(master->get_number_constraint());
 				}
@@ -603,7 +598,13 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 }
 
 void update_in_out_stabilisation(BendersData& data) {
-
+	if (data.ub < data.best_ub) {
+		data.x_stab = data.x_cut;
+		data.stab_value = std::min(1.0, 1.2 * data.stab_value);
+	}
+	else {
+		data.stab_value = std::max(0.1, 0.8 * data.stab_value);
+	}
 }
 
 void compute_ub(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options) {
