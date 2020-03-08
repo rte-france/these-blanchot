@@ -586,4 +586,36 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 	}
 }
 
+void compute_x_cut(BendersOptions const& options, BendersData& data) {
+	// initialisation
+	if (data.it == 1) {
+		data.x_stab = data.x0;
+		data.x_cut = data.x0;
+	}
+	else {
+		for (auto const& kvp : data.x0) {
+			data.x_cut[kvp.first] = data.stab_value * data.x0[kvp.first] +
+				(1 - data.stab_value) * data.x_stab[kvp.first];
+		}
+	}
+
+	data.ub = 0;
+}
+
+void update_in_out_stabilisation(BendersData& data) {
+
+}
+
 void compute_ub(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options) {
+	// Taking the obj function of master prob to compute c.x_cut
+	DblVector obj;
+	int n_cols = master->get_ncols();
+	obj.resize(n_cols, -1);
+	master->get_obj(obj, 0, n_cols - 1);
+
+	int col_id(0);
+	for (auto const& kvp : data.x_cut) {
+		col_id = master->_name_to_id[kvp.first];
+		data.ub += kvp.second * obj[col_id];
+	}
+}
