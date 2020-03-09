@@ -54,6 +54,7 @@ void init_log(std::ostream&stream, int const log_level) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "ALPHA";
 	}
 	stream << std::endl;
 }
@@ -95,6 +96,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << data.deletedcut;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.stab_value;
 	}
 	stream << std::endl;
 
@@ -315,7 +317,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 *
 *  \param options : set of parameters
 */
-int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
+int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData & data) {
 	
 	// Store the status of a non  optimal slave, 0 if all opitmals
 	int slaves_worth_status = 0;
@@ -333,10 +335,17 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
+
+		// Saving the subgrad /!\ to the weights
+		for (auto const& grad : handler->get_subgradient()) {
+			data.subgrad[grad.first] += grad.second;
+		}
+
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
 	}
+
 	return slaves_worth_status;
 }
 
@@ -606,15 +615,44 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 	}
 
 	data.ub = 0;
+	
+	// Reinit the gradient before computing the cuts
+	/*for (auto const& kvp : data.x0) {
+		data.subgrad[kvp.first] = 0.0;
+	}*/
 }
 
-void update_in_out_stabilisation(BendersData& data) {
-	if (data.ub < data.best_ub) {
-		data.x_stab = data.x_cut;
+void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data) {
+	
+	// Taking the obj function of master prob to compute the global subgradient
+	DblVector obj;
+	int n_cols = master->get_ncols();
+	obj.resize(n_cols, -1);
+	master->get_obj(obj, 0, n_cols - 1);
+	
+	int col_id(0);
+	double cos(0);
+	
+	for (auto const& kvp : data.subgrad) {
+		//std::cout << kvp.first << "  " << data.subgrad[kvp.first] << std::endl;
+		col_id = master->_name_to_id[kvp.first];
+		cos += (data.subgrad[kvp.first]/data.nslaves - obj[col_id]) * (data.x0[kvp.first] - data.x_stab[kvp.first]);
+	}
+	std::cout << "ANGLE " << cos << std::endl;
+	if (cos > 0) {
 		data.stab_value = std::min(1.0, 1.2 * data.stab_value);
 	}
-	else {
+	else if (cos < 0) {
 		data.stab_value = std::max(0.1, 0.8 * data.stab_value);
+	}
+	//std::cout << "ALPHA " << data.stab_value << std::endl;
+	
+	if (data.ub < data.best_ub) {
+		data.x_stab = data.x_cut;
+		//data.stab_value = std::min(1.0, 1.2 * data.stab_value);
+	}
+	else {
+		//data.stab_value = std::max(0.1, 0.8 * data.stab_value);
 	}
 }
 

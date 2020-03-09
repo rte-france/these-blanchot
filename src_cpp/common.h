@@ -151,6 +151,9 @@ struct BendersData {
 	// Stability center
 	Point x_stab;
 	double stab_value;
+	
+	// local subgradient to update stab
+	Point subgrad;
 };
 
 double norm_point(Point const & x0, Point const & x1);

@@ -100,7 +100,7 @@ void Benders::run(std::ostream & stream) {
 		build_cut();
 
 		compute_ub(_master, _data, _options);
-		update_in_out_stabilisation(_data);
+		update_in_out_stabilisation(_master, _data);
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 		_data.timer_master = timer_master.elapsed();
