@@ -595,6 +595,10 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 	}
 
+	for (auto const& kvp : data.x0) {
+		//std::cout << kvp.first << "  " << kvp.second << "   " << data.x_stab[kvp.first] << "   " << data.x_cut[kvp.first] << std::endl;
+	}
+
 	data.ub = 0;
 }
 
