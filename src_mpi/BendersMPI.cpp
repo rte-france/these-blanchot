@@ -131,7 +131,9 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
 		}
 	}
-	broadcast(world, _data.x0, 0);
+	// ??
+	compute_x_cut(_options, _data);
+	broadcast(world, _data.x_cut, 0);
 	if (_options.RAND_AGGREGATION) {
 		std::random_shuffle(_slaves.begin(), _slaves.end());
 	}
@@ -235,6 +237,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		update_random_option(env, world, _options, _data);
 		++_data.it;
 		_data.deletedcut = 0;
+
 		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
 
@@ -242,7 +245,9 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		step_2(env, world);
 
 		if (world.rank() == 0) {
-			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+			compute_ub(_master, _data, _options);
+			update_in_out_stabilisation(_data);
+			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x_cut);
 			_data.timer_master = timer_master.elapsed();
 			print_log(stream, _data, _options.LOG_LEVEL);
 			_data.stop = stopping_criterion(_data,_options);
