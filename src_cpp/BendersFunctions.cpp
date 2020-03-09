@@ -584,19 +584,25 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 
 void compute_x_cut(BendersOptions const& options, BendersData& data) {
 	// initialisation
-	if (data.it == 1) {
+	
+	if (options.ALGORITHM == "BASE") {
 		data.x_stab = data.x0;
 		data.x_cut = data.x0;
 	}
-	else {
-		for (auto const& kvp : data.x0) {
-			data.x_cut[kvp.first] = data.stab_value * data.x0[kvp.first] +
-				(1 - data.stab_value) * data.x_stab[kvp.first];
+	else if (options.ALGORITHM == "IN-OUT") {
+		if (data.it == 1) {
+			data.x_stab = data.x0;
+			data.x_cut = data.x0;
+		} else {
+			for (auto const& kvp : data.x0) {
+				data.x_cut[kvp.first] = data.stab_value * data.x0[kvp.first] +
+					(1 - data.stab_value) * data.x_stab[kvp.first];
+			}
 		}
 	}
-
-	for (auto const& kvp : data.x0) {
-		//std::cout << kvp.first << "  " << kvp.second << "   " << data.x_stab[kvp.first] << "   " << data.x_cut[kvp.first] << std::endl;
+	else {
+		std::cout << "ALGORITHME NON RECONNU" << std::endl;
+		std::exit(0);
 	}
 
 	data.ub = 0;

@@ -55,3 +55,6 @@ BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
 //Bool to say if non optimal problem should be written in a file before exit
 BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
 
+// Algorithm used to solve the problem (BASE, IN-OUT)
+BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "IN-OUT")
+
