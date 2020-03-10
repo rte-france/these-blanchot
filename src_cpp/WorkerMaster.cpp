@@ -229,7 +229,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	_id_alpha = 0;
 	auto const it(_name_to_id.find(alpha));
 	if (it == _name_to_id.end()) {
-		double lb(-1e10); /*!< Lower Bound */
+		double lb(options.THETA_LB); /*!< Lower Bound */
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
 		double zero(0);
