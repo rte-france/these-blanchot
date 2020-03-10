@@ -336,11 +336,6 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
 
-		// Saving the subgrad /!\ to the weights
-		for (auto const& grad : handler->get_subgradient()) {
-			data.subgrad[grad.first] += grad.second;
-		}
-
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
@@ -623,36 +618,12 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 }
 
 void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data) {
-	
-	// Taking the obj function of master prob to compute the global subgradient
-	DblVector obj;
-	int n_cols = master->get_ncols();
-	obj.resize(n_cols, -1);
-	master->get_obj(obj, 0, n_cols - 1);
-	
-	int col_id(0);
-	double cos(0);
-	
-	for (auto const& kvp : data.subgrad) {
-		//std::cout << kvp.first << "  " << data.subgrad[kvp.first] << std::endl;
-		col_id = master->_name_to_id[kvp.first];
-		cos += (data.subgrad[kvp.first]/data.nslaves - obj[col_id]) * (data.x0[kvp.first] - data.x_stab[kvp.first]);
-	}
-	std::cout << "ANGLE " << cos << std::endl;
-	if (cos > 0) {
-		data.stab_value = std::min(1.0, 1.2 * data.stab_value);
-	}
-	else if (cos < 0) {
-		data.stab_value = std::max(0.1, 0.8 * data.stab_value);
-	}
-	//std::cout << "ALPHA " << data.stab_value << std::endl;
-	
 	if (data.ub < data.best_ub) {
 		data.x_stab = data.x_cut;
-		//data.stab_value = std::min(1.0, 1.2 * data.stab_value);
+		data.stab_value = std::min(1.0, 1.2 * data.stab_value);
 	}
 	else {
-		//data.stab_value = std::max(0.1, 0.8 * data.stab_value);
+		data.stab_value = std::max(0.1, 0.8 * data.stab_value);
 	}
 }
 
