@@ -158,7 +158,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		gather(world, slave_cut_package, all_package, 0);
 		_data.timer_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
-		build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+		build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
 	}
 	else {
 		if (_options.RAND_AGGREGATION) {
@@ -170,27 +170,6 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		gather(world, slave_cut_package, 0);
 	}
 	broadcast(world, _options.RAND_AGGREGATION, 0);	
-	world.barrier();
-}
-
-/*!
-*  \brief Gather, store and sort all slaves basis in a set
-*
-*  \param env : environment variable for mpi communication
-*
-*  \param world : communicator variable for mpi communication
-*/
-void BendersMpi::step_3(mpi::environment & env, mpi::communicator & world) {
-	SimplexBasisPackage slave_basis_package;
-	if (world.rank() == 0) {
-		AllBasisPackage all_basis_package;
-		gather(world, slave_basis_package, all_basis_package, 0);
-		all_basis_package.erase(all_basis_package.begin());
-	}
-	else {
-		get_slave_basis(slave_basis_package, _map_slaves);
-		gather(world, slave_basis_package, 0);
-	}
 	world.barrier();
 }
 

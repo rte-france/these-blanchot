@@ -51,6 +51,11 @@ typedef std::vector<ActiveCut> ActiveCutStorage;
 typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
 
+
+/*!
+* \class Predicate
+* \brief TO DO
+*/
 struct Predicate {
 	bool operator()(PointPtr const & lhs, PointPtr const & rhs)const {
 		return *lhs < *rhs;
@@ -120,37 +125,33 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 * \brief Structure used to manage every benders data
 */
 struct BendersData {
-	int nbasis;
-	double timer_slaves;
-	double timer_master;
-	double lb;
-	double ub;
-	double best_ub;
-	int maxsimplexiter;
-	int minsimplexiter;
-	int deletedcut;
-	int it;
-	bool stop;
-	double alpha;
-	std::vector<double> alpha_i;
-	double slave_cost;
-	double invest_cost;
-	Point bestx;
-	Point x0;
-	int nslaves;
-	double dnslaves;
-	int nrandom;
+	double timer_slaves;			/*!< Time spent in the slave resolution at each iteration */
+	double timer_master;			/*!< Time spent in the master resolution at each iteration */
+	double lb;						/*!< Lower bound of Benders resolution */
+	double ub;						/*!< Upper bound computed at the current iteration */
+	double best_ub;					/*!< Best upper bound found */
+	int maxsimplexiter;				/*!< Number max of simplex iterations observed in the slave resolutions */
+	int minsimplexiter;				/*!< Number min of simplex iterations observed in the slave resolutions */
+	int deletedcut;					/*!< Number of cuts not added at this iteration because they already exixst in Benders */
+	int it;							/*!< Iteration of the algorithm */
+	bool stop;						/*!< True if one of the stopping criterion is observed */
+	double alpha;					/*!< Value of the weighted sum of the epigraph variables of the subproblems */
+	std::vector<double> alpha_i;	/*!< Vector of the value of the epigrpah variables of the subproblems */
+	double slave_cost;				/*!< Second stage cost at this iteration */
+	double invest_cost;				/*!< First stage cost at this iteration */
+	Point bestx;					/*!< Best point observed (lowest upper bound) */
+	Point x0;						/*!< Current solution of master problem */
+	int nslaves;					/*!< Number of subproblems */
+	int nrandom;					/*!< Number of slaves problems to sample randomly at one iteration if needed */
 
-	int master_status;
-	int slave_status;
-	int global_prb_status;
+	int master_status;				/*!< Solver status after master resolution */
+	int slave_status;				/*!< Worst solver status after resolution of the subproblems */
+	int global_prb_status;			/*!< Status of the entire problem after resolution of master and subproblems */
 
 	// Stabilisation in-out
-	// Point in which we derive the cut
-	Point x_cut;
-	// Stability center
-	Point x_stab;
-	double stab_value;
+	Point x_cut;					/*!< Point in which a cut is computed */
+	Point x_stab;					/*!< Stability center used in in-out stabilisation */
+	double stab_value;				/*!< Value of the stabilisation (between 0 and 1) */
 
 };
 

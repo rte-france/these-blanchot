@@ -5,17 +5,19 @@
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
 
-//void declare_solver(SolverAbstract::Ptr& solv, BendersOptions& options);
-
 class WorkerMerge;
 typedef std::shared_ptr<WorkerMerge> WorkerMergePtr;
 
+/*!
+* \class WorkerMerge
+* \brief Class daughter of Worker used in merge_mps to set up and solve the deterministic reformulation
+*/
 class WorkerMerge : public Worker {
 public:
-	Str2Int _decalage;
-	int _ncols;
-	int _nslaves;
-	CouplingMap _x_mps_id;
+	Str2Int _decalage;		/*!< number of existing columns in the full problem to add the new ones at the end */
+	int _ncols;				/*!< Number total of column in the full problem */
+	int _nslaves;			/*!< Number of subproblems */
+	CouplingMap _x_mps_id;	/*!< id of first stage variable in each mps file */
 
 public:
 	WorkerMerge(BendersOptions const& options);
@@ -41,6 +43,11 @@ public:
 	void set_threads(int n_threads);
 };
 
+
+/*!
+* \class StandardLp
+* \brief Class used to set a subproblem and add it in the full problem
+*/
 class StandardLp {
 private:
 	// to be used in boost serialization for mpi transfer

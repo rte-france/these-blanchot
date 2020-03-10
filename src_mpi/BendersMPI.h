@@ -32,14 +32,12 @@ public:
 	AllCutStorage _all_cuts_storage;
 	DynamicAggregateCuts _dynamic_aggregate_cuts;
 
-	SimplexBasisStorage _basis;
 	SlaveCutId _slave_cut_id;
 	ActiveCutStorage _active_cuts;
 
 	void free(mpi::environment & env, mpi::communicator & world);
 	void step_1(mpi::environment & env, mpi::communicator & world);
 	void step_2(mpi::environment & env, mpi::communicator & world);
-	void step_3(mpi::environment & env, mpi::communicator & world);
 	void update_random_option(mpi::environment & env, mpi::communicator & world, BendersOptions const & options, BendersData & data);
 	void run(mpi::environment & env, mpi::communicator & world, std::ostream & stream);
 

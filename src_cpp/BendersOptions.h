@@ -2,6 +2,10 @@
 
 #include "common.h"
 
+/*!
+* \class BendersOptions
+* \brief Class containing the options
+*/
 class BendersOptions {
 public:
 

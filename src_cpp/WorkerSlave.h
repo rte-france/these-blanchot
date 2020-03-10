@@ -2,7 +2,6 @@
 
 #include "Worker.h"
 #include "SlaveCut.h"
-#include "SimplexBasis.h"
 
 
 /*! 
@@ -28,8 +27,6 @@ public:
 
 	void fix_to(Point const & x0);
 	void get_subgradient(Point & s);
-
-	SimplexBasis get_basis();
 
 };
 

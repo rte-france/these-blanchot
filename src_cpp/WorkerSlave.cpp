@@ -92,23 +92,3 @@ void WorkerSlave::get_subgradient(Point & s) {
 
 }
 
-/*!
-*  \brief Get simplex basis of a problem
-*
-*  Method to store simplex basis of a problem, and build the distance matrix
-*/
-SimplexBasis WorkerSlave::get_basis() {
-	int ncols;
-	int nrows;
-	IntVector cstatus;
-	IntVector rstatus;
-
-	nrows = _solver->get_nrows();
-	ncols = _solver->get_ncols();
-
-	cstatus.resize(ncols);
-	rstatus.resize(nrows);
-	_solver->get_basis(rstatus.data(), cstatus.data());
-	return std::make_pair(rstatus, cstatus);
-}
-

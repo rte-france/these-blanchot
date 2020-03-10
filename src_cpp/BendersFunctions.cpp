@@ -8,7 +8,6 @@
 */
 void init(BendersData & data) {
 	std::srand(time(NULL));
-	data.nbasis = 0;
 	data.lb = -1e20;
 	data.ub = +1e20;
 	data.best_ub = +1e20;
@@ -532,7 +531,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 *
 *  \param data : set of benders data
 */
-void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
+void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions & options) {
 	check_status(all_package, data);
 	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
@@ -542,22 +541,6 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 	}
 	else if (options.RAND_AGGREGATION) {
 		add_random_cuts(master, all_package, problem_to_id, options, data);
-	}
-}
-
-/*!
-*  \brief Get all slaves basis from a map
-*
-*  Fonction to get all slaves basis
-*
-*  \param simplex_basis_package : map linking each slave to its current simplex basis
-*
-*  \param map_slaves : map linking each slaves names to their problem
-*/
-void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves) {
-	for (auto & kvp : map_slaves) {
-		WorkerSlavePtr & ptr(kvp.second);
-		simplex_basis_package[kvp.first] = ptr->get_basis();
 	}
 }
 
