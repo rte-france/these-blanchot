@@ -224,7 +224,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		step_2(env, world);
 
 		if (world.rank() == 0) {
-			compute_ub(_master, _data, _options);
+			compute_ub(_master, _data);
 			update_in_out_stabilisation(_master, _data);
 			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x_cut);
 			_data.timer_master = timer_master.elapsed();

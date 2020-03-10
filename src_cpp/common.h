@@ -60,6 +60,7 @@ struct Predicate {
 	bool operator()(PointPtr const & lhs, PointPtr const & rhs)const {
 		return *lhs < *rhs;
 	}
+
 	bool operator()(Point const & lhs, Point const & rhs)const {
 		Point::const_iterator it1(lhs.begin());
 		Point::const_iterator it2(rhs.begin());

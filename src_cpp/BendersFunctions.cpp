@@ -137,6 +137,8 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 * \param point : point to print
 *
 * \param filter_non_zero : either if zeros coordinates need to be printed or not
+*
+* \param status : status returned after optimization (0 if optimal)
 */
 void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero, int status) {
 	if (status == OPTIMAL) {
@@ -263,6 +265,8 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 *  \brief Check if every slave has been solved to optimality
 *
 *  \param all_package : storage of each slaves status
+*
+*  \param data : status of resolution of master and subproblems
 */
 void check_status(AllCutPackage const & all_package, BendersData & data) {
 	if (data.master_status != OPTIMAL) {
@@ -289,6 +293,8 @@ void check_status(AllCutPackage const & all_package, BendersData & data) {
 *  \param master : pointer to the master problem
 *
 *  \param data : benders data to update with master optimal solution
+*
+*  \param options : option to say if a non optimal problem has to be written before exiting
 */
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	Timer timer_master;
@@ -391,8 +397,6 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 *
 *  \param problem_to_id : map linking each problem to its id
 *
-*  \param trace : vector keeping data for each iteration
-*
 *  \param all_cuts_storage : set to store every new cut
 *
 *  \param slave_cut_id : map linking each cut to its id in the master problem
@@ -437,8 +441,6 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 *
 *  \param problem_to_id : map linking each problem to its id
 *
-*  \param trace : vector keeping data for each iteration
-*
 *  \param all_cuts_storage : set to store every new cut
 *
 *  \param data : Benders data
@@ -481,8 +483,6 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 *
 *  \param problem_to_id : map linking each problem to its id
 *
-*  \param trace : vector keeping data for each iteration
-*
 *  \param options : set of benders options
 *
 *  \param data : set of benders data
@@ -519,13 +519,9 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 *
 *  \param problem_to_id : map linking each problem to its id
 *
-*  \param trace : vector keeping data for each iteration
-*
 *  \param slave_cut_id : map linking each slaves to their cuts ids in the master problem
 *
 *  \param all_cuts_storage : set to store every new cut
-*
-*  \param dynamic_aggregate_cuts : vector of tuple storing cut information (rhs, x0, subgradient)
 *
 *  \param options : set of benders options
 *
@@ -563,14 +559,18 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 	for (auto & kvp : cut_id) {
 		for (int i(0); i < kvp.second.size(); i++) {
 			active_cuts.push_back(std::make_tuple(it, kvp.first, i + 1, (dual[kvp.first[i]] != 0)));
-			//	}
-			//}
 		}
 	}
 }
 
+/*!
+*  \brief Compute the point in which the subproblems will be solveds
+*
+*  \param options : algorithm saying in which way the separation point is computed
+*
+*  \param data : data of Benders resolution
+*/
 void compute_x_cut(BendersOptions const& options, BendersData& data) {
-	// initialisation
 	
 	if (options.ALGORITHM == "BASE") {
 		data.x_stab = data.x0;
@@ -593,13 +593,17 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 	}
 
 	data.ub = 0;
-	
-	// Reinit the gradient before computing the cuts
-	/*for (auto const& kvp : data.x0) {
-		data.subgrad[kvp.first] = 0.0;
-	}*/
 }
 
+/*!
+*  \brief Update in-out stabilization center and value
+*
+*  Change the stability center if the new point is better than the previous, and change the stabilization value
+*
+*  \param master : pointer to master problem
+*
+*  \param data : data of the Benders resolution
+*/
 void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data) {
 	if (data.ub < data.best_ub) {
 		data.x_stab = data.x_cut;
@@ -610,7 +614,16 @@ void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data) {
 	}
 }
 
-void compute_ub(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options) {
+/*!
+*  \brief Compute the value of the separation point
+*
+*  Computethe actual value of the separation point by taking the sum of the valu of all the subproblem and adding the first stage variables value
+*
+*  \param master : pointer to master problem
+*
+*  \param data : data of Benders
+*/
+void compute_ub(WorkerMasterPtr& master, BendersData& data) {
 	// Taking the obj function of master prob to compute c.x_cut
 	DblVector obj;
 	int n_cols = master->get_ncols();

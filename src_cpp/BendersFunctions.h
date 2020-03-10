@@ -38,4 +38,4 @@ void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts
 // in-out stabilisation
 void compute_x_cut(BendersOptions const& options, BendersData& data);
 void update_in_out_stabilisation(WorkerMasterPtr & _master, BendersData& data);
-void compute_ub(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options);
+void compute_ub(WorkerMasterPtr& master, BendersData& data);

@@ -12,8 +12,8 @@ typedef std::shared_ptr<WorkerMaster> WorkerMasterPtr;
 
 class WorkerMaster : public Worker {
 public:
-	int _id_alpha;
-	std::vector<int> _id_alpha_i;
+	int _id_alpha;					/*!< Column id of the global epigraph variable alpha (weighted sum of the subproblems epigraph variables ) */
+	std::vector<int> _id_alpha_i;	/*!< Column id of each subproblem epigraph variable */
 
 public:
 	WorkerMaster();

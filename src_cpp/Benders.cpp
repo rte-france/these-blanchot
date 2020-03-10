@@ -99,7 +99,7 @@ void Benders::run(std::ostream & stream) {
 		compute_x_cut(_options, _data);
 		build_cut();
 
-		compute_ub(_master, _data, _options);
+		compute_ub(_master, _data);
 		update_in_out_stabilisation(_master, _data);
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 

@@ -11,9 +11,9 @@ void XPRS_CC optimizermsg(XPRSprob prob, void* stream, const char* sMsg, int nLe
 * \brief Class for XPRESS problems and methods 
 */
 class SolverXPRESS : public SolverAbstract {
-	static int _NumberOfProblems;
+	static int _NumberOfProblems;	/*!< Counter of the total number of XPRESS problems declared to set or end the environment */
 public:
-	XPRSprob _xprs;
+	XPRSprob _xprs;					/*!< Problem in XPRESS */
 
 public:
 	SolverXPRESS();

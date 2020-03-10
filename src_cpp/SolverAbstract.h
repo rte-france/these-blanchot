@@ -30,9 +30,9 @@ public :
 	};
 
 public:
-	std::string _name;
-	typedef std::shared_ptr<SolverAbstract> Ptr;
-	std::list<std::ostream*> _stream;
+	std::string _name;								/*!< Name of the problem */
+	typedef std::shared_ptr<SolverAbstract> Ptr;	/*!< Ptr to the solver */
+	std::list<std::ostream*> _stream;				/*!< List of streams to print the output (default std::cout) */
 public:
 	SolverAbstract() {};
 	virtual ~SolverAbstract() {};

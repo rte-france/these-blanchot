@@ -16,12 +16,11 @@ typedef std::shared_ptr<Worker> WorkerPtr;
 *
 *  This class opens and sets a problem from a mps and a mapping variable map
 */
-
 class Worker
 {
 public:
-	bool _is_master;
-	SolverAbstract::Ptr _solver;
+	bool _is_master;				/*!< Bool set to true only for the master problem */
+	SolverAbstract::Ptr _solver;	/*!< Ptr to the solver object */
 
 public:
 	Worker();
@@ -39,9 +38,9 @@ public:
 
 	void free();
 public:
-	std::string _path_to_mps;
-	Str2Int _name_to_id; /*!< Link between the variable name and its identifier */
-	Int2Str _id_to_name; /*!< Link between the identifier of a variable and its name*/
+	std::string _path_to_mps;	/*!< Path to find .MPS file of the problem data */
+	Str2Int _name_to_id;		/*!< Link between the variable name and its identifier */
+	Int2Str _id_to_name;		/*!< Link between the identifier of a variable and its name*/
 	
 public:
 

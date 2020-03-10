@@ -1,27 +1,12 @@
 #include "merge_mps_functions.h"
 
-/*void declare_solver(SolverAbstract::Ptr& solv, BendersOptions& options) {
-	if (options.SOLVER == "") {
-		std::cout << "SOLVER NON RECONU" << std::endl;
-		std::exit(0);
-	}
-	#ifdef CPLEX
-	else if (options.SOLVER == "CPLEX") {
-		solv = std::make_shared< SolverCPLEX>();
-	}
-	#endif
-	#ifdef XPRESS
-	else if (options.SOLVER == "XPRESS") {
-		solv = std::make_shared< SolverXPRESS>();
-	}
-	#endif
-	else {
-		std::cout << "SOLVER NON RECONU" << std::endl;
-		std::exit(0);
-	}
-}
+/*!
+*  \brief Creator of a Worker problem without any data
+*
+*  Creator of a Worker problem without any data
+*
+*  \param options : solver to set
 */
-
 WorkerMerge::WorkerMerge(BendersOptions const& options)
 {
 	// Initialisation du solver adapte
@@ -35,6 +20,17 @@ WorkerMerge::WorkerMerge(BendersOptions const& options)
 	_nslaves	= 0;
 }
 
+/*!
+*  \brief Creator of an empty Worker problem to fill it with all the .MPS problems 
+*
+*  Creator of an empty Worker problem to fill it with all the .MPS problems 
+*
+*  \param options : solver to set
+*
+*  \param input : total number of problems
+*
+*  \param name : Name of the Worker problem
+*/
 WorkerMerge::WorkerMerge(BendersOptions const& options, CouplingMap const& input, std::string const& name)
 {
 	// Initialisation du solver adapte
@@ -59,22 +55,47 @@ WorkerMerge::~WorkerMerge()
 {
 }
 
+/*!
+*  \brief Calling the free method of the solver
+*/
 void WorkerMerge::free()
 {
 	_solver->free();
 }
 
+/*!
+*  \brief Reading a problem
+*
+*  Creator of an empty Worker problem to fill it with all the .MPS problems
+*
+*  \param problem_name : name of the file to read
+*
+*  \param flags : extension of the file to read
+*/
 void WorkerMerge::read(std::string const& problem_name, std::string const& flags)
 {
 	_solver->init(problem_name.c_str());
 	_solver->read_prob(problem_name.c_str(), flags.c_str());
 }
 
+/*!
+*  \brief Writing a problem
+*
+*  \param name : name of the file to write
+*
+*  \param flags : extension of the file to write
+*/
 void WorkerMerge::write_prob(std::string const& name, std::string const& flags)
 {
 	_solver->write_prob(name.c_str(), flags.c_str());
 }
 
+
+/*!
+*  \brief Saving the id of the replication of a first-stage variable in the full problem to set up linking constraints
+*
+*  \param first_stage_var : pair<Problem_name, <var_name, Column ID> >
+*/
 void WorkerMerge::fill_mps_id(std::pair<std::string, Str2Int> first_stage_var)
 {
 	for (auto const& x : first_stage_var.second) {
@@ -82,6 +103,13 @@ void WorkerMerge::fill_mps_id(std::pair<std::string, Str2Int> first_stage_var)
 	}
 }
 
+/*!
+*  \brief Reading all the problems in input and merging them in the current problem
+*
+*  \param input : input of all the problems file to merge
+*
+*  \param options :path to the files
+*/
 void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const& options) {
 
 	for (auto const& kvp : input) {
@@ -110,11 +138,32 @@ void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const&
 	add_coupling_constraints();
 }
 
+/*!
+*  \brief Getter of the objective vector of the problem between columns index first and last
+*
+*  \param obj : the vector to fill
+*
+*  \param first : first index
+*
+*  \param last : last index
+*/
 void WorkerMerge::get_obj(DblVector& obj, int first, int last)
 {
 	_solver->get_obj(obj.data(), first, last);
 }
 
+
+/*!
+*  \brief Getter of the solution vector and value
+*
+*  \param x0 : optimal point
+*
+*  \param val : optial value
+*
+*  \param input : first stage variables
+*
+*  \param options : options
+*/
 void WorkerMerge::get_optimal_point_and_value(Point& x0, double& val, CouplingMap & input, BendersOptions const& options) {
 	DblVector ptr(get_ncols(), 0);
 	get_MIP_sol(ptr.data(), NULL);
@@ -126,6 +175,13 @@ void WorkerMerge::get_optimal_point_and_value(Point& x0, double& val, CouplingMa
 	val = get_mip_value();
 }
 
+/*!
+*  \brief Multiply the objective vector of the problem by the weight value of the subproblem
+*
+*  \param options : options
+*
+*  \param weight : weight factor of the problem in the final objective
+*/
 void WorkerMerge::chg_obj(BendersOptions const& options, double weight)
 {
 	int mps_ncols = get_ncols();
@@ -144,11 +200,19 @@ void WorkerMerge::chg_obj(BendersOptions const& options, double weight)
 	_solver->chg_obj(mps_ncols, sequence.data(), obj.data());
 }
 
+/*!
+*  \brief Set the ID of the first column of the problem prb in the final problem
+*
+*  \param prb : problem name
+*/
 void WorkerMerge::set_decalage(std::string const& prb)
 {
 	_decalage[prb] = get_ncols();
 }
 
+/*!
+*  \brief Add the couling constraints to link the first stage variables from all the problems in the final problem
+*/
 void WorkerMerge::add_coupling_constraints()
 {
 	IntVector mstart;
@@ -199,11 +263,19 @@ void WorkerMerge::add_coupling_constraints()
 	_solver->add_rows(nrows, neles, sense.data(), rhs.data(), NULL, mstart.data(), cindex.data(), values.data());
 }
 
+/*!
+*  \brief return the number of columns of the problem
+*/
 int WorkerMerge::get_ncols()
 {
 	return _solver->get_ncols();
 }
 
+/*!
+*  \brief Set the number of threads to solve the problem
+*
+*  \param n_threads : max number of threads
+*/
 void WorkerMerge::set_threads(int n_threads)
 {
 	_solver->set_threads(n_threads);
