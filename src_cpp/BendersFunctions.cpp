@@ -26,6 +26,8 @@ void init(BendersData & data) {
 
 	// in-out stab
 	data.stab_value = 0.5;
+	
+	data.total_time.restart();
 }
 
 /*!
@@ -229,7 +231,8 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 	return(
 		((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || 
 		(data.lb + options.GAP >= data.best_ub) ||
-		(data.global_prb_status != 0)
+		(data.global_prb_status != 0) ||
+		(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT)
 		);
 }
 

@@ -154,6 +154,8 @@ struct BendersData {
 	Point x_stab;					/*!< Stability center used in in-out stabilisation */
 	double stab_value;				/*!< Value of the stabilisation (between 0 and 1) */
 
+	Timer total_time;				/*!< Total time elapsed */
+
 };
 
 double norm_point(Point const & x0, Point const & x1);

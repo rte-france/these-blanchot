@@ -55,3 +55,9 @@ BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
 // Algorithm used to solve the problem (BASE, IN-OUT)
 BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "IN-OUT")
 
+// Time limit
+BENDERS_OPTIONS_MACRO(TIME_LIMIT, double, -1)
+
+// LB set on epigraph variables
+BENDERS_OPTIONS_MACRO(THETA_LB, double, -1e10)
+

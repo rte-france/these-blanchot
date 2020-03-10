@@ -68,8 +68,10 @@ A problem has to be created as a folder with :
 	RAND_AGGREGATION 	int 		DEFAULT 0 				Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 	XPRESS_TRACE 		int 		DEFAULT 0 				Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise
 
-	GAP					float		DEFAULT 1e-6 			Optimiality gap of Benders 
-	SLAVE_WEIGHT_VALUE  float 		DEFAULT 1				If SLAVE_WEIGHT is CONSTANT, set here the divisor required 
+	GAP					double		DEFAULT 1e-6 			Optimiality gap of Benders 
+	SLAVE_WEIGHT_VALUE  double 		DEFAULT 1				If SLAVE_WEIGHT is CONSTANT, set here the divisor required 
+	TIME_LIMIT			double		DEFAULT -1 				Time limit to run Benders ( It will finish the current iteration before stopping )
+	THETA_LB 			double 		DEFAULT -1e10 			Lower bound set on epigraph variables (can change dramatically convergence rate)
 
 	AGGREGATION 		bool 		DEFAULT false 			Use classic (TRUE) or Multicut (FALSE) Benders 					
 	DELETE_CUT			bool 		DEFAULT false 			Check if a cut already exist to add only new cuts
@@ -86,10 +88,10 @@ A problem has to be created as a folder with :
 	ALGORITHM 			string 		DEFAULT IN-OUT 			Algorithm to solve Benders Decomposition (BASE, IN-OUT)
 
 
-Utilistion
+Utilisation
 ================================================
 
-The solver can be launch from a terminal. It has to be launch from the folder set by the option INPUTROOT 
+The solver can be launch from a terminal. It has to be launch from the folder so that ./INPUTROOT/MASTER_NAME.mps exists
 4 cases of possibles :
 
 1. Windows
