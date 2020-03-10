@@ -4,6 +4,9 @@
 #ifdef XPRESS
 #include "SolverXPRESS.h"
 #endif
+#ifdef CPLEX
+#include "SolverCPLEX.h"
+#endif
 
 
 

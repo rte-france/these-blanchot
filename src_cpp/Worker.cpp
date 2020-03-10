@@ -25,7 +25,7 @@ void Worker::declare_solver(std::string const & solver_name)
 	}
 #ifdef CPLEX
 	else if (solver_name == "CPLEX") {
-		_solver = std::make_shared< SolverCPLEX>();
+		_solver = std::make_shared< SolverCPLEX>(_path_to_mps);
 	}
 #endif
 #ifdef XPRESS

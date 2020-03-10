@@ -13,10 +13,10 @@ class SolverCPLEX : public SolverAbstract {
 public:
 	CPXENVptr _env;				/*!< Ptr to the CPLEX environment */
 	CPXLPptr _prb;				/*!< Ptr to the CPLEX problem */
-	StrVector CPLEX_LP_STATUS;	/*!< CPLEX lp status */
+	//StrVector CPLEX_LP_STATUS;	/*!< CPLEX lp status */
 
 public:
-	SolverCPLEX();
+	SolverCPLEX(std::string const& name);
 	virtual ~SolverCPLEX();
 
 // General methods

@@ -25,38 +25,36 @@ StrVector XPRS_MIP_STATUS = {
 };
 
 
-int SolverCPLEX::_NumberOfProblems = 0;
-SolverCPLEX::SolverCPLEX() {
-	if (_NumberOfProblems == 0) {
-		XPRSinit("");
-	}
-	_NumberOfProblems += 1;
-	_xprs = NULL;
-	XPRScreateprob(&_xprs);
+//int SolverCPLEX::_NumberOfProblems = 0;
+SolverCPLEX::SolverCPLEX(std::string const& name) {
+	int status(0);
+	_env = CPXopenCPLEX(&status);
+	_prb = CPXcreateprob(_env, &status, name.c_str());
 }
 
 SolverCPLEX::~SolverCPLEX() {
-	_NumberOfProblems -= 1;
-	if (_NumberOfProblems == 0) {
-		XPRSfree();
-	}
+	CPXfreeprob(_env, &_prb);
+	int status = CPXcloseCPLEX(&_env);
+	std::cout << "CLOSE STATUS = " << status << std::endl;
 }
 
 void SolverCPLEX::init(std::string const& path_to_mps) {
-	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
-	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
-	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
+	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
+	CPXsetintparam(_env, CPXPARAM_Threads, 1);
+	// Not coded in CPLEX
+	//XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
 }
 
 void SolverCPLEX::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
 {
-	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
-	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
-	XPRSloadlp(_xprs, probname, ncol, nrow, qrtype, rhs, range, obj, mstart, mnel, mrwind, dmatval, dlb, dub);
+	CPXsetintparam(_env, CPXPARAM_Threads, 1);
+	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
+	//XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
+	//XPRSloadlp(_xprs, probname, ncol, nrow, qrtype, rhs, range, obj, mstart, mnel, mrwind, dmatval, dlb, dub);
 }
 
 void SolverCPLEX::write_prob(const char* name, const char* flags) const {
-	XPRSwriteprob(_xprs, name, flags);
+	CPXwriteprob(_env, _prb, name, flags);
 }
 
 void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
@@ -278,10 +276,10 @@ void SolverCPLEX::get_MIP_sol(double* primals, double* duals) {
 
 void SolverCPLEX::set_output_log_level(int loglevel) {
 	if (loglevel == 1 || loglevel == 3) {
-		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
+		CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
 	}
 	else {
-		XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
+		CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_OFF);
 	}
 }
 
@@ -300,5 +298,5 @@ void SolverCPLEX::set_algorithm(std::string const& algo) {
 
 void SolverCPLEX::set_threads(int n_threads)
 {
-	XPRSsetintcontrol(_xprs, XPRS_THREADS, n_threads);
+	CPXsetintparam(_env, CPXPARAM_Threads, n_threads);
 }
