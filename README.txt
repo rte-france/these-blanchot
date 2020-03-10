@@ -64,26 +64,34 @@ A problem has to be created as a folder with :
 
     LOG_LEVEL           int         DEFAULT 3               level of detail of log output (from 1 to 3) 					
     MAX_ITERATIONS      int         DEFAULT -1              Number of iterations limit of Benders (-1 : no limit)	
-    SLAVE_NUMBER        int         DEFAULT -1              Number of slaves to use to solve the problem (-1 for all slaves present in the structure file)
-    RAND_AGGREGATION    int         DEFAULT 0               Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
-    XPRESS_TRACE        int         DEFAULT 0               Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise
+    SLAVE_NUMBER        int         DEFAULT -1              Number of slaves to use to solve the problem 
+                                                            (-1 for all slaves present in the structure file)
+    RAND_AGGREGATION    int         DEFAULT 0               Number of slaves to select for random aggregation, 
+                                                            set to 0 if no random aggregation needed
+    XPRESS_TRACE        int         DEFAULT 0               Set to 1 if Xpress output is wanted for the master, 
+                                                            2 for slaves, 3 for both, 0 otherwise
 
     GAP                 double      DEFAULT 1e-6            Optimiality gap of Benders 
     SLAVE_WEIGHT_VALUE  double      DEFAULT 1               If SLAVE_WEIGHT is CONSTANT, set here the divisor required 
-    TIME_LIMIT          double      DEFAULT -1              Time limit to run Benders ( It will finish the current iteration before stopping )
-    THETA_LB            double      DEFAULT -1e10           Lower bound set on epigraph variables (can change dramatically convergence rate)
+    TIME_LIMIT          double      DEFAULT -1              Time limit to run Benders 
+                                                            It will finish the current iteration before stopping
+    THETA_LB            double      DEFAULT -1e10           Lower bound set on epigraph variables 
+                                                            Can change dramatically convergence rate
 
     AGGREGATION         bool        DEFAULT false           Use classic (TRUE) or Multicut (FALSE) Benders 					
     DELETE_CUT          bool        DEFAULT false           Check if a cut already exist to add only new cuts
     ACTIVECUTS          bool        DEFAULT false           True if a statement of active cuts need to be done, false otherwise
-    WRITE_ERRORED_PROB  bool        DEFAULT true            Bool to say if non optimal problem (infeasible, unbounded, ...) should be written in a file before exit
+    WRITE_ERRORED_PROB  bool        DEFAULT true            Bool to say if non optimal problem (infeasible, unbounded, ...) 
+                                                            should be written in a file before exit
 
     LOG_OUTPUT          string      DEFAULT COMMAND         Name of the file in which to print the log (COMMAND for terminal)
-    SLAVE_WEIGHT        string      DEFAULT CONSTANT        UNIFORM (1/n), CONSTANT (to set in SLAVE_WEIGHT_VALUE), or a txt file linking each slave to its weight 	
+    SLAVE_WEIGHT        string      DEFAULT CONSTANT        UNIFORM (1/n), CONSTANT (to set in SLAVE_WEIGHT_VALUE), 
+                                                            or a txt file linking each slave to its weight 	
     MASTER_NAME         string      DEFAULT master          Name of the master problem file, if different from 'master' 	
     STRUCTURE_FILE      string      DEFAULT structure.txt   Name of the structure file
     INPUTROOT           string      DEFAULT .               Path to the folder where input files are stored 	
-    MASTER_METHOD       string      DEFAULT SIMPLEX         Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER) 
+    MASTER_METHOD       string      DEFAULT SIMPLEX         Method use to solve the master problem 
+                                                            (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER) 
     SOLVER              string      DEFAULT XPRESS          Choice of the solver to use (XPRESS only for now)
     ALGORITHM           string      DEFAULT IN-OUT          Algorithm to solve Benders Decomposition (BASE, IN-OUT)
 
