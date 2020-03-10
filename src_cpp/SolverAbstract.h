@@ -66,6 +66,8 @@ public:
 	virtual void get_lb(double* lb, int fisrt, int last) const = 0;
 	virtual void get_ub(double* ub, int fisrt, int last) const = 0;
 
+	virtual int get_n_integer_vars() const = 0;
+
 	virtual void free() = 0;
 
 // Methods to tranform a problem

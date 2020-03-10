@@ -37,8 +37,15 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
-	}
 
+		if (_master->get_n_integer_vars() > 0) {
+			if (options.ALGORITHM == "IN-OUT") {
+				std::cout << "ERROR : IN-OUT algorithm can not be used with integer problems." << std::endl;
+				std::cout << "Please set alorithm to BASE." << std::endl;
+				std::exit(0);
+			}
+		}
+	}
 }
 
 

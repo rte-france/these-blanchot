@@ -51,6 +51,15 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 				}
 			}
 			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _options, _data.nslaves));
+
+			if (_master->get_n_integer_vars() > 0) {
+				if (_options.ALGORITHM == "IN-OUT") {
+					std::cout << "ERROR : IN-OUT algorithm can not be used with integer problems." << std::endl;
+					std::cout << "Please set alorithm to BASE." << std::endl;
+					std::exit(0);
+				}
+			}
+
 			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
 		}
 		mpi::broadcast(world, _data.nslaves, 0);

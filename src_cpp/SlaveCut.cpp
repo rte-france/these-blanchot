@@ -132,12 +132,9 @@ bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
 SlaveCutTrimmer::SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, Point & x0) : _data_cut(data), _x0(x0) {
 	_const_cut = _data_cut->get_dbl(SLAVE_COST);
 
-	std::cout << "VALUE BEFORE X0 = " << _const_cut << std::endl;
-
 	for (auto const & kvp : _x0) {
 		_const_cut -= get_subgradient().find(kvp.first)->second * kvp.second;
 	}
-	std::cout << "VALUE AFTER X0 = " << _const_cut << std::endl;
 }
 
 /*!

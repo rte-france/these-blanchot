@@ -36,6 +36,8 @@ public:
 	int get_nrows();
 	void get_obj(DblVector & obj, int first, int last);
 
+	int get_n_integer_vars();
+
 	void free();
 public:
 	std::string _path_to_mps;	/*!< Path to find .MPS file of the problem data */

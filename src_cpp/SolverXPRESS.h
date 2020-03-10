@@ -44,6 +44,7 @@ public:
 	virtual void get_lb(double* lb, int fisrt, int last) const;
 	virtual void get_ub(double* ub, int fisrt, int last) const;
 
+	virtual int get_n_integer_vars() const;
 
 	virtual void free();
 

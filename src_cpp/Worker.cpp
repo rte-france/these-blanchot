@@ -192,3 +192,8 @@ void Worker::get_obj(DblVector & obj, int first, int last)
 {
 	_solver->get_obj(obj.data(), first, last);
 }
+
+int Worker::get_n_integer_vars()
+{
+	return _solver->get_n_integer_vars();
+}

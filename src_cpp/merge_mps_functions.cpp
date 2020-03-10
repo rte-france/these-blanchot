@@ -121,7 +121,6 @@ void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const&
 		set_decalage(kvp.first);
 
 		WorkerMerge prob(options);
-		std::cout << problem_name << std::endl;
 		prob.read(problem_name, "");
 
 		if (kvp.first != options.MASTER_NAME) {

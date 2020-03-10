@@ -260,6 +260,13 @@ void SolverXPRESS::get_ub(double* ub, int first, int last) const {
 	XPRSgetub(_xprs, ub, first, last);
 }
 
+int SolverXPRESS::get_n_integer_vars() const
+{
+	int n_int_vars(0);
+	XPRSgetintattrib(_xprs, XPRS_MIPENTS, &n_int_vars);
+	return n_int_vars;
+}
+
 void SolverXPRESS::free() {
 	XPRSdestroyprob(_xprs);
 }
