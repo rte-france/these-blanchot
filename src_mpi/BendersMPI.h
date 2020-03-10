@@ -33,7 +33,6 @@ public:
 	DynamicAggregateCuts _dynamic_aggregate_cuts;
 
 	SlaveCutId _slave_cut_id;
-	ActiveCutStorage _active_cuts;
 
 	void free(mpi::environment & env, mpi::communicator & world);
 	void step_1(mpi::environment & env, mpi::communicator & world);

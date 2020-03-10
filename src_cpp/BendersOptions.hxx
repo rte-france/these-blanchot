@@ -37,9 +37,6 @@ BENDERS_OPTIONS_MACRO(STRUCTURE_FILE, std::string, "structure.txt")
 //Path to the folder where input files are stored 
 BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
 
-//True if a statement of active cuts need to be done, false otherwise 
-BENDERS_OPTIONS_MACRO(ACTIVECUTS, bool, false)
-
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 

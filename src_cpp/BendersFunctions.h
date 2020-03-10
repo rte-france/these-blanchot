@@ -14,7 +14,7 @@ void init_log(std::ostream&stream, int const log_level);
 void print_log(std::ostream&stream, BendersData const & data, int const log_level);
 void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std::string const & name, int const islaves);
 void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero,int status);
-void print_active_cut(ActiveCutStorage const & active_cuts, BendersOptions const & options);
+void print_active_cut(BendersOptions const & options);
 
 
 void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0);
@@ -33,7 +33,7 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersOptions & options, BendersData & data);
 void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions & options);
 
-void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts, SlaveCutId & cut_id, int const it);
+void update_active_cuts(WorkerMasterPtr & master, SlaveCutId & cut_id, int const it);
 
 // in-out stabilisation
 void compute_x_cut(BendersOptions const& options, BendersData& data);

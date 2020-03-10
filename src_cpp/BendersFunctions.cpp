@@ -178,34 +178,6 @@ void print_solution(std::ostream&stream, Point const & point, bool const filter_
 }
 
 /*!
-*  \brief Write in a csv file every active cut at every iteration
-*
-*	Write in a csv file every active cut for every slave for all iterations
-*
-*  \param active_cuts : vector of tuple storing which cut is active or not
-*
-*  \param options : set of parameters
-*/
-void print_active_cut(ActiveCutStorage const & active_cuts, BendersOptions const & options) {
-	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "active_cut_output.csv");
-	std::ofstream file(output, std::ios::out | std::ios::trunc);
-	if (file)
-	{
-		file << "Ite;Slave;CutNumber;IsActive;" << std::endl;
-		for (int i(0); i < active_cuts.size(); i++) {
-			file << std::get<0>(active_cuts[i]) << ";";
-			file << std::get<1>(active_cuts[i]) << ";";
-			file << std::get<2>(active_cuts[i]) << ";";
-			file << std::get<3>(active_cuts[i]) << ";" << std::endl;
-		}
-		file.close();
-	}
-	else {
-		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
-	}
-}
-
-/*!
 *  \brief Update best upper bound and best optimal variables
 *
 *	Function to update best upper bound and best optimal variables regarding the current ones
@@ -419,9 +391,6 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 			}
 			else {
 				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
-				if (options.ACTIVECUTS) {
-					slave_cut_id[itmap.first].push_back(master->get_number_constraint());
-				}
 				all_cuts_storage[itmap.first].insert(cut);
 			}
 
@@ -537,29 +506,6 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 	}
 	else if (options.RAND_AGGREGATION) {
 		add_random_cuts(master, all_package, problem_to_id, options, data);
-	}
-}
-
-/*!
-*  \brief Store all cuts status at each iteration
-*
-*  Fonction to store all cuts status from master problem at each iteration
-*
-*  \param master : pointer to master problem
-*
-*  \param active_cuts : vector of tuple storing each cut status
-*
-*  \param cut_id : map linking each cut from each slave to its id in master problem
-*
-*  \param it : current iteration
-*/
-void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts, SlaveCutId & cut_id, int const it) {
-	DblVector dual;
-	master->get_dual_values(dual);
-	for (auto & kvp : cut_id) {
-		for (int i(0); i < kvp.second.size(); i++) {
-			active_cuts.push_back(std::make_tuple(it, kvp.first, i + 1, (dual[kvp.first[i]] != 0)));
-		}
 	}
 }
 

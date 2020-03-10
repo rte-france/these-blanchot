@@ -31,5 +31,4 @@ public:
 	AllCutStorage _all_cuts_storage; /*!< Storage of cuts */
 
 	SlaveCutId _slave_cut_id; /*!< id of the cuts */
-	ActiveCutStorage _active_cuts; /*!< Active cuts */
 };

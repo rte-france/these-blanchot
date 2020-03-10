@@ -99,9 +99,6 @@ void Benders::run(std::ostream & stream) {
 		Timer timer_master;
 		++_data.it;
 		get_master_value(_master, _data, _options);
-		if (_options.ACTIVECUTS) {
-			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
-		}
 
 		compute_x_cut(_options, _data);
 		build_cut();
@@ -116,8 +113,4 @@ void Benders::run(std::ostream & stream) {
 	}
 	
 	print_solution(stream, _data.bestx, true, _data.global_prb_status);
-
-	if (_options.ACTIVECUTS) {
-		print_active_cut(_active_cuts,_options);
-	}
 }

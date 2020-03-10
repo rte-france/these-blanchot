@@ -136,11 +136,7 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 	if (world.rank() == 0)
 	{
 		get_master_value(_master, _data, _options);
-		if (_options.ACTIVECUTS) {
-			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
-		}
 	}
-	// ??
 	compute_x_cut(_options, _data);
 	broadcast(world, _data.x_cut, 0);
 	if (_options.RAND_AGGREGATION) {
@@ -247,9 +243,5 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 	if (world.rank() == 0) {
 		print_solution(stream, _data.bestx, true, _data.global_prb_status);
-
-		if (_options.ACTIVECUTS) {
-			print_active_cut(_active_cuts, _options);
-		}
 	}
 }
