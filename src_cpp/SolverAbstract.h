@@ -74,12 +74,12 @@ public:
 public:
 	virtual void fix_first_stage(Point const& x0) = 0;
 	virtual void add_cut(Point const& s, Point const& x0, double rhs) = 0;
-	virtual void del_rows(int nrows, const int* mindex) = 0;
+	virtual void del_rows(int first, int last) = 0;
 	virtual void add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
 		const double* range, const int* mstart, const int* mclind, const double* dmatval) = 0;
 	virtual void add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
 		const double* dmatval, const double* bdl, const double* bdu) = 0;
-	virtual void add_names(int type, const char* cnames, int first, int last) = 0;
+	virtual void add_name(int type, const char* cnames, int indice) = 0;
 	virtual void chg_obj(int nels, const int* mindex, const double* obj) = 0;
 	virtual void chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) = 0;
 	virtual void chg_col_type(int nels, const int* mindex, const char* qctype) const = 0;

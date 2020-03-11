@@ -54,12 +54,8 @@ int WorkerMaster::get_number_constraint() {
 *  \param nrows : number of rows to delete
 */
 void WorkerMaster::delete_constraint(int const nrows) {
-	std::vector<int> mindex(nrows, 0);
 	int const nconstraint(get_number_constraint());
-	for (int i(0); i < nrows; i++) {
-		mindex[i] = nconstraint - nrows + i;
-	}
-	_solver->del_rows(nrows, mindex.data());
+	_solver->del_rows(nconstraint - nrows, nconstraint - 1);
 }
 
 
@@ -236,7 +232,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 		std::vector<int> start(2, 0);
 		_id_alpha = _solver->get_ncols(); /* Set the number of columns in _id_alpha */
 		_solver->add_cols(1, 0, &obj, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
-		_solver->add_names(2, alpha.c_str(), _id_alpha, _id_alpha);
+		_solver->add_name(2, alpha.c_str(), _id_alpha);
 
 		_id_alpha_i.resize(nslaves, -1);
 
@@ -245,7 +241,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 			_solver->add_cols(1, 0, &zero, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha_i and its parameters */
 			std::stringstream buffer;
 			buffer << "alpha_" << i;
-			_solver->add_names(2, buffer.str().c_str(), _id_alpha_i[i], _id_alpha_i[i]);
+			_solver->add_name(2, buffer.str().c_str(), _id_alpha_i[i]);
 		}
 		{
 			std::vector<char> rowtype(1, 'E');

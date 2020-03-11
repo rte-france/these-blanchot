@@ -89,6 +89,5 @@ void WorkerSlave::get_subgradient(Point & s) {
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
-
 }
 

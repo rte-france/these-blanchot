@@ -228,6 +228,7 @@ int SolverXPRESS::get_nrows() const {
 int SolverXPRESS::get_nelems() const {
 	int elems(0);
 	XPRSgetintattrib(_xprs, XPRS_ELEMS, &elems);
+	std::cout << "XPRESS ELEMS = " << elems << std::endl;
 	return elems;
 }
 
@@ -279,8 +280,12 @@ void SolverXPRESS::add_cut(Point const& s, Point const& x0, double rhs) {
 
 }
 
-void SolverXPRESS::del_rows(int nrows, const int* mindex) {
-	XPRSdelrows(_xprs, nrows, mindex);
+void SolverXPRESS::del_rows(int first, int last) {
+	IntVector mindex(last - first + 1);
+	for (int i = 0; i < last - first + 1; i++) {
+		mindex[i] = first + i;
+	}
+	XPRSdelrows(_xprs, last - first + 1, mindex.data());
 }
 
 void SolverXPRESS::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
@@ -293,8 +298,8 @@ void SolverXPRESS::add_cols(int newcol, int newnz, const double* objx, const int
 	XPRSaddcols(_xprs, newcol, newnz, objx, mstart, mrwind, dmatval, bdl, bdu);
 }
 
-void SolverXPRESS::add_names(int type, const char* cnames, int first, int last) {
-	XPRSaddnames(_xprs, type, cnames, first, last);
+void SolverXPRESS::add_name(int type, const char* cnames, int indice) {
+	XPRSaddnames(_xprs, type, cnames, indice, indice);
 }
 
 void SolverXPRESS::chg_obj(int nels, const int* mindex, const double* obj) {

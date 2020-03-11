@@ -2,28 +2,14 @@
 
 // Definition of solver optimization status
 StrVector CPLEX_LP_STATUS = {
-	"XPRS_LP_UNSTARTED",
-	"XPRS_LP_OPTIMAL",
-	"XPRS_LP_INFEAS",
-	"XPRS_LP_CUTOFF",
-	"XPRS_LP_UNFINISHED",
-	"XPRS_LP_UNBOUNDED",
-	"XPRS_LP_CUTOFF_IN_DUAL",
-	"XPRS_LP_UNSOLVED",
-	"XPRS_LP_NONCONVEX"
+		"0",
+		"CPX_STAT_OPTIMAL",
+		"CPX_STAT_UNBOUNDED",
+		"CPX_STAT_INFEASIBLE",
+		"CPX_STAT_INForUNBD",
+		"CPX_STAT_OPTIMAL_INFEAS",
+		"CPX_STAT_NUM_BEST"
 };
-
-StrVector XPRS_MIP_STATUS = {
-	"XPRS_MIP_NOT_LOADED",
-	"XPRS_MIP_LP_NOT_OPTIMAL",
-	"XPRS_MIP_LP_OPTIMAL",
-	"XPRS_MIP_NO_SOL_FOUND",
-	"XPRS_MIP_SOLUTION",
-	"XPRS_MIP_INFEAS",
-	"XPRS_MIP_OPTIMAL",
-	"XPRS_MIP_UNBOUNDED",
-};
-
 
 //int SolverCPLEX::_NumberOfProblems = 0;
 SolverCPLEX::SolverCPLEX(std::string const& name) {
@@ -33,7 +19,7 @@ SolverCPLEX::SolverCPLEX(std::string const& name) {
 }
 
 SolverCPLEX::~SolverCPLEX() {
-	CPXfreeprob(_env, &_prb);
+	free();
 	int status = CPXcloseCPLEX(&_env);
 	std::cout << "CLOSE STATUS = " << status << std::endl;
 }
@@ -59,8 +45,8 @@ void SolverCPLEX::write_prob(const char* name, const char* flags) const {
 
 void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
 	
-	int xprs_status(0);
-	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
+	//int xprs_status(0);
+	//XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
 
 	if (status != OPTIMAL) {
 		std::cout << "status is : " << status << std::endl;
@@ -88,32 +74,29 @@ void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, 
 			buffer << ".mps";
 			std::cout << "status is : " << optim_status << std::endl;
 			std::cout << "written in " << buffer.str() << std::endl;
-			XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
+			write_prob(buffer.str().c_str(), "");
 		}
 	}
-	/*else if (status) {
-		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
-	}*/
 }
 
 void SolverCPLEX::read_prob(const char* prob_name, const char* flags)
 {
-	XPRSreadprob(_xprs, prob_name, flags);
+	CPXreadcopyprob(_env, _prb, prob_name, flags);
 }
 
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
-	int status = XPRSlpoptimize(_xprs, "");
+	int status = CPXlpopt(_env, _prb);
 
-	int xprs_status(0);
-	status = XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
+	int cpx_status(0);
+	CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
 	
-	if (xprs_status == XPRS_LP_OPTIMAL) {
+	if (cpx_status == CPX_STAT_OPTIMAL) {
 		lp_status = OPTIMAL;
 	}
-	else if (xprs_status == XPRS_LP_INFEAS) {
+	else if (cpx_status == CPX_STAT_INFEASIBLE) {
 		lp_status = INFEASIBLE;
 	}
-	else if (xprs_status == XPRS_LP_UNBOUNDED) {
+	else if (cpx_status == CPX_STAT_UNBOUNDED) {
 		lp_status = UNBOUNDED;
 	}
 	else {
@@ -122,19 +105,19 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 }
 
 void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) {
-	int status(0);
-	status = XPRSmipoptimize(_xprs, "");
+	
+	int status = CPXmipopt(_env, _prb);
 
-	int xprs_status(0);
-	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &xprs_status);
+	int cpx_status(0);
+	CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
 
-	if (xprs_status == XPRS_MIP_OPTIMAL) {
+	if (cpx_status == CPXMIP_OPTIMAL) {
 		lp_status = OPTIMAL;
 	}
-	else if (xprs_status == XPRS_MIP_INFEAS) {
+	else if (cpx_status == CPXMIP_INFEASIBLE) {
 		lp_status = INFEASIBLE;
 	}
-	else if (xprs_status == XPRS_MIP_UNBOUNDED) {
+	else if (cpx_status == CPXMIP_UNBOUNDED) {
 		lp_status = UNBOUNDED;
 	}
 	else {
@@ -143,65 +126,66 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 }
 
 void SolverCPLEX::get_obj(double* obj, int first, int last) const {
-	XPRSgetobj(_xprs, obj, first, last);
+	CPXgetobj(_env, _prb, obj, first, last);
 }
 
 int SolverCPLEX::get_ncols() const {
 	int cols(0);
-	XPRSgetintattrib(_xprs, XPRS_COLS, &cols);
+	cols = CPXgetnumcols(_env, _prb);
 	return cols;
 }
 
 int SolverCPLEX::get_nrows() const {
 	int rows(0);
-	XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
+	rows = CPXgetnumrows(_env, _prb);
 	return rows;
 }
 
 int SolverCPLEX::get_nelems() const {
-	int elems(0);
-	XPRSgetintattrib(_xprs, XPRS_ELEMS, &elems);
+	int elems = CPXgetnumnz(_env, _prb);
+	std::cout << "CPLEX ELEMS = " << elems << std::endl;
 	return elems;
 }
 
 void SolverCPLEX::get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, int first, int last) const {
-	XPRSgetrows(_xprs, mstart, mclind, dmatval, size, nels, first, last);
+	std::cout << "PAS SUR DE GETROWS" << std::endl;
+	CPXgetrows(_env, _prb, nels, mstart, mclind, dmatval, size, NULL, first, last);
 }
 
-void SolverCPLEX::get_row_type(char* qrtype, int first, int last) const
-{
-	XPRSgetrowtype(_xprs, qrtype, first, last);
+void SolverCPLEX::get_row_type(char* qrtype, int first, int last) const{
+	CPXgetsense(_env, _prb, qrtype, first, last);
 }
 
 void SolverCPLEX::get_rhs(double* rhs, int first, int last) const {
-	XPRSgetrhs(_xprs, rhs, first, last);
+	CPXgetrhs(_env, _prb, rhs, first, last);
 }
 
 void SolverCPLEX::get_rhs_range(double* range, int first, int last) const {
-	XPRSgetrhsrange(_xprs, range, first, last);
+	std::cout << "PAS SUR D APPLER LA BONNE FONCTION POUR get_rhs_range" << std::endl;
+	CPXgetrngval(_env, _prb, range, first, last);
 }
 
 void SolverCPLEX::get_col_type(char* coltype, int first, int last) const {
-	XPRSgetcoltype(_xprs, coltype, first, last);
+	CPXgetctype(_env, _prb, coltype, first, last);
 }
 
 void SolverCPLEX::get_lb(double* lb, int first, int last) const {
-	XPRSgetlb(_xprs, lb, first, last);
+	CPXgetlb(_env, _prb, lb, first, last);
 }
 
 void SolverCPLEX::get_ub(double* ub, int first, int last) const {
-	XPRSgetub(_xprs, ub, first, last);
+	CPXgetub(_env, _prb, ub, first, last);
 }
 
 int SolverCPLEX::get_n_integer_vars() const
 {
-	int n_int_vars(0);
-	XPRSgetintattrib(_xprs, XPRS_MIPENTS, &n_int_vars);
-	return n_int_vars;
+	int n_int_vars = CPXgetnumint(_env, _prb);
+	int n_bin_vars = CPXgetnumbin(_env, _prb);
+	return n_int_vars + n_bin_vars;
 }
 
 void SolverCPLEX::free() {
-	XPRSdestroyprob(_xprs);
+	CPXfreeprob(_env, &_prb);
 }
 
 void SolverCPLEX::fix_first_stage(Point const& x0) {
@@ -212,34 +196,44 @@ void SolverCPLEX::add_cut(Point const& s, Point const& x0, double rhs) {
 
 }
 
-void SolverCPLEX::del_rows(int nrows, const int* mindex) {
-	XPRSdelrows(_xprs, nrows, mindex);
+void SolverCPLEX::del_rows(int first, int last) {
+	CPXdelrows(_env, _prb, first, last);
 }
 
 void SolverCPLEX::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs,
 	const double* range, const int* mstart, const int* mclind, const double* dmatval) {
-	int status = XPRSaddrows(_xprs, newrows, newnz, qrtype, rhs, range, mstart, mclind, dmatval);
+	CPXaddrows(_env, _prb, 0, newrows, newnz, rhs, qrtype, mstart, mclind, dmatval, NULL, NULL);
 }
 
 void SolverCPLEX::add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
 	const double* dmatval, const double* bdl, const double* bdu) {
-	XPRSaddcols(_xprs, newcol, newnz, objx, mstart, mrwind, dmatval, bdl, bdu);
+	CPXaddcols(_env, _prb, newcol, newnz, objx, mstart, mrwind, dmatval, bdl, bdu, NULL);
 }
 
-void SolverCPLEX::add_names(int type, const char* cnames, int first, int last) {
-	XPRSaddnames(_xprs, type, cnames, first, last);
+void SolverCPLEX::add_name(int type, const char* cnames, int indice) {
+	if (type == 1) {
+		type = 'r';
+	}
+	else if (type == '2') {
+		type = 'c';
+	}
+	else {
+		std::cout << "ERROR : wrong type sent to add_name" << std::endl;
+		std::exit(0);
+	}
+	CPXchgname(_env, _prb, type, indice, cnames);
 }
 
 void SolverCPLEX::chg_obj(int nels, const int* mindex, const double* obj) {
-	XPRSchgobj(_xprs, nels, mindex, obj);
+	CPXchgobj(_env, _prb, nels, mindex, obj);
 }
 
 void SolverCPLEX::chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) {
-	XPRSchgbounds(_xprs, nbds, mindex, qbtype, bnd);
+	CPXchgbds(_env, _prb, nbds, mindex, qbtype, bnd);
 }
 
 void SolverCPLEX::chg_col_type(int nels, const int* mindex, const char* qctype) const {
-	XPRSchgcoltype(_xprs, nels, mindex, qctype);
+	CPXchgctype(_env, _prb, nels, mindex, qctype);
 }
 
 void SolverCPLEX::get_basis(int* rstatus, int* cstatus) const {
