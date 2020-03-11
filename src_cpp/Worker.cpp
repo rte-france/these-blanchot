@@ -78,7 +78,7 @@ void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps,
 	_path_to_mps = path_to_mps;
 	add_stream(std::cout);
 	_solver->init(path_to_mps);
-	_solver->read_prob(path_to_mps.c_str(), "");
+	_solver->read_prob(path_to_mps.c_str(), "MPS");
 
 	//std::ifstream file(_path_to_mapping.c_str());
 	_name_to_id = variable_map;

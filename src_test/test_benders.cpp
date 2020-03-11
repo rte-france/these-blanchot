@@ -10,15 +10,16 @@
 TEST_CASE("Lecture LP et MPS") {
 
 	BendersOptions options;
+	options.SOLVER = "CPLEX";
 	REQUIRE(options.SLAVE_NUMBER == -1); // Options declarees
 
 	// Declaration d'un Worker
 	WorkerMerge prob(options);
 	// 0 Variables au debut
 	REQUIRE(prob.get_ncols() == 0); // Probleme initialise
-	prob.read("small_MPS", "");
+	prob.read("small_MPS", "MPS");
 	REQUIRE(prob.get_ncols() == 1);
-	prob.read("small_LP", "l");
+	prob.read("small_LP", "LP");
 	REQUIRE(prob.get_ncols() == 2);
 
 	int lp_status(0);
@@ -43,6 +44,7 @@ SCENARIO("Resolution instance LP") {
 	GIVEN("A LP instance") {
 
 		BendersOptions options;
+		options.SOLVER = "CPLEX";
 		options.INPUTROOT = "./mini_instance_LP/";
 
 		WHEN("Solving with merge_mps") {
@@ -97,6 +99,7 @@ SCENARIO("Resolution instance MIP") {
 	GIVEN("A LP instance") {
 
 		BendersOptions options;
+		options.SOLVER = "CPLEX";
 		options.INPUTROOT = "./mini_instance_MIP/";
 
 		WHEN("Solving with merge_mps") {
@@ -150,7 +153,9 @@ SCENARIO("Resolution instance MIP") {
 SCENARIO("Resolution instance INFEASIBLE") {
 	GIVEN("An infeasible instance") {
 
+
 		BendersOptions options;
+		options.SOLVER = "CPLEX";
 		options.INPUTROOT = "./mini_instance_INFEAS/";
 		options.WRITE_ERRORED_PROB = false;
 
@@ -204,6 +209,7 @@ SCENARIO("Resolution instance UNBOUDED") {
 	GIVEN("An unbounded instance") {
 
 		BendersOptions options;
+		options.SOLVER = "CPLEX";
 		options.INPUTROOT = "./mini_instance_UNBOUNDED/";
 
 		WHEN("Solving with merge_mps") {

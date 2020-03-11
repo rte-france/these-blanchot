@@ -121,14 +121,20 @@ void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const&
 		set_decalage(kvp.first);
 
 		WorkerMerge prob(options);
-		prob.read(problem_name, "");
+		std::cout << "READING " << problem_name << std::endl;
+		prob.read(problem_name, "MPS");
 
 		if (kvp.first != options.MASTER_NAME) {
 			prob.chg_obj(options, weight);
 		}
 
+		std::cout << "MERGING" << std::endl;
+
 		StandardLp lpData(prob);
 		lpData.append_in(*this);
+
+
+		std::cout << _solver->get_ncols() << std::endl;
 
 		prob.free();
 		fill_mps_id(kvp);

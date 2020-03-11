@@ -11,20 +11,26 @@ StrVector CPLEX_LP_STATUS = {
 		"CPX_STAT_NUM_BEST"
 };
 
-//int SolverCPLEX::_NumberOfProblems = 0;
+int SolverCPLEX::_NumberOfProblems = 0;
 SolverCPLEX::SolverCPLEX(std::string const& name) {
+	std::cout << "ENV" << std::endl;
 	int status(0);
 	_env = CPXopenCPLEX(&status);
 	_prb = CPXcreateprob(_env, &status, name.c_str());
+	_NumberOfProblems += 1;
 }
 
 SolverCPLEX::~SolverCPLEX() {
 	free();
-	int status = CPXcloseCPLEX(&_env);
-	std::cout << "CLOSE STATUS = " << status << std::endl;
+	_NumberOfProblems -= 1;
+	if (_NumberOfProblems == 0) {
+		std::cout << "CLOSING CPLEX" << std::endl;
+		int status = CPXcloseCPLEX(&_env);
+	}
 }
 
 void SolverCPLEX::init(std::string const& path_to_mps) {
+	std::cout << "INIT" << std::endl;
 	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
 	CPXsetintparam(_env, CPXPARAM_Threads, 1);
 	// Not coded in CPLEX
@@ -33,6 +39,7 @@ void SolverCPLEX::init(std::string const& path_to_mps) {
 
 void SolverCPLEX::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
 {
+	std::cout << "LOAD LP QUI LOAD RIEN" << std::endl;
 	CPXsetintparam(_env, CPXPARAM_Threads, 1);
 	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
 	//XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
@@ -45,9 +52,6 @@ void SolverCPLEX::write_prob(const char* name, const char* flags) const {
 
 void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
 	
-	//int xprs_status(0);
-	//XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
-
 	if (status != OPTIMAL) {
 		std::cout << "status is : " << status << std::endl;
 		std::stringstream buffer;
@@ -81,7 +85,20 @@ void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, 
 
 void SolverCPLEX::read_prob(const char* prob_name, const char* flags)
 {
-	CPXreadcopyprob(_env, _prb, prob_name, flags);
+	std::string name = prob_name;
+	std::string point = ".";
+	std::string cpxflags;
+	if (std::string(flags) == "LP") {
+		cpxflags = "lp";
+	}
+	else if (std::string(flags) == "MPS") {
+		cpxflags = "mps";
+	}
+	else {
+		std::cout << "ERROR : Unknown file type " << flags << std::endl;
+		std::exit(0);
+	}
+	CPXreadcopyprob(_env, _prb, (name+point+ cpxflags).c_str(), flags);
 }
 
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
@@ -106,22 +123,27 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 
 void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) {
 	
-	int status = CPXmipopt(_env, _prb);
-
-	int cpx_status(0);
-	CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
-
-	if (cpx_status == CPXMIP_OPTIMAL) {
-		lp_status = OPTIMAL;
-	}
-	else if (cpx_status == CPXMIP_INFEASIBLE) {
-		lp_status = INFEASIBLE;
-	}
-	else if (cpx_status == CPXMIP_UNBOUNDED) {
-		lp_status = UNBOUNDED;
+	if (get_n_integer_vars() == 0) {
+		solve(lp_status, path_to_mps);
 	}
 	else {
-		lp_status = UNKNOWN;
+		int status = CPXmipopt(_env, _prb);
+
+		int cpx_status(0);
+		CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
+
+		if (cpx_status == CPXMIP_OPTIMAL) {
+			lp_status = OPTIMAL;
+		}
+		else if (cpx_status == CPXMIP_INFEASIBLE) {
+			lp_status = INFEASIBLE;
+		}
+		else if (cpx_status == CPXMIP_UNBOUNDED) {
+			lp_status = UNBOUNDED;
+		}
+		else {
+			lp_status = UNKNOWN;
+		}
 	}
 }
 
@@ -148,7 +170,6 @@ int SolverCPLEX::get_nelems() const {
 }
 
 void SolverCPLEX::get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, int first, int last) const {
-	std::cout << "PAS SUR DE GETROWS" << std::endl;
 	CPXgetrows(_env, _prb, nels, mstart, mclind, dmatval, size, NULL, first, last);
 }
 
@@ -211,10 +232,11 @@ void SolverCPLEX::add_cols(int newcol, int newnz, const double* objx, const int*
 }
 
 void SolverCPLEX::add_name(int type, const char* cnames, int indice) {
+
 	if (type == 1) {
 		type = 'r';
 	}
-	else if (type == '2') {
+	else if (type == 2) {
 		type = 'c';
 	}
 	else {
@@ -237,7 +259,7 @@ void SolverCPLEX::chg_col_type(int nels, const int* mindex, const char* qctype) 
 }
 
 void SolverCPLEX::get_basis(int* rstatus, int* cstatus) const {
-	XPRSgetbasis(_xprs, rstatus, cstatus);
+	CPXgetbase(_env, _prb, cstatus, rstatus);
 }
 
 void SolverCPLEX::get_value(double& lb)const  {
@@ -245,15 +267,15 @@ void SolverCPLEX::get_value(double& lb)const  {
 }
 
 void SolverCPLEX::get_mip_value(double& lb) const {
-	XPRSgetdblattrib(_xprs, XPRS_MIPOBJVAL, &lb);
+	CPXsolution(_env, _prb, NULL, &lb, NULL, NULL, NULL, NULL);
 }
 
 void SolverCPLEX::get_lp_value(double& lb) const {
-	XPRSgetdblattrib(_xprs, XPRS_LPOBJVAL, &lb);
+	CPXsolution(_env, _prb, NULL, &lb, NULL, NULL, NULL, NULL);
 }
 
 void SolverCPLEX::get_simplex_ite(int& result) const {
-	XPRSgetintattrib(_xprs, XPRS_SIMPLEXITER, &result);
+	result = CPXgetmipitcnt(_env, _prb);
 }
 
 void SolverCPLEX::get(Point& x0, double& alpha, DblVector& alpha_i) {
@@ -261,11 +283,11 @@ void SolverCPLEX::get(Point& x0, double& alpha, DblVector& alpha_i) {
 }
 
 void SolverCPLEX::get_LP_sol(double* primals, double* slacks, double* duals, double* reduced_costs) {
-	XPRSgetlpsol(_xprs, primals, slacks, duals, reduced_costs);
+	CPXsolution(_env, _prb, NULL, NULL, primals, duals, slacks, reduced_costs);
 }
 
 void SolverCPLEX::get_MIP_sol(double* primals, double* duals) {
-	XPRSgetmipsol(_xprs, primals, duals);
+	CPXsolution(_env, _prb, NULL, NULL, primals, NULL, NULL, NULL);
 }
 
 void SolverCPLEX::set_output_log_level(int loglevel) {
@@ -279,14 +301,14 @@ void SolverCPLEX::set_output_log_level(int loglevel) {
 
 void SolverCPLEX::set_algorithm(std::string const& algo) {
 	if (algo == "BARRIER") {
-		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
+		CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_BARRIER);
 	}
 	else if (algo == "BARRIER_WO_CROSSOVER") {
-		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 4);
-		XPRSsetintcontrol(_xprs, XPRS_CROSSOVER, 0);
+		CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_BARRIER);
+		CPXsetintparam(_env, CPXPARAM_Barrier_Crossover, CPX_ALG_NONE);
 	}
 	else {
-		XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
+		CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_DUAL);
 	}
 }
 

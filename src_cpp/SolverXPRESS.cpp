@@ -165,7 +165,12 @@ void SolverXPRESS::write_errored_prob(int status, BendersOptions const& options,
 
 void SolverXPRESS::read_prob(const char* prob_name, const char* flags)
 {
-	XPRSreadprob(_xprs, prob_name, flags);
+	std::string xprs_flags = "";
+	if (std::string(flags) == "LP") {
+		xprs_flags = "l";
+	}
+
+	XPRSreadprob(_xprs, prob_name, xprs_flags.c_str());
 }
 
 void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
