@@ -1,5 +1,6 @@
-#include "SolverXPRESS.h"
 
+#ifdef XPRESS
+#include "SolverXPRESS.h"
 // Definition of solver optimization status
 StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_UNSTARTED",
@@ -380,3 +381,5 @@ void SolverXPRESS::set_threads(int n_threads)
 {
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, n_threads);
 }
+
+#endif

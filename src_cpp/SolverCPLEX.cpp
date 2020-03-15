@@ -1,5 +1,6 @@
 #include "SolverCPLEX.h"
 
+#ifdef CPLEX
 // Definition of solver optimization status
 StrVector CPLEX_LP_STATUS = {
 		"0",
@@ -330,3 +331,6 @@ void SolverCPLEX::set_threads(int n_threads)
 {
 	CPXsetintparam(_env, CPXPARAM_Threads, n_threads);
 }
+
+
+#endif

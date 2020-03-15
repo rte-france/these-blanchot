@@ -8,8 +8,7 @@ int main(int argc, char** argv)
 	BendersOptions options(build_benders_options(argc, argv));
 	options.print(std::cout);
 
-
-
+	Timer timer;
 	CouplingMap input;
 	build_input(options, input);
 
@@ -18,8 +17,6 @@ int main(int argc, char** argv)
 
 	// Lecture et ajout de tous les problemes dans full
 	full.merge_problems(input, options);
-
-	full.write_prob("TEST_FULL", "LP");
 
 	std::cout << "Solving" << std::endl;
 
@@ -36,7 +33,7 @@ int main(int argc, char** argv)
 	std::cout << "Optimal value " << val << std::endl;
 
 	print_solution(std::cout, x0, true, status);
-
+	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 	full.free();
 
 	return 0;

@@ -121,14 +121,11 @@ void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const&
 		set_decalage(kvp.first);
 
 		WorkerMerge prob(options);
-		std::cout << "READING " << problem_name << std::endl;
 		prob.read(problem_name, "MPS");
 
 		if (kvp.first != options.MASTER_NAME) {
 			prob.chg_obj(options, weight);
 		}
-
-		std::cout << "MERGING" << std::endl;
 
 		StandardLp lpData(prob);
 		lpData.append_in(*this);
@@ -198,7 +195,6 @@ void WorkerMerge::chg_obj(BendersOptions const& options, double weight)
 
 	for (auto& c : obj) {
 		c *= weight;
-		std::cout << "OBJ " << c << std::endl;
 	}
 	_solver->chg_obj(mps_ncols, sequence.data(), obj.data());
 }
