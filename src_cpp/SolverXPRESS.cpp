@@ -142,6 +142,9 @@ void SolverXPRESS::write_errored_prob(int status, BendersOptions const& options,
 		else if (status == UNBOUNDED) {
 			optim_status = SOLVER_STRING_STATUS[UNBOUNDED];
 		}
+		else if (status == INForUNBOUND) {
+			optim_status = SOLVER_STRING_STATUS[INForUNBOUND];
+		}
 		else if (status == UNKNOWN) {
 			optim_status = SOLVER_STRING_STATUS[UNKNOWN];
 		}

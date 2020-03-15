@@ -30,7 +30,7 @@ SolverCPLEX::~SolverCPLEX() {
 }
 
 void SolverCPLEX::init(std::string const& path_to_mps) {
-	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
+	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_OFF);
 	CPXsetintparam(_env, CPXPARAM_Threads, 1);
 	// Not coded in CPLEX
 	//XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
@@ -62,6 +62,9 @@ void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, 
 		}
 		else if (status == UNBOUNDED) {
 			optim_status = SOLVER_STRING_STATUS[UNBOUNDED];
+		}
+		else if (status == INForUNBOUND) {
+			optim_status = SOLVER_STRING_STATUS[INForUNBOUND];
 		}
 		else if (status == UNKNOWN) {
 			optim_status = SOLVER_STRING_STATUS[UNKNOWN];
@@ -104,8 +107,8 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 	int status = CPXlpopt(_env, _prb);
 
 	int cpx_status(0);
-	CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
-	
+	cpx_status = CPXgetstat(_env, _prb);
+
 	if (cpx_status == CPX_STAT_OPTIMAL) {
 		lp_status = OPTIMAL;
 	}
@@ -114,6 +117,9 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 	}
 	else if (cpx_status == CPX_STAT_UNBOUNDED) {
 		lp_status = UNBOUNDED;
+	}
+	else if (cpx_status == CPX_STAT_INForUNBD) {
+		lp_status = INForUNBOUND;
 	}
 	else {
 		lp_status = UNKNOWN;
@@ -128,7 +134,8 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 	else {
 		int status = CPXmipopt(_env, _prb);
 		int cpx_status(0);
-		CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
+		cpx_status = CPXgetstat(_env, _prb);
+
 		if (cpx_status == CPXMIP_OPTIMAL) {
 			lp_status = OPTIMAL;
 		}
@@ -137,6 +144,9 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 		}
 		else if (cpx_status == CPXMIP_UNBOUNDED) {
 			lp_status = UNBOUNDED;
+		}
+		else if (cpx_status == CPXMIP_INForUNBD) {
+			lp_status = INForUNBOUND;
 		}
 		else {
 			lp_status = UNKNOWN;
@@ -188,7 +198,6 @@ void SolverCPLEX::get_col_type(char* coltype, int first, int last) const {
 	// Declaration en MIP pour creer les types de variables dans la memoire (CPLEX)
 	CPXchgprobtype(_env, _prb, CPXPROB_MILP);
 	int status = CPXgetctype(_env, _prb, coltype, first, last);
-	std::cout << "COL TYPE RECUP = " << coltype << std::endl;
 }
 
 void SolverCPLEX::get_lb(double* lb, int first, int last) const {
@@ -257,10 +266,8 @@ void SolverCPLEX::chg_bounds(int nbds, const int* mindex, const char* qbtype, co
 }
 
 void SolverCPLEX::chg_col_type(int nels, const int* mindex, const char* qctype) const {
-	std::cout << "COL TYPES = " << qctype << std::endl;
 	CPXchgctype(_env, _prb, nels, mindex, qctype);
 	if (get_n_integer_vars() == 0) {
-		std::cout << "ON REPASSE EN LP" << std::endl;
 		CPXchgprobtype(_env, _prb, CPXPROB_LP);
 	}
 }
@@ -282,7 +289,7 @@ void SolverCPLEX::get_lp_value(double& lb) const {
 }
 
 void SolverCPLEX::get_simplex_ite(int& result) const {
-	result = CPXgetmipitcnt(_env, _prb);
+	result = CPXgetitcnt(_env, _prb);
 }
 
 void SolverCPLEX::get(Point& x0, double& alpha, DblVector& alpha_i) {

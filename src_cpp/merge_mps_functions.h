@@ -142,8 +142,6 @@ public:
 		prob._solver->chg_col_type(std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NCOLS],
 			newcindex.data(), std::get<Attribute::CHAR_VECTOR_INDEX>(_data)[CharVectorAttribute::COLTYPE].data());
 
-		std::cout << "COL TYPES = " << std::get<Attribute::CHAR_VECTOR_INDEX>(_data)[CharVectorAttribute::COLTYPE].data() << std::endl;
-
 		prob._solver->add_rows(std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NROWS],
 			std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NELES],
 			std::get<Attribute::CHAR_VECTOR_INDEX>(_data)[CharVectorAttribute::ROWTYPE].data(),

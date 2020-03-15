@@ -187,7 +187,7 @@ SCENARIO("Resolution instance INFEASIBLE") {
 			full.get_optimal_point_and_value(x0, val, input, options);
 
 			THEN("the optimal solution is found.") {
-				REQUIRE(status == INFEASIBLE); // problem infeasible
+				REQUIRE(( status == INFEASIBLE || status == INForUNBOUND)); // problem infeasible
 			}
 
 			full.free();
@@ -202,7 +202,8 @@ SCENARIO("Resolution instance INFEASIBLE") {
 
 
 			THEN("the optimal solution in found.") {
-				REQUIRE(benders._data.global_prb_status == INFEASIBLE); // problem infeasible
+				REQUIRE( (benders._data.global_prb_status == INFEASIBLE ||
+					benders._data.global_prb_status == INForUNBOUND) ); // problem infeasible
 			}
 
 			benders.free();
@@ -240,7 +241,7 @@ SCENARIO("Resolution instance UNBOUDED") {
 			full.get_optimal_point_and_value(x0, val, input, options);
 
 			THEN("the optimal solution is found.") {
-				REQUIRE(status == UNBOUNDED); // problem unbounded
+				REQUIRE( (status == UNBOUNDED || status == INForUNBOUND) ); // problem unbounded
 			}
 
 			full.free();
@@ -255,7 +256,8 @@ SCENARIO("Resolution instance UNBOUDED") {
 
 
 			THEN("the optimal solution in found.") {
-				REQUIRE(benders._data.global_prb_status == UNBOUNDED); // problem unbounded
+				REQUIRE( (benders._data.global_prb_status == UNBOUNDED ||
+					benders._data.global_prb_status == INForUNBOUND ) ); // problem unbounded
 			}
 
 			benders.free();

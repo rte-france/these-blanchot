@@ -131,11 +131,7 @@ void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const&
 		std::cout << "MERGING" << std::endl;
 
 		StandardLp lpData(prob);
-		std::cout << "DECLARATION STANDARD LP OK" << std::endl;
 		lpData.append_in(*this);
-
-		std::cout << "TOTAL ROWS : " << get_nrows() << std::endl;
-		std::cout << "TOTAL COLS : " << get_ncols() << std::endl;
 
 		prob.free();
 		fill_mps_id(kvp);
