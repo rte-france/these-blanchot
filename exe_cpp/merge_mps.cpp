@@ -8,6 +8,8 @@ int main(int argc, char** argv)
 	BendersOptions options(build_benders_options(argc, argv));
 	options.print(std::cout);
 
+
+
 	CouplingMap input;
 	build_input(options, input);
 
@@ -16,6 +18,8 @@ int main(int argc, char** argv)
 
 	// Lecture et ajout de tous les problemes dans full
 	full.merge_problems(input, options);
+
+	full.write_prob("TEST_FULL", "LP");
 
 	std::cout << "Solving" << std::endl;
 

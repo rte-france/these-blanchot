@@ -15,5 +15,6 @@
               RAND_AGGREGATION                                                 0
                  MASTER_METHOD                                           SIMPLEX
                   XPRESS_TRACE                                                 0
-                        SOLVER                                            XPRESS
+                        SOLVER                                            CPLEX
+                        ALGORITHM                                       BASE
 

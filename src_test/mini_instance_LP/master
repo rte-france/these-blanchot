@@ -1,0 +1,8 @@
+\ENCODING=ISO-8859-1
+\Problem name: ./mini_instance_LP/\master.mps
+
+Minimize
+ OBJ: 1.5 x
+Bounds
+ 0 <= x <= 10
+End

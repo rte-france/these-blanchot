@@ -10,5 +10,5 @@ COLUMNS
 RHS
 	RHS 		C1 			2.5
 BOUNDS
-	LO			perte_2		0
+	LO		BND 	perte_2		0
 ENDATA

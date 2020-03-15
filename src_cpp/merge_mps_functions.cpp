@@ -131,10 +131,11 @@ void WorkerMerge::merge_problems(CouplingMap const& input, BendersOptions const&
 		std::cout << "MERGING" << std::endl;
 
 		StandardLp lpData(prob);
+		std::cout << "DECLARATION STANDARD LP OK" << std::endl;
 		lpData.append_in(*this);
 
-
-		std::cout << _solver->get_ncols() << std::endl;
+		std::cout << "TOTAL ROWS : " << get_nrows() << std::endl;
+		std::cout << "TOTAL COLS : " << get_ncols() << std::endl;
 
 		prob.free();
 		fill_mps_id(kvp);
@@ -201,6 +202,7 @@ void WorkerMerge::chg_obj(BendersOptions const& options, double weight)
 
 	for (auto& c : obj) {
 		c *= weight;
+		std::cout << "OBJ " << c << std::endl;
 	}
 	_solver->chg_obj(mps_ncols, sequence.data(), obj.data());
 }

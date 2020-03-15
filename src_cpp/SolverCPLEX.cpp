@@ -13,8 +13,8 @@ StrVector CPLEX_LP_STATUS = {
 
 int SolverCPLEX::_NumberOfProblems = 0;
 SolverCPLEX::SolverCPLEX(std::string const& name) {
-	std::cout << "ENV" << std::endl;
 	int status(0);
+	
 	_env = CPXopenCPLEX(&status);
 	_prb = CPXcreateprob(_env, &status, name.c_str());
 	_NumberOfProblems += 1;
@@ -30,7 +30,6 @@ SolverCPLEX::~SolverCPLEX() {
 }
 
 void SolverCPLEX::init(std::string const& path_to_mps) {
-	std::cout << "INIT" << std::endl;
 	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
 	CPXsetintparam(_env, CPXPARAM_Threads, 1);
 	// Not coded in CPLEX
@@ -39,7 +38,6 @@ void SolverCPLEX::init(std::string const& path_to_mps) {
 
 void SolverCPLEX::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
 {
-	std::cout << "LOAD LP QUI LOAD RIEN" << std::endl;
 	CPXsetintparam(_env, CPXPARAM_Threads, 1);
 	CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
 	//XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
@@ -98,10 +96,11 @@ void SolverCPLEX::read_prob(const char* prob_name, const char* flags)
 		std::cout << "ERROR : Unknown file type " << flags << std::endl;
 		std::exit(0);
 	}
-	CPXreadcopyprob(_env, _prb, (name+point+ cpxflags).c_str(), flags);
+	int status = CPXreadcopyprob(_env, _prb, (name+point+ cpxflags).c_str(), flags);
 }
 
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
+
 	int status = CPXlpopt(_env, _prb);
 
 	int cpx_status(0);
@@ -128,10 +127,8 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 	}
 	else {
 		int status = CPXmipopt(_env, _prb);
-
 		int cpx_status(0);
 		CPXsolution(_env, _prb, &cpx_status, NULL, NULL, NULL, NULL, NULL);
-
 		if (cpx_status == CPXMIP_OPTIMAL) {
 			lp_status = OPTIMAL;
 		}
@@ -165,12 +162,13 @@ int SolverCPLEX::get_nrows() const {
 
 int SolverCPLEX::get_nelems() const {
 	int elems = CPXgetnumnz(_env, _prb);
-	std::cout << "CPLEX ELEMS = " << elems << std::endl;
 	return elems;
 }
 
 void SolverCPLEX::get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, int first, int last) const {
-	CPXgetrows(_env, _prb, nels, mstart, mclind, dmatval, size, NULL, first, last);
+	IntVector surplus;
+	surplus.resize(1);
+	CPXgetrows(_env, _prb, nels, mstart, mclind, dmatval, size, surplus.data(), first, last);
 }
 
 void SolverCPLEX::get_row_type(char* qrtype, int first, int last) const{
@@ -182,12 +180,15 @@ void SolverCPLEX::get_rhs(double* rhs, int first, int last) const {
 }
 
 void SolverCPLEX::get_rhs_range(double* range, int first, int last) const {
-	std::cout << "PAS SUR D APPLER LA BONNE FONCTION POUR get_rhs_range" << std::endl;
 	CPXgetrngval(_env, _prb, range, first, last);
 }
 
 void SolverCPLEX::get_col_type(char* coltype, int first, int last) const {
-	CPXgetctype(_env, _prb, coltype, first, last);
+
+	// Declaration en MIP pour creer les types de variables dans la memoire (CPLEX)
+	CPXchgprobtype(_env, _prb, CPXPROB_MILP);
+	int status = CPXgetctype(_env, _prb, coltype, first, last);
+	std::cout << "COL TYPE RECUP = " << coltype << std::endl;
 }
 
 void SolverCPLEX::get_lb(double* lb, int first, int last) const {
@@ -200,7 +201,8 @@ void SolverCPLEX::get_ub(double* ub, int first, int last) const {
 
 int SolverCPLEX::get_n_integer_vars() const
 {
-	int n_int_vars = CPXgetnumint(_env, _prb);
+	int n_int_vars = -1;
+	n_int_vars = CPXgetnumint(_env, _prb);
 	int n_bin_vars = CPXgetnumbin(_env, _prb);
 	return n_int_vars + n_bin_vars;
 }
@@ -223,7 +225,7 @@ void SolverCPLEX::del_rows(int first, int last) {
 
 void SolverCPLEX::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs,
 	const double* range, const int* mstart, const int* mclind, const double* dmatval) {
-	CPXaddrows(_env, _prb, 0, newrows, newnz, rhs, qrtype, mstart, mclind, dmatval, NULL, NULL);
+	int status = CPXaddrows(_env, _prb, 0, newrows, newnz, rhs, qrtype, mstart, mclind, dmatval,NULL, NULL);
 }
 
 void SolverCPLEX::add_cols(int newcol, int newnz, const double* objx, const int* mstart, const int* mrwind,
@@ -255,7 +257,12 @@ void SolverCPLEX::chg_bounds(int nbds, const int* mindex, const char* qbtype, co
 }
 
 void SolverCPLEX::chg_col_type(int nels, const int* mindex, const char* qctype) const {
+	std::cout << "COL TYPES = " << qctype << std::endl;
 	CPXchgctype(_env, _prb, nels, mindex, qctype);
+	if (get_n_integer_vars() == 0) {
+		std::cout << "ON REPASSE EN LP" << std::endl;
+		CPXchgprobtype(_env, _prb, CPXPROB_LP);
+	}
 }
 
 void SolverCPLEX::get_basis(int* rstatus, int* cstatus) const {

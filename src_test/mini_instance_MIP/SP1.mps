@@ -10,5 +10,5 @@ COLUMNS
 RHS
 	RHS 	C1 		1.5
 BOUNDS
-	LO		perte	0
+	LO	BND	perte	0
 ENDATA

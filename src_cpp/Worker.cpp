@@ -116,6 +116,8 @@ void Worker::solve(int & lp_status, BendersOptions const& options, std::string c
 */
 void Worker::solve_integer(int& lp_status, BendersOptions const& options, std::string const& path_to_mps) {
 	_solver->solve_integer(lp_status, _path_to_mps);
+
+	std::cout << "SOLVE INTEGER STATUS = " << lp_status << std::endl;
 	write_errored_prob(lp_status, options, path_to_mps);
 }
 

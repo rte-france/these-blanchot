@@ -2,13 +2,13 @@
 NAME          SP2
 ROWS
  N  OBJ
- G 	C1
+ G 	C2
 COLUMNS
-    x  			C1			1
+    x  			C2			1
     perte_2 	OBJ			1
-    perte_2 	C1			1
+    perte_2 	C2			1
 RHS
-	RHS 		C1 			2.5
+	RHS 		C2 			2.5
 BOUNDS
-	LO			perte_2		0
+	LO			BND 	perte_2		0
 ENDATA

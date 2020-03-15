@@ -105,8 +105,10 @@ public:
 			0, std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NROWS] - 1);
 		prob._solver->get_rhs_range(std::get<Attribute::DBL_VECTOR_INDEX>(_data)[DblVectorAttribute::RANGE].data(),
 			0, std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NROWS] - 1);
+
 		prob._solver->get_col_type(std::get<Attribute::CHAR_VECTOR_INDEX>(_data)[CharVectorAttribute::COLTYPE].data(),
 			0, std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NCOLS] - 1);
+
 		prob._solver->get_lb(std::get<Attribute::DBL_VECTOR_INDEX>(_data)[DblVectorAttribute::LB].data(),
 			0, std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NCOLS] - 1);
 		prob._solver->get_ub(std::get<Attribute::DBL_VECTOR_INDEX>(_data)[DblVectorAttribute::UB].data(),
@@ -139,6 +141,8 @@ public:
 
 		prob._solver->chg_col_type(std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NCOLS],
 			newcindex.data(), std::get<Attribute::CHAR_VECTOR_INDEX>(_data)[CharVectorAttribute::COLTYPE].data());
+
+		std::cout << "COL TYPES = " << std::get<Attribute::CHAR_VECTOR_INDEX>(_data)[CharVectorAttribute::COLTYPE].data() << std::endl;
 
 		prob._solver->add_rows(std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NROWS],
 			std::get<Attribute::INT_INDEX>(_data)[IntAttribute::NELES],
