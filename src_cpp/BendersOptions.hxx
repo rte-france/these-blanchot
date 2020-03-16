@@ -52,10 +52,16 @@ BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
 //Bool to say if non optimal problem should be written in a file before exit
 BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
 
-// Algorithm used to solve the problem (BASE, IN-OUT)
+// Algorithm used to solve the problem (BASE, IN-OUT, ENHANCED_MULTICUT)
 BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "IN-OUT")
 
-// Time limit
+// Method to sample scenarios if ALGORITHM == ENHANCED_MULTICUT (ORDERED -- TO ADD : RANDOM, ORDERED_RD, MAX_GAP ?)
+BENDERS_OPTIONS_MACRO(SORTING_METHOD, std::string, "ORDERED")
+
+// Number of slaves solved at each iteration on each machine if ALGORITHM == ENHANCED_MULTICUT
+BENDERS_OPTIONS_MACRO(BATCH_SIZE, int, 1)
+
+// Time limit for Benders decomposition ( -1 for no limit )
 BENDERS_OPTIONS_MACRO(TIME_LIMIT, double, -1)
 
 // LB set on epigraph variables

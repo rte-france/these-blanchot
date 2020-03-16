@@ -19,8 +19,6 @@ public:
 	void build_cut();
 	void run(std::ostream& stream);
 
-	void set_slaves_order(BendersData& data, BendersOptions const& options);
-
 	void classic_iteration(std::ostream& stream);
 	void enhanced_multicut_iteration(std::ostream& stream);
 

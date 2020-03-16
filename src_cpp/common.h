@@ -134,7 +134,8 @@ struct BendersData {
 	double best_ub;					/*!< Best upper bound found */
 	int maxsimplexiter;				/*!< Number max of simplex iterations observed in the slave resolutions */
 	int minsimplexiter;				/*!< Number min of simplex iterations observed in the slave resolutions */
-	int deletedcut;					/*!< Number of cuts not added at this iteration because they already exixst in Benders */
+	int deletedcut;					/*!< Number of cuts not added at this iteration because they 
+									already exixst in Benders */
 	int it;							/*!< Iteration of the algorithm */
 	bool stop;						/*!< True if one of the stopping criterion is observed */
 	double alpha;					/*!< Value of the weighted sum of the epigraph variables of the subproblems */
@@ -144,7 +145,6 @@ struct BendersData {
 	Point bestx;					/*!< Best point observed (lowest upper bound) */
 	Point x0;						/*!< Current solution of master problem */
 	int nslaves;					/*!< Number of subproblems */
-	int nrandom;					/*!< Number of slaves problems to sample randomly at one iteration if needed */
 
 	int master_status;				/*!< Solver status after master resolution */
 	int slave_status;				/*!< Worst solver status after resolution of the subproblems */
@@ -158,12 +158,16 @@ struct BendersData {
 	Timer total_time;				/*!< Total time elapsed */
 
 	// Enhanced multicut
-	int batch_size;					/*!< Number of slaves to solve on each process (= total number of slaves
+	int nrandom;					/*!< Number of slaves problems to sample randomly at one iteration if needed (OUTDATED) */
+	int batch_size;					/*!< Number max of slaves to solve on each process (= total number of slaves
 									in sequential mode ) */
 	int n_slaves_no_cut;			/*< Counter of slaves solved in a particular first stage solution
 									which were not cut */
 	double espilon_s;				/*!< optimality gap on one subproblem */
 	bool has_cut;					/*!< Bool saying if a subproblem has been cut at the last iteration */
+	IntVector indices;				/*!< Vector of indices of subproblems to perform sampling, the order of this 
+									vector will tell the subproblems to sample */
+
 
 };
 

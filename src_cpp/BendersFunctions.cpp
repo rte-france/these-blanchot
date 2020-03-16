@@ -6,7 +6,7 @@
 *
 *  \param data : Benders data
 */
-void init(BendersData & data) {
+void init(BendersData & data, BendersOptions const& options) {
 	std::srand(time(NULL));
 	data.lb = -1e20;
 	data.ub = +1e20;
@@ -28,6 +28,18 @@ void init(BendersData & data) {
 	data.stab_value = 0.5;
 	
 	data.total_time.restart();
+
+	// Sampling order initialization
+	data.indices = std::vector<int>(data.nslaves, 0);
+	for (unsigned int i = 0; i < data.nslaves; i++) {
+		data.indices[i] = i;
+	}
+
+	data.n_slaves_no_cut = 0;
+	data.has_cut = true;
+
+	data.batch_size = options.BATCH_SIZE;
+	data.espilon_s = options.GAP / data.nslaves;
 }
 
 /*!
@@ -39,7 +51,57 @@ void init(BendersData & data) {
 *
 * \param log_level : level of log precision (from 1 to 3)
 */
-void init_log(std::ostream&stream, int const log_level) {
+void init_log(std::ostream&stream, int const log_level, BendersOptions const& options) {
+	if (options.ALGORITHM == "BASE") {
+		init_log_base(stream, log_level);
+	}
+	else if (options.ALGORITHM == "IN-OUT") {
+		init_log_inout(stream, log_level);
+	}
+	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
+		init_log_enhanced_multicut(stream, log_level);
+	}
+}
+
+/*!
+*  \brief Initialize Benders log for BASE algorithm
+*
+*  Method to initialize Benders log by printing each column title
+*
+*  \param stream : output to print log
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void init_log_base(std::ostream& stream, int const log_level) {
+	stream << std::setw(10) << "ITE";
+	stream << std::setw(20) << "LB";
+	stream << std::setw(20) << "UB";
+	stream << std::setw(20) << "BESTUB";
+	stream << std::setw(15) << "GAP";
+
+	if (log_level > 1) {
+		stream << std::setw(15) << "MINSIMPLEX";
+		stream << std::setw(15) << "MAXSIMPLEX";
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << "DELETEDCUT";
+		stream << std::setw(15) << "TIMEMASTER";
+		stream << std::setw(15) << "TIMESLAVES";
+	}
+	stream << std::endl;
+}
+
+/*!
+*  \brief Initialize Benders log for IN-OUT algorithm
+*
+*  Method to initialize Benders log by printing each column title
+*
+*  \param stream : output to print log
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void init_log_inout(std::ostream& stream, int const log_level) {
 	stream << std::setw(10) << "ITE";
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "UB";
@@ -61,6 +123,33 @@ void init_log(std::ostream&stream, int const log_level) {
 }
 
 /*!
+*  \brief Initialize Benders log for ENHANCED_MULTICUT algorithm
+*
+*  Method to initialize Benders log by printing each column title
+*
+*  \param stream : output to print log
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
+	stream << std::setw(10) << "ITE";
+	stream << std::setw(20) << "LB";
+
+	if (log_level > 1) {
+		stream << std::setw(15) << "MINSIMPLEX";
+		stream << std::setw(15) << "MAXSIMPLEX";
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << "DELETEDCUT";
+		stream << std::setw(15) << "TIMEMASTER";
+		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "NBR_NOCUT";
+	}
+	stream << std::endl;
+}
+
+/*!
 *  \brief Print iteration log
 *
 *  Method to print the log of an iteration
@@ -71,8 +160,30 @@ void init_log(std::ostream&stream, int const log_level) {
 *
 * \param log_level : level of log precision (from 1 to 3)
 */
-void print_log(std::ostream&stream, BendersData const & data, int const log_level) {
+void print_log(std::ostream&stream, BendersData const & data, int const log_level, BendersOptions const & options) {
+	if (options.ALGORITHM == "BASE") {
+		print_log_base(stream, data, log_level);
+	}
+	else if (options.ALGORITHM == "IN-OUT") {
+		print_log_inout(stream, data, log_level);
+	}
+	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
+		print_log_enhanced_multicut(stream, data, log_level);
+	}
+}
 
+/*!
+*  \brief Print iteration log for BASE algorithm
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*
+* \param data : data to print
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void print_log_base(std::ostream&stream, BendersData const & data, int const log_level) {
 	stream << std::setw(10) << data.it;
 	if (data.lb == -1e20)
 		stream << std::setw(20) << "-INF";
@@ -86,7 +197,47 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(20) << "+INF";
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
-		stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
+
+	if (log_level > 1) {
+		stream << std::setw(15) << data.minsimplexiter;
+		stream << std::setw(15) << data.maxsimplexiter;
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << data.deletedcut;
+		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+	}
+	stream << std::endl;
+}
+
+/*!
+*  \brief Print iteration log for IN-OUT algorithm
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*
+* \param data : data to print
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void print_log_inout(std::ostream& stream, BendersData const& data, int const log_level) {
+	stream << std::setw(10) << data.it;
+	if (data.lb == -1e20)
+		stream << std::setw(20) << "-INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.lb;
+	if (data.ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.ub;
+	if (data.best_ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -100,7 +251,39 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << std::setprecision(2) << data.stab_value;
 	}
 	stream << std::endl;
+}
 
+/*!
+*  \brief Print iteration log for ENHANCED_MULTICUT algorithm
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*
+* \param data : data to print
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, int const log_level) {
+	stream << std::setw(10) << data.it;
+	if (data.lb == -1e20) {
+		stream << std::setw(20) << "-INF";
+	}
+	else {
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.lb;
+	}
+	if (log_level > 1) {
+		stream << std::setw(15) << data.minsimplexiter;
+		stream << std::setw(15) << data.maxsimplexiter;
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << data.deletedcut;
+		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << data.n_slaves_no_cut;
+	}
+	stream << std::endl;
 }
 
 /*!
@@ -232,7 +415,8 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 		((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || 
 		(data.lb + options.GAP >= data.best_ub) ||
 		(data.global_prb_status != 0) ||
-		(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT)
+		(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT) ||
+		(data.n_slaves_no_cut == data.nslaves)
 		);
 }
 
@@ -337,27 +521,45 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 *
 *  \param options : set of parameters
 */
-int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData const & data) {
+int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, 
+	StrVector const & slaves, BendersOptions const & options, BendersData const& data, Str2Int & problem_to_id) {
+	
 	// Store the status of a non  optimal slave, 0 if all opitmals
 	int slaves_worth_status = 0;
 	
-	for (int i(0); i < data.nrandom; i++){
+	// Computing the maximum number of problems we can solve
+	//std::cout << " /!\ EN MPI, IL FAUT CALCULER LE NOMBRE DE SLAVES SUR LA MACHINE " << std::endl;
+	int local_nslaves = map_slaves.size();
+	int n_slaves_to_solve = std::min(data.batch_size, local_nslaves - data.n_slaves_no_cut);
+
+	std::cout << "NUMBER SLAVES = " << n_slaves_to_solve << std::endl;
+
+	int counter = 0;
+
+	int begin = data.n_slaves_no_cut;
+	//for (int i(0); i < data.nrandom; i++){
+	for (int i(begin); i < begin + n_slaves_to_solve; i++) {
 		Timer timer_slave;
-		std::string const name_slave(random_slaves[i]);
+		std::string const name_slave(slaves[data.indices[i]]);
+
+		std::cout << name_slave << std::endl;
+
 		WorkerSlavePtr & ptr(map_slaves[name_slave]);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+
 		ptr->fix_to(data.x_cut);
 		ptr->solve(handler->get_int(LPSTATUS), options, name_slave);
-
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
-
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
-			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
+		
+
 		slave_cut_package[name_slave] = *slave_cut_data;
 	}
+
 	return slaves_worth_status;
 }
 
@@ -381,7 +583,8 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 *  \param options : set of parameters
 *
 */
-void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
+void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, 
+	AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -461,6 +664,11 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 */
 void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersOptions & options, BendersData & data) {
 	int nboundslaves(0);
+	
+	// Counter of number of subproblems which were not really cut this ite
+	int counter = 0;
+	int total_counter = 0;
+
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
@@ -468,14 +676,20 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			master->add_cut_slave(problem_to_id[kvp.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
-			if (handler->get_dbl(SLAVE_COST) <= options.GAP + handler->get_dbl(ALPHA_I)) {
-				nboundslaves++;
-			}
 
+			// Check if the cut has really cut or not
+			if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
+				counter += 1;
+			}
+			total_counter += 1;
 		}
 	}
-	if (nboundslaves == options.RAND_AGGREGATION) {
-		options.RAND_AGGREGATION = 0;
+
+	// update number of slaves not cut
+	data.n_slaves_no_cut = counter;
+	if (counter < total_counter) {
+		data.has_cut = true;
+		data.n_slaves_no_cut == 0;
 	}
 }
 
@@ -501,7 +715,19 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 */
 void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions & options) {
 	check_status(all_package, data);
-	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
+	if (options.ALGORITHM == "BASE" || options.ALGORITHM == "IN-OUT") {
+		if (options.AGGREGATION) {
+			sort_cut_slave_aggregate(all_package, master, problem_to_id, all_cuts_storage, data, options);
+		}
+		else {
+			sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
+		}
+	}
+	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
+		add_random_cuts(master, all_package, problem_to_id, options, data);
+	}
+
+	/*if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
 	}
 	else if (options.AGGREGATION) {
@@ -509,7 +735,7 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 	}
 	else if (options.RAND_AGGREGATION) {
 		add_random_cuts(master, all_package, problem_to_id, options, data);
-	}
+	}*/
 }
 
 /*!
@@ -536,8 +762,12 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 			}
 		}
 	}
+	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
+		data.x_stab = data.x0;
+		data.x_cut = data.x0;
+	}
 	else {
-		std::cout << "ALGORITHME NON RECONNU" << std::endl;
+		std::cout << "ALGORITHME " << options.ALGORITHM << " NON RECONNU" << std::endl;
 		std::exit(0);
 	}
 
@@ -566,7 +796,7 @@ void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data) {
 /*!
 *  \brief Compute the value of the separation point
 *
-*  Computethe actual value of the separation point by taking the sum of the valu of all the subproblem and adding the first stage variables value
+*  Compute the actual value of the separation point by taking the sum of the valu of all the subproblem and adding the first stage variables value
 *
 *  \param master : pointer to master problem
 *
@@ -583,5 +813,23 @@ void compute_ub(WorkerMasterPtr& master, BendersData& data) {
 	for (auto const& kvp : data.x_cut) {
 		col_id = master->_name_to_id[kvp.first];
 		data.ub += kvp.second * obj[col_id];
+	}
+}
+
+/*!
+*  \brief Compute the new order of subproblems
+*
+*  Compute the new order of subproblems, used in ENHANCED_MULTICUT to know which one is solve first
+*
+*  \param data		: data of Benders
+*  \param options	: options of Benders
+*/
+void set_slaves_order(BendersData& data, BendersOptions const& options) {
+	if (options.SORTING_METHOD == "ORDERED") {
+		std::rotate(data.indices.begin(), data.indices.begin() + data.n_slaves_no_cut + 1, data.indices.end());
+	}
+	else {
+		std::cout << "SORTING METHOD UNKNOWN. Please check README.txt to see available methods." << std::endl;
+		std::exit(0);
 	}
 }
