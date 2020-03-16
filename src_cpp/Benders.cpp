@@ -114,3 +114,47 @@ void Benders::run(std::ostream & stream) {
 	
 	print_solution(stream, _data.bestx, true, _data.global_prb_status);
 }
+
+void set_slaves_order(BendersData& data, BendersOptions const& options) {
+	std::random_shuffle(_slaves.begin(), _slaves.end());
+}
+
+void Benders::classic_iteration(std::ostream& stream) {
+	Timer timer_master;
+	++_data.it;
+	get_master_value(_master, _data, _options);
+
+	compute_x_cut(_options, _data);
+	build_cut();
+
+	compute_ub(_master, _data);
+	update_in_out_stabilisation(_master, _data);
+	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+
+	_data.timer_master = timer_master.elapsed();
+	print_log(stream, _data, _options.LOG_LEVEL);
+	_data.stop = stopping_criterion(_data, _options);
+}
+
+void Benders::enhanced_multicut_iteration(std::ostream& stream) {
+	Timer timer_master;
+	++_data.it;
+	if (_data.has_cut == true) {
+		set_slaves_order(_data, _options);
+		_data.n_slaves_no_cut = 0;
+		get_master_value(_master, _data, _options);
+	}
+
+	compute_x_cut(_options, _data);
+	build_cut();
+
+	//compute_ub(_master, _data);
+	//update_in_out_stabilisation(_master, _data);
+	//update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
+
+
+
+	_data.timer_master = timer_master.elapsed();
+	print_log(stream, _data, _options.LOG_LEVEL);
+	_data.stop = stopping_criterion(_data, _options);
+}

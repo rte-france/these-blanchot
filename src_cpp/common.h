@@ -157,6 +157,14 @@ struct BendersData {
 
 	Timer total_time;				/*!< Total time elapsed */
 
+	// Enhanced multicut
+	int batch_size;					/*!< Number of slaves to solve on each process (= total number of slaves
+									in sequential mode ) */
+	int n_slaves_no_cut;			/*< Counter of slaves solved in a particular first stage solution
+									which were not cut */
+	double espilon_s;				/*!< optimality gap on one subproblem */
+	bool has_cut;					/*!< Bool saying if a subproblem has been cut at the last iteration */
+
 };
 
 double norm_point(Point const & x0, Point const & x1);
