@@ -11,6 +11,11 @@ Worker::Worker() {
 	_is_master = false;
 }
 
+/*!
+*  \brief Create a pointer to the right solver
+*
+*  \param solver_name : name of the solver to use
+*/
 void Worker::declare_solver(std::string const & solver_name)
 {
 	// Declaration du solver
@@ -20,7 +25,7 @@ void Worker::declare_solver(std::string const & solver_name)
 	}
 #ifdef CPLEX
 	else if (solver_name == "CPLEX") {
-		_solver = std::make_shared< SolverCPLEX>();
+		_solver = std::make_shared< SolverCPLEX>(_path_to_mps);
 	}
 #endif
 #ifdef XPRESS
@@ -73,6 +78,7 @@ void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps,
 	_path_to_mps = path_to_mps;
 	add_stream(std::cout);
 	_solver->init(path_to_mps);
+	_solver->read_prob(path_to_mps.c_str(), "MPS");
 
 	//std::ifstream file(_path_to_mapping.c_str());
 	_name_to_id = variable_map;
@@ -82,20 +88,25 @@ void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps,
 	_is_master = false;
 }
 
+
+/*!
+*  \brief Add a stream to the list of output streams of the Worker
+*
+*  \param stream : stream to add
+*/
 void Worker::add_stream(std::ostream& stream)
 {
 	get_stream().push_back(&stream);
 }
-
-
 
 /*!
 *  \brief Method to solve a problem as a LP
 *
 *  \param lp_status : problem status after optimization
 */
-void Worker::solve(int & lp_status) {
+void Worker::solve(int & lp_status, BendersOptions const& options, std::string const& path_to_mps) {
 	_solver->solve(lp_status, _path_to_mps);
+	write_errored_prob(lp_status, options, path_to_mps);
 }
 
 /*!
@@ -103,15 +114,39 @@ void Worker::solve(int & lp_status) {
 *
 *  \param lp_status : problem status after optimization
 */
-void Worker::solve_integer(int& lp_status) {
+void Worker::solve_integer(int& lp_status, BendersOptions const& options, std::string const& path_to_mps) {
 	_solver->solve_integer(lp_status, _path_to_mps);
+	write_errored_prob(lp_status, options, path_to_mps);
 }
 
+/*!
+*  \brief Write a problem which was not solved to optimality
+*
+*  \param status : status of the solver
+*
+*  \param options : bool to say if need to write
+*
+*  \param path_to_mps : path to the file to write
+*/
+void Worker::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
+	_solver->write_errored_prob(status, options, path_to_mps);
+}
+
+/*!
+*  \brief get MIP solution of a problem (available after solve_integer)
+*
+*  \param x : primal values
+*
+*  \param duals : dual values
+*/
 void Worker::get_MIP_sol(double* x, double* duals)
 {
 	_solver->get_MIP_sol(x, duals);
 }
 
+/*!
+*  \brief get MIP value of a problem (available after solve_integer)
+*/
 double Worker::get_mip_value()
 {
 	double val(0);
@@ -126,4 +161,39 @@ double Worker::get_mip_value()
 */
 void Worker::get_simplex_ite(int & result) {
 	_solver->get_simplex_ite(result);
+}
+
+/*!
+*  \brief Get the number of columns of the problem
+*/
+int Worker::get_ncols()
+{
+	return _solver->get_ncols();
+}
+
+/*!
+*  \brief Get the number of rows of the problem
+*/
+int Worker::get_nrows()
+{
+	return _solver->get_nrows();
+}
+
+/*!
+*  \brief Get the objective vector of the problem between column first and last
+*
+*  \param obj : vector to fill with the objective
+*
+*  \param first : first column
+*
+*  \param last : last column
+*/
+void Worker::get_obj(DblVector & obj, int first, int last)
+{
+	_solver->get_obj(obj.data(), first, last);
+}
+
+int Worker::get_n_integer_vars()
+{
+	return _solver->get_n_integer_vars();
 }

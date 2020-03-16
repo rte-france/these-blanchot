@@ -29,23 +29,29 @@ void build_SlaveCutData(SlaveCutData &);
 enum SlaveCutInt {
 	SIMPLEXITER = 0,
 	LPSTATUS,
-	MAXINT
+	MAXINT_VALUE,
 };
 
 enum SlaveCutDbl {
 	SLAVE_COST = 0,
 	ALPHA_I,
 	SLAVE_TIMER,
-	MAXDBL 
+	MAXDBL_VALUE,
 };
 
 enum SlaveCutStr {
 	MAXSTR = 0
 };
 
+/*!
+* \class SlaveCutDataHandler
+* \brief Class defining one cut
+*/
 class SlaveCutDataHandler {
 public:
+	SlaveCutDataPtr _data; /*!< Data of the cut */
 
+public:
 	Point & get_subgradient();
 	IntVector & get_int();
 	DblVector & get_dbl();
@@ -66,20 +72,22 @@ public:
 	void print(std::ostream & stream)const;
 
 public:
-
 	SlaveCutDataHandler(SlaveCutDataPtr const &data);
 	SlaveCutDataHandler(SlaveCutDataPtr & data);
 	virtual ~SlaveCutDataHandler();
-
-	SlaveCutDataPtr _data;
 };
 
+/*!
+* \class SlaveCutTrimmer
+* \brief Class containing a cut and a point
+*/
 class SlaveCutTrimmer {
 public:
-	SlaveCutDataHandlerPtr _data_cut;
-	Point _x0;
-	double _const_cut;
+	SlaveCutDataHandlerPtr _data_cut;	/*!< Pointer on Data Cuts */
+	Point _x0;							/*!< Point in which one can evaluate the cut */
+	double _const_cut;					/*!< Value of the cut in the point x0 */
 
+public:
 	SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, Point & x0);
 	Point const & get_subgradient()const;
 

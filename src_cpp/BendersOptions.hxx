@@ -37,9 +37,6 @@ BENDERS_OPTIONS_MACRO(STRUCTURE_FILE, std::string, "structure.txt")
 //Path to the folder where input files are stored 
 BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
 
-//True if a statement of active cuts need to be done, false otherwise 
-BENDERS_OPTIONS_MACRO(ACTIVECUTS, bool, false)
-
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 
@@ -51,3 +48,16 @@ BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 
 //Choice of the solver to use (XPRESS only for now)
 BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
+
+//Bool to say if non optimal problem should be written in a file before exit
+BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
+
+// Algorithm used to solve the problem (BASE, IN-OUT)
+BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "IN-OUT")
+
+// Time limit
+BENDERS_OPTIONS_MACRO(TIME_LIMIT, double, -1)
+
+// LB set on epigraph variables
+BENDERS_OPTIONS_MACRO(THETA_LB, double, -1e10)
+

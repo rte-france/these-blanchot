@@ -3,7 +3,6 @@
 #include "WorkerMaster.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
-#include "SimplexBasis.h"
 
 
 /*!
@@ -15,23 +14,21 @@ public:
 	Benders(CouplingMap const & problem_list, BendersOptions const & options);
 	virtual ~Benders();
 
-	WorkerMasterPtr _master;
-	SlavesMapPtr _map_slaves;
-
-	Str2Int _problem_to_id;
-	BendersData _data;
-	BendersOptions _options;
-	StrVector _slaves;
-
-	AllCutStorage _all_cuts_storage;
-	DynamicAggregateCuts _dynamic_aggregate_cuts;
-
-	SimplexBasisStorage _basis;
-	SlaveCutId _slave_cut_id;
-	ActiveCutStorage _active_cuts;
-
 	void free();
-	
+
 	void build_cut();
-	void run(std::ostream & stream);
+	void run(std::ostream& stream);
+
+public:
+	WorkerMasterPtr _master; /*!<  Pointer to master problem */
+	SlavesMapPtr _map_slaves; /*!< Map of slaves problems <string, WorkerSlavePre> */
+
+	Str2Int _problem_to_id; /*!< Map linking problems to the id of their epigraph variables */
+	BendersData _data; /*!< Data of the resolution */
+	BendersOptions _options; /*!<  Options */
+	StrVector _slaves; /*!< Vector of subproblems names */
+
+	AllCutStorage _all_cuts_storage; /*!< Storage of cuts */
+
+	SlaveCutId _slave_cut_id; /*!< id of the cuts */
 };

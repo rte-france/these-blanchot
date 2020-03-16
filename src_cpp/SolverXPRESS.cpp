@@ -1,5 +1,6 @@
-#include "SolverXPRESS.h"
 
+#ifdef XPRESS
+#include "SolverXPRESS.h"
 // Definition of solver optimization status
 StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_UNSTARTED",
@@ -12,6 +13,18 @@ StrVector XPRS_LP_STATUS = {
 	"XPRS_LP_UNSOLVED",
 	"XPRS_LP_NONCONVEX"
 };
+
+StrVector XPRS_MIP_STATUS = {
+	"XPRS_MIP_NOT_LOADED",
+	"XPRS_MIP_LP_NOT_OPTIMAL",
+	"XPRS_MIP_LP_OPTIMAL",
+	"XPRS_MIP_NO_SOL_FOUND",
+	"XPRS_MIP_SOLUTION",
+	"XPRS_MIP_INFEAS",
+	"XPRS_MIP_OPTIMAL",
+	"XPRS_MIP_UNBOUNDED",
+};
+
 
 /************************************************************************************\
 * Name:         optimizermsg                                                         *
@@ -99,7 +112,6 @@ void SolverXPRESS::init(std::string const& path_to_mps) {
 	XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_NO_OUTPUT);
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
-	XPRSreadprob(_xprs, path_to_mps.c_str(), "");
 }
 
 void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
@@ -111,6 +123,58 @@ void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char*
 
 void SolverXPRESS::write_prob(const char* name, const char* flags) const {
 	XPRSwriteprob(_xprs, name, flags);
+}
+
+void SolverXPRESS::write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const {
+	
+	int xprs_status(0);
+	XPRSgetintattrib(_xprs, XPRS_LPSTATUS, &xprs_status);
+
+	if (status != OPTIMAL) {
+		std::cout << "status is : " << status << std::endl;
+		std::stringstream buffer;
+
+		std::string optim_status = "";
+		if (status == OPTIMAL) {
+			optim_status = SOLVER_STRING_STATUS[OPTIMAL];
+		}else if(status == INFEASIBLE) {
+			optim_status = SOLVER_STRING_STATUS[INFEASIBLE];
+		}
+		else if (status == UNBOUNDED) {
+			optim_status = SOLVER_STRING_STATUS[UNBOUNDED];
+		}
+		else if (status == INForUNBOUND) {
+			optim_status = SOLVER_STRING_STATUS[INForUNBOUND];
+		}
+		else if (status == UNKNOWN) {
+			optim_status = SOLVER_STRING_STATUS[UNKNOWN];
+		}
+		else {
+			optim_status = SOLVER_STRING_STATUS[UNKNOWN];
+		}
+
+		if (options.WRITE_ERRORED_PROB) {
+			buffer << path_to_mps << "status_";
+			buffer << optim_status;
+			buffer << ".mps";
+			std::cout << "status is : " << optim_status << std::endl;
+			std::cout << "written in " << buffer.str() << std::endl;
+			XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
+		}
+	}
+	/*else if (status) {
+		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
+	}*/
+}
+
+void SolverXPRESS::read_prob(const char* prob_name, const char* flags)
+{
+	std::string xprs_flags = "";
+	if (std::string(flags) == "LP") {
+		xprs_flags = "l";
+	}
+
+	XPRSreadprob(_xprs, prob_name, xprs_flags.c_str());
 }
 
 void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
@@ -128,21 +192,8 @@ void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 	else if (xprs_status == XPRS_LP_UNBOUNDED) {
 		lp_status = UNBOUNDED;
 	}
-	
-	if (xprs_status != XPRS_LP_OPTIMAL) {
-		std::cout << "lp_status is : " << xprs_status << std::endl;
-		std::stringstream buffer;
-
-		buffer << path_to_mps << "_lp_status_";
-		buffer << XPRS_LP_STATUS[xprs_status];
-		buffer << ".mps";
-		std::cout << "lp_status is : " << XPRS_LP_STATUS[xprs_status] << std::endl;
-		std::cout << "written in " << buffer.str() << std::endl;
-		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
-		std::exit(0);
-	}
-	else if (status) {
-		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
+	else {
+		lp_status = UNKNOWN;
 	}
 }
 
@@ -162,22 +213,8 @@ void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps)
 	else if (xprs_status == XPRS_MIP_UNBOUNDED) {
 		lp_status = UNBOUNDED;
 	}
-
-
-	if (xprs_status != XPRS_MIP_OPTIMAL && xprs_status != XPRS_LP_OPTIMAL) {
-		std::cout << "lp_status is : " << xprs_status << std::endl;
-		std::stringstream buffer;
-
-		buffer << path_to_mps << "_lp_status_";
-		buffer << XPRS_LP_STATUS[xprs_status];
-		buffer << ".mps";
-		std::cout << "lp_status is : " << XPRS_LP_STATUS[xprs_status] << std::endl;
-		std::cout << "written in " << buffer.str() << std::endl;
-		XPRSwriteprob(_xprs, buffer.str().c_str(), "x");
-		std::exit(0);
-	}
-	else if (status) {
-		std::cout << "Worker::solve() status " << status << ", " << path_to_mps << std::endl;
+	else {
+		lp_status = UNKNOWN;
 	}
 }
 
@@ -200,6 +237,7 @@ int SolverXPRESS::get_nrows() const {
 int SolverXPRESS::get_nelems() const {
 	int elems(0);
 	XPRSgetintattrib(_xprs, XPRS_ELEMS, &elems);
+	std::cout << "XPRESS ELEMS = " << elems << std::endl;
 	return elems;
 }
 
@@ -232,6 +270,13 @@ void SolverXPRESS::get_ub(double* ub, int first, int last) const {
 	XPRSgetub(_xprs, ub, first, last);
 }
 
+int SolverXPRESS::get_n_integer_vars() const
+{
+	int n_int_vars(0);
+	XPRSgetintattrib(_xprs, XPRS_MIPENTS, &n_int_vars);
+	return n_int_vars;
+}
+
 void SolverXPRESS::free() {
 	XPRSdestroyprob(_xprs);
 }
@@ -244,8 +289,12 @@ void SolverXPRESS::add_cut(Point const& s, Point const& x0, double rhs) {
 
 }
 
-void SolverXPRESS::del_rows(int nrows, const int* mindex) {
-	XPRSdelrows(_xprs, nrows, mindex);
+void SolverXPRESS::del_rows(int first, int last) {
+	IntVector mindex(last - first + 1);
+	for (int i = 0; i < last - first + 1; i++) {
+		mindex[i] = first + i;
+	}
+	XPRSdelrows(_xprs, last - first + 1, mindex.data());
 }
 
 void SolverXPRESS::add_rows(int newrows, int newnz, const char* qrtype, const double* rhs, 
@@ -258,8 +307,8 @@ void SolverXPRESS::add_cols(int newcol, int newnz, const double* objx, const int
 	XPRSaddcols(_xprs, newcol, newnz, objx, mstart, mrwind, dmatval, bdl, bdu);
 }
 
-void SolverXPRESS::add_names(int type, const char* cnames, int first, int last) {
-	XPRSaddnames(_xprs, type, cnames, first, last);
+void SolverXPRESS::add_name(int type, const char* cnames, int indice) {
+	XPRSaddnames(_xprs, type, cnames, indice, indice);
 }
 
 void SolverXPRESS::chg_obj(int nels, const int* mindex, const double* obj) {
@@ -332,3 +381,5 @@ void SolverXPRESS::set_threads(int n_threads)
 {
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, n_threads);
 }
+
+#endif

@@ -37,8 +37,15 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
-	}
 
+		if (_master->get_n_integer_vars() > 0) {
+			if (options.ALGORITHM == "IN-OUT") {
+				std::cout << "ERROR : IN-OUT algorithm can not be used with integer problems." << std::endl;
+				std::cout << "Please set alorithm to BASE." << std::endl;
+				std::exit(0);
+			}
+		}
+	}
 }
 
 
@@ -63,14 +70,14 @@ void Benders::build_cut() {
 	Timer timer_slaves;
 	if (_options.RAND_AGGREGATION) {
 		std::random_shuffle(_slaves.begin(), _slaves.end());
-		get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data);
+		_data.slave_status = get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data);
 	}
 	else {
-		get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
+		_data.slave_status = get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
-	build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+	build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
 }
 
 /*!
@@ -92,12 +99,12 @@ void Benders::run(std::ostream & stream) {
 		Timer timer_master;
 		++_data.it;
 		get_master_value(_master, _data, _options);
-		if (_options.ACTIVECUTS) {
-			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
-		}
 
+		compute_x_cut(_options, _data);
 		build_cut();
 
+		compute_ub(_master, _data);
+		update_in_out_stabilisation(_master, _data);
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 		_data.timer_master = timer_master.elapsed();
@@ -105,9 +112,5 @@ void Benders::run(std::ostream & stream) {
 		_data.stop = stopping_criterion(_data, _options);
 	}
 	
-	print_solution(stream, _data.bestx, true);
-
-	if (_options.ACTIVECUTS) {
-		print_active_cut(_active_cuts,_options);
-	}
+	print_solution(stream, _data.bestx, true, _data.global_prb_status);
 }

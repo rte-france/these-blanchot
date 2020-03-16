@@ -8,7 +8,6 @@
 */
 void init(BendersData & data) {
 	std::srand(time(NULL));
-	data.nbasis = 0;
 	data.lb = -1e20;
 	data.ub = +1e20;
 	data.best_ub = +1e20;
@@ -19,6 +18,16 @@ void init(BendersData & data) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+	
+	// Solver status
+	data.global_prb_status = 0;
+	data.master_status = 0;
+	data.slave_status = 0;
+
+	// in-out stab
+	data.stab_value = 0.5;
+	
+	data.total_time.restart();
 }
 
 /*!
@@ -46,6 +55,7 @@ void init_log(std::ostream&stream, int const log_level) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "ALPHA";
 	}
 	stream << std::endl;
 }
@@ -87,6 +97,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 		stream << std::setw(15) << data.deletedcut;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.stab_value;
 	}
 	stream << std::endl;
 
@@ -128,52 +139,43 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 * \param point : point to print
 *
 * \param filter_non_zero : either if zeros coordinates need to be printed or not
+*
+* \param status : status returned after optimization (0 if optimal)
 */
-void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero) {
-	stream << std::endl;
-	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-	stream << "*                                                                                               *" << std::endl;
-	stream << "*                                      Investment solution                                      *" << std::endl;
-	stream << "*                                                                                               *" << std::endl;
-	stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-	stream << "|                                                                                               |" << std::endl;
-	for (auto const & kvp : point) {
-		if (!filter_non_zero || std::fabs(kvp.second) > 1e-10) {
-			stream << "|  " << std::setw(70) << std::left << kvp.first;
-			stream << " = ";
-			stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
-			stream << "|" << std::endl;
+void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero, int status) {
+	if (status == OPTIMAL) {
+		stream << std::endl;
+		stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+		stream << "*                                                                                               *" << std::endl;
+		stream << "*                                      Investment solution                                      *" << std::endl;
+		stream << "*                                                                                               *" << std::endl;
+		stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+		stream << "|                                                                                               |" << std::endl;
+		for (auto const& kvp : point) {
+			if (!filter_non_zero || std::fabs(kvp.second) > 1e-10) {
+				stream << "|  " << std::setw(70) << std::left << kvp.first;
+				stream << " = ";
+				stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
+				stream << "|" << std::endl;
+			}
 		}
+		stream << "|_______________________________________________________________________________________________|" << std::endl;
+		stream << std::endl;
 	}
-	stream << "|_______________________________________________________________________________________________|" << std::endl;
-	stream << std::endl;
-}
-
-/*!
-*  \brief Write in a csv file every active cut at every iteration
-*
-*	Write in a csv file every active cut for every slave for all iterations
-*
-*  \param active_cuts : vector of tuple storing which cut is active or not
-*
-*  \param options : set of parameters
-*/
-void print_active_cut(ActiveCutStorage const & active_cuts, BendersOptions const & options) {
-	std::string output(options.OUTPUTROOT + PATH_SEPARATOR + "active_cut_output.csv");
-	std::ofstream file(output, std::ios::out | std::ios::trunc);
-	if (file)
-	{
-		file << "Ite;Slave;CutNumber;IsActive;" << std::endl;
-		for (int i(0); i < active_cuts.size(); i++) {
-			file << std::get<0>(active_cuts[i]) << ";";
-			file << std::get<1>(active_cuts[i]) << ";";
-			file << std::get<2>(active_cuts[i]) << ";";
-			file << std::get<3>(active_cuts[i]) << ";" << std::endl;
-		}
-		file.close();
+	else if(status == INFEASIBLE){
+		std::cout << "****************************************************" << std::endl;
+		std::cout << "               THE PROBLEM IS INFEASIBLE			  " << std::endl;
+		std::cout << "****************************************************" << std::endl;
+	}
+	else if (status == UNBOUNDED) {
+		std::cout << "****************************************************" << std::endl;
+		std::cout << "               THE PROBLEM IS UNBOUNDED			  " << std::endl;
+		std::cout << "****************************************************" << std::endl;
 	}
 	else {
-		std::cout << "Impossible d'ouvrir le fichier .csv" << std::endl;
+		std::cout << "****************************************************" << std::endl;
+		std::cout << "  ERROR : PROBLEM STATUS IS UNKNOWN			      " << std::endl;
+		std::cout << "****************************************************" << std::endl;
 	}
 }
 
@@ -226,18 +228,25 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
-	return(((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || (data.lb + options.GAP >= data.best_ub));
+	return(
+		((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || 
+		(data.lb + options.GAP >= data.best_ub) ||
+		(data.global_prb_status != 0) ||
+		(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT)
+		);
 }
 
 /*!
 *  \brief Check if every slave has been solved to optimality
 *
 *  \param all_package : storage of each slaves status
+*
+*  \param data : status of resolution of master and subproblems
 */
-void check_status(AllCutPackage const & all_package, BendersData const & data) {
+void check_status(AllCutPackage const & all_package, BendersData & data) {
 	if (data.master_status != OPTIMAL) {
 		std::cout << "Master status is " << data.master_status << std::endl;
-		exit(0);
+		data.global_prb_status = data.master_status;
 	}
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
@@ -245,7 +254,7 @@ void check_status(AllCutPackage const & all_package, BendersData const & data) {
 			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
 			if (handler->get_int(LPSTATUS) != OPTIMAL) {
 				std::cout << "Slave " << kvp.first << " status is " << handler->get_int(LPSTATUS) << std::endl;
-				exit(0);
+				data.global_prb_status = data.slave_status;
 			}
 		}
 	}
@@ -259,20 +268,18 @@ void check_status(AllCutPackage const & all_package, BendersData const & data) {
 *  \param master : pointer to the master problem
 *
 *  \param data : benders data to update with master optimal solution
+*
+*  \param options : option to say if a non optimal problem has to be written before exiting
 */
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
 
-	master->solve_integer(data.master_status);
-	//master->solve(data.master_status);
+	master->solve_integer(data.master_status, options, "master_");
+	
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
 
-	data.invest_cost = data.lb - data.alpha;
-	if (!options.RAND_AGGREGATION) {
-		data.ub = data.invest_cost;
-	}
 	data.timer_master = timer_master.elapsed();
 }
 
@@ -290,21 +297,31 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 *
 *  \param options : set of parameters
 */
-void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData const & data) {
+int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData & data) {
+	
+	// Store the status of a non  optimal slave, 0 if all opitmals
+	int slaves_worth_status = 0;
+
 	for (auto & kvp : map_slaves) {
 		Timer timer_slave;
 		WorkerSlavePtr & ptr(kvp.second);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-		ptr->fix_to(data.x0);
-		ptr->solve(handler->get_int(LPSTATUS));
+		ptr->fix_to(data.x_cut);
+
+		ptr->solve(handler->get_int(LPSTATUS), options, kvp.first);
+
+		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
+
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[kvp.first] = *slave_cut_data;
 	}
+
+	return slaves_worth_status;
 }
 
 /*!
@@ -320,15 +337,20 @@ void get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slave
 *
 *  \param options : set of parameters
 */
-void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData const & data) {
+int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, StrVector const & random_slaves, BendersOptions const & options, BendersData const & data) {
+	// Store the status of a non  optimal slave, 0 if all opitmals
+	int slaves_worth_status = 0;
+	
 	for (int i(0); i < data.nrandom; i++){
 		Timer timer_slave;
 		std::string const name_slave(random_slaves[i]);
 		WorkerSlavePtr & ptr(map_slaves[name_slave]);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-		ptr->fix_to(data.x0);
-		ptr->solve(handler->get_int(LPSTATUS));
+		ptr->fix_to(data.x_cut);
+		ptr->solve(handler->get_int(LPSTATUS), options, name_slave);
+
+		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
@@ -336,6 +358,7 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[name_slave] = *slave_cut_data;
 	}
+	return slaves_worth_status;
 }
 
 /*!
@@ -348,8 +371,6 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 *  \param master : pointer to thte master problem
 *
 *  \param problem_to_id : map linking each problem to its id
-*
-*  \param trace : vector keeping data for each iteration
 *
 *  \param all_cuts_storage : set to store every new cut
 *
@@ -367,15 +388,12 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
 			data.ub += handler->get_dbl(SLAVE_COST);
-			SlaveCutTrimmer cut(handler, data.x0);
+			SlaveCutTrimmer cut(handler, data.x_cut);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
 			else {
-				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
-				if (options.ACTIVECUTS) {
-					slave_cut_id[itmap.first].push_back(master->get_number_constraint());
-				}
+				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
 				all_cuts_storage[itmap.first].insert(cut);
 			}
 
@@ -395,8 +413,6 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 *
 *  \param problem_to_id : map linking each problem to its id
 *
-*  \param trace : vector keeping data for each iteration
-*
 *  \param all_cuts_storage : set to store every new cut
 *
 *  \param data : Benders data
@@ -412,10 +428,10 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			data.ub += handler->get_dbl(SLAVE_COST);
 			rhs += handler->get_dbl(SLAVE_COST);
-			for (auto const & var : data.x0) {
+			for (auto const & var : data.x_cut) {
 				s[var.first] += handler->get_subgradient()[var.first];
 			}
-			SlaveCutTrimmer cut(handler, data.x0);
+			SlaveCutTrimmer cut(handler, data.x_cut);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
@@ -438,8 +454,6 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 *  \param all_package : storage of every slave information
 *
 *  \param problem_to_id : map linking each problem to its id
-*
-*  \param trace : vector keeping data for each iteration
 *
 *  \param options : set of benders options
 *
@@ -477,19 +491,15 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 *
 *  \param problem_to_id : map linking each problem to its id
 *
-*  \param trace : vector keeping data for each iteration
-*
 *  \param slave_cut_id : map linking each slaves to their cuts ids in the master problem
 *
 *  \param all_cuts_storage : set to store every new cut
-*
-*  \param dynamic_aggregate_cuts : vector of tuple storing cut information (rhs, x0, subgradient)
 *
 *  \param options : set of benders options
 *
 *  \param data : set of benders data
 */
-void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, DynamicAggregateCuts & dynamic_aggregate_cuts, BendersData & data, BendersOptions & options) {
+void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions & options) {
 	check_status(all_package, data);
 	if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
 		sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
@@ -503,43 +513,75 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 }
 
 /*!
-*  \brief Get all slaves basis from a map
+*  \brief Compute the point in which the subproblems will be solveds
 *
-*  Fonction to get all slaves basis
+*  \param options : algorithm saying in which way the separation point is computed
 *
-*  \param simplex_basis_package : map linking each slave to its current simplex basis
-*
-*  \param map_slaves : map linking each slaves names to their problem
+*  \param data : data of Benders resolution
 */
-void get_slave_basis(SimplexBasisPackage & simplex_basis_package, SlavesMapPtr & map_slaves) {
-	for (auto & kvp : map_slaves) {
-		WorkerSlavePtr & ptr(kvp.second);
-		simplex_basis_package[kvp.first] = ptr->get_basis();
+void compute_x_cut(BendersOptions const& options, BendersData& data) {
+	
+	if (options.ALGORITHM == "BASE") {
+		data.x_stab = data.x0;
+		data.x_cut = data.x0;
+	}
+	else if (options.ALGORITHM == "IN-OUT") {
+		if (data.it == 1) {
+			data.x_stab = data.x0;
+			data.x_cut = data.x0;
+		} else {
+			for (auto const& kvp : data.x0) {
+				data.x_cut[kvp.first] = data.stab_value * data.x0[kvp.first] +
+					(1 - data.stab_value) * data.x_stab[kvp.first];
+			}
+		}
+	}
+	else {
+		std::cout << "ALGORITHME NON RECONNU" << std::endl;
+		std::exit(0);
+	}
+
+	data.ub = 0;
+}
+
+/*!
+*  \brief Update in-out stabilization center and value
+*
+*  Change the stability center if the new point is better than the previous, and change the stabilization value
+*
+*  \param master : pointer to master problem
+*
+*  \param data : data of the Benders resolution
+*/
+void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data) {
+	if (data.ub < data.best_ub) {
+		data.x_stab = data.x_cut;
+		data.stab_value = std::min(1.0, 1.2 * data.stab_value);
+	}
+	else {
+		data.stab_value = std::max(0.1, 0.8 * data.stab_value);
 	}
 }
 
 /*!
-*  \brief Store all cuts status at each iteration
+*  \brief Compute the value of the separation point
 *
-*  Fonction to store all cuts status from master problem at each iteration
+*  Computethe actual value of the separation point by taking the sum of the valu of all the subproblem and adding the first stage variables value
 *
 *  \param master : pointer to master problem
 *
-*  \param active_cuts : vector of tuple storing each cut status
-*
-*  \param cut_id : map linking each cut from each slave to its id in master problem
-*
-*  \param it : current iteration
+*  \param data : data of Benders
 */
-void update_active_cuts(WorkerMasterPtr & master, ActiveCutStorage & active_cuts, SlaveCutId & cut_id, int const it) {
-	DblVector dual;
-	master->get_dual_values(dual);
-	for (auto & kvp : cut_id) {
-		for (int i(0); i < kvp.second.size(); i++) {
-			active_cuts.push_back(std::make_tuple(it, kvp.first, i + 1, (dual[kvp.first[i]] != 0)));
-			//	}
-			//}
-		}
+void compute_ub(WorkerMasterPtr& master, BendersData& data) {
+	// Taking the obj function of master prob to compute c.x_cut
+	DblVector obj;
+	int n_cols = master->get_ncols();
+	obj.resize(n_cols, -1);
+	master->get_obj(obj, 0, n_cols - 1);
+
+	int col_id(0);
+	for (auto const& kvp : data.x_cut) {
+		col_id = master->_name_to_id[kvp.first];
+		data.ub += kvp.second * obj[col_id];
 	}
 }
-

@@ -6,10 +6,9 @@
 *  \param data : pointer to a slave cut data
 */
 SlaveCutDataHandler::SlaveCutDataHandler(SlaveCutDataPtr & data) :_data(data) {
-	//get_subgradient().clear();
-	get_int().resize(SlaveCutInt::MAXINT);
-	get_dbl().resize(SlaveCutDbl::MAXDBL);
-	get_str().resize(SlaveCutDbl::MAXDBL);
+	get_int().resize(SlaveCutInt::MAXINT_VALUE);
+	get_dbl().resize(SlaveCutDbl::MAXDBL_VALUE);
+	get_str().resize(SlaveCutDbl::MAXDBL_VALUE);
 }
 
 SlaveCutDataHandler::~SlaveCutDataHandler() {
@@ -132,6 +131,7 @@ bool SlaveCutTrimmer::operator<(SlaveCutTrimmer const & other) const {
 */
 SlaveCutTrimmer::SlaveCutTrimmer(SlaveCutDataHandlerPtr & data, Point & x0) : _data_cut(data), _x0(x0) {
 	_const_cut = _data_cut->get_dbl(SLAVE_COST);
+
 	for (auto const & kvp : _x0) {
 		_const_cut -= get_subgradient().find(kvp.first)->second * kvp.second;
 	}

@@ -1,23 +1,23 @@
 #pragma once
 
 #include "SolverAbstract.h"
-#ifdef XPRESS
-#include "xprs.h"
-
-void XPRS_CC optimizermsg(XPRSprob prob, void* stream, const char* sMsg, int nLen, int nMsglvl);
+#ifdef CPLEX
+#include "cplex.h"
 
 /*!
-* \class SolverXPRESS
-* \brief Class for XPRESS problems and methods 
+* \class SolverCPLEX
+* \brief Class for CPLEX problems and methods 
 */
-class SolverXPRESS : public SolverAbstract {
+class SolverCPLEX : public SolverAbstract {
 	static int _NumberOfProblems;	/*!< Counter of the total number of XPRESS problems declared to set or end the environment */
 public:
-	XPRSprob _xprs;					/*!< Problem in XPRESS */
+	CPXENVptr _env;				/*!< Ptr to the CPLEX environment */
+	CPXLPptr _prb;				/*!< Ptr to the CPLEX problem */
+	//StrVector CPLEX_LP_STATUS;	/*!< CPLEX lp status */
 
 public:
-	SolverXPRESS();
-	virtual ~SolverXPRESS();
+	SolverCPLEX(std::string const& name);
+	virtual ~SolverCPLEX();
 
 // General methods
 public:
@@ -80,7 +80,4 @@ public:
 	virtual void set_algorithm(std::string const& algo);
 	virtual void set_threads(int n_threads);
 };
-
-void errormsg(XPRSprob& xprs, const char* sSubName, int nLineNo, int nErrCode);
-void optimizermsg(XPRSprob prob, void* stream, const char* sMsg, int nLen, int nMsglvl);
 #endif

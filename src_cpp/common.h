@@ -9,7 +9,8 @@
 #define PATH_SEPARATOR "/" 
 #endif 
 
-#define XPRESS
+//#define XPRESS
+#define CPLEX
 
 #include <tuple>
 #include <sstream>
@@ -45,16 +46,22 @@ typedef std::vector<std::string> StrVector;
 typedef std::map < std::string, Str2Int> CouplingMap;
 
 typedef std::map <std::string, IntVector> SlaveCutId;
-typedef std::tuple <int, std::string, int, bool> ActiveCut;
-typedef std::vector<ActiveCut> ActiveCutStorage;
+//typedef std::tuple <int, std::string, int, bool> ActiveCut;
+//typedef std::vector<ActiveCut> ActiveCutStorage;
 
 typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
 
+
+/*!
+* \class Predicate
+* \brief TO DO
+*/
 struct Predicate {
 	bool operator()(PointPtr const & lhs, PointPtr const & rhs)const {
 		return *lhs < *rhs;
 	}
+
 	bool operator()(Point const & lhs, Point const & rhs)const {
 		Point::const_iterator it1(lhs.begin());
 		Point::const_iterator it2(rhs.begin());
@@ -84,13 +91,6 @@ struct Predicate {
 			return (it1 == end1);
 		}
 	}
-};
-
-// Definition of optimality codes
-enum SOLVER_STATUS {
-	OPTIMAL,
-	INFEASIBLE,
-	UNBOUNDED,
 };
 
 
@@ -127,27 +127,36 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 * \brief Structure used to manage every benders data
 */
 struct BendersData {
-	int nbasis;
-	double timer_slaves;
-	double timer_master;
-	double lb;
-	double ub;
-	double best_ub;
-	int maxsimplexiter;
-	int minsimplexiter;
-	int deletedcut;
-	int it;
-	bool stop;
-	double alpha;
-	std::vector<double> alpha_i;
-	double slave_cost;
-	double invest_cost;
-	Point bestx;
-	Point x0;
-	int nslaves;
-	double dnslaves;
-	int master_status;
-	int nrandom;
+	double timer_slaves;			/*!< Time spent in the slave resolution at each iteration */
+	double timer_master;			/*!< Time spent in the master resolution at each iteration */
+	double lb;						/*!< Lower bound of Benders resolution */
+	double ub;						/*!< Upper bound computed at the current iteration */
+	double best_ub;					/*!< Best upper bound found */
+	int maxsimplexiter;				/*!< Number max of simplex iterations observed in the slave resolutions */
+	int minsimplexiter;				/*!< Number min of simplex iterations observed in the slave resolutions */
+	int deletedcut;					/*!< Number of cuts not added at this iteration because they already exixst in Benders */
+	int it;							/*!< Iteration of the algorithm */
+	bool stop;						/*!< True if one of the stopping criterion is observed */
+	double alpha;					/*!< Value of the weighted sum of the epigraph variables of the subproblems */
+	std::vector<double> alpha_i;	/*!< Vector of the value of the epigrpah variables of the subproblems */
+	double slave_cost;				/*!< Second stage cost at this iteration */
+	double invest_cost;				/*!< First stage cost at this iteration */
+	Point bestx;					/*!< Best point observed (lowest upper bound) */
+	Point x0;						/*!< Current solution of master problem */
+	int nslaves;					/*!< Number of subproblems */
+	int nrandom;					/*!< Number of slaves problems to sample randomly at one iteration if needed */
+
+	int master_status;				/*!< Solver status after master resolution */
+	int slave_status;				/*!< Worst solver status after resolution of the subproblems */
+	int global_prb_status;			/*!< Status of the entire problem after resolution of master and subproblems */
+
+	// Stabilisation in-out
+	Point x_cut;					/*!< Point in which a cut is computed */
+	Point x_stab;					/*!< Stability center used in in-out stabilisation */
+	double stab_value;				/*!< Value of the stabilisation (between 0 and 1) */
+
+	Timer total_time;				/*!< Total time elapsed */
+
 };
 
 double norm_point(Point const & x0, Point const & x1);

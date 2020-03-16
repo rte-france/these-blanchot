@@ -5,6 +5,10 @@
 #include <chrono>
 typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
 
+/*!
+* \class Timer
+* \brief Timer object based on std::chrono
+*/
 class Timer {
 public:
 	Timer();
@@ -18,12 +22,10 @@ private:
 
 inline Timer::Timer() {
 	restart();
-
 }
 
 inline void Timer::restart() {
 	_start = std::chrono::system_clock::now();
-
 }
 
 inline double Timer::elapsed() const {
