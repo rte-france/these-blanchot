@@ -161,6 +161,9 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 	build_cut();
 
 	_data.timer_master = timer_master.elapsed();
-	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
+
+	if (_data.it % _options.LOG_NUMBER_ITE == 0 || _data.stop) {
+		print_log(stream, _data, _options.LOG_LEVEL, _options);
+	}
 }

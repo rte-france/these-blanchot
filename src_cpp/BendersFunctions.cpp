@@ -532,17 +532,14 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 	int local_nslaves = map_slaves.size();
 	int n_slaves_to_solve = std::min(data.batch_size, local_nslaves - data.n_slaves_no_cut);
 
-	std::cout << "NUMBER SLAVES = " << n_slaves_to_solve << std::endl;
-
 	int counter = 0;
 
 	int begin = data.n_slaves_no_cut;
+
 	//for (int i(0); i < data.nrandom; i++){
 	for (int i(begin); i < begin + n_slaves_to_solve; i++) {
 		Timer timer_slave;
 		std::string const name_slave(slaves[data.indices[i]]);
-
-		std::cout << name_slave << std::endl;
 
 		WorkerSlavePtr & ptr(map_slaves[name_slave]);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
@@ -686,7 +683,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 	}
 
 	// update number of slaves not cut
-	data.n_slaves_no_cut = counter;
+	data.n_slaves_no_cut += counter;
 	if (counter < total_counter) {
 		data.has_cut = true;
 		data.n_slaves_no_cut == 0;

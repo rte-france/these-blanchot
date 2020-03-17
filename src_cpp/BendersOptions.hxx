@@ -67,3 +67,5 @@ BENDERS_OPTIONS_MACRO(TIME_LIMIT, double, -1)
 // LB set on epigraph variables
 BENDERS_OPTIONS_MACRO(THETA_LB, double, -1e10)
 
+// Iterations when printing a log line
+BENDERS_OPTIONS_MACRO(LOG_NUMBER_ITE, int, 1)
