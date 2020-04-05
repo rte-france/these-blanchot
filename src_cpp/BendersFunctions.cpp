@@ -429,11 +429,12 @@ void bound_simplex_iter(int simplexiter, BendersData & data) {
 */
 bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 	if (options.ALGORITHM == "ENHANCED_MULTICUT") {
+		//std::cout << std::scientific << data.ub - data.lb << std::endl;
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
 			(data.global_prb_status != 0) ||
 			(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT) ||
-			(data.n_slaves_no_cut == data.nslaves)
+			(data.n_slaves_no_cut == data.nslaves && data.lb + options.GAP >= data.ub)
 			);
 	}
 	else {

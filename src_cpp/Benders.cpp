@@ -172,6 +172,7 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 	
 	if (_data.n_slaves_no_cut == _data.nslaves) {
 		compute_ub(_master, _data);
+		_data.has_cut = true;
 	}
 	_data.stop = stopping_criterion(_data, _options);
 
