@@ -92,6 +92,8 @@ void Benders::build_cut() {
 */
 void Benders::run(std::ostream & stream) {
 	
+	Timer timer;
+
 	init_log(stream, _options.LOG_LEVEL, _options);
 	for (auto const & kvp : _problem_to_id) {
 		_all_cuts_storage[kvp.first] = SlaveCutStorage();
@@ -110,8 +112,10 @@ void Benders::run(std::ostream & stream) {
 			std::exit(0);
 		}
 	}
-	
-	print_solution(stream, _data.bestx, true, _data.global_prb_status);
+
+	print_solution(stream, _data.x_cut, true, _data.global_prb_status, _options.PRINT_SOLUTION);
+
+	std::cout << "Computation time : " << timer.elapsed() << std::endl;
 }
 
 
@@ -150,20 +154,28 @@ void Benders::classic_iteration(std::ostream& stream) {
 void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 	Timer timer_master;
 	++_data.it;
+
+	reset_iteration_data(_data, _options);
+
 	if (_data.has_cut == true) {
-		set_slaves_order(_data, _options);
-		_data.n_slaves_no_cut = 0;
-		get_master_value(_master, _data, _options);
 		_data.has_cut = false;
+		_data.n_slaves_no_cut = 0;
+
+		set_slaves_order(_data, _options);
+		get_master_value(_master, _data, _options);
+		compute_x_cut(_options, _data);
 	}
 
-	compute_x_cut(_options, _data);
 	build_cut();
 
 	_data.timer_master = timer_master.elapsed();
+	
+	if (_data.n_slaves_no_cut == _data.nslaves) {
+		compute_ub(_master, _data);
+	}
 	_data.stop = stopping_criterion(_data, _options);
 
 	if (_data.it % _options.LOG_NUMBER_ITE == 0 || _data.stop) {
 		print_log(stream, _data, _options.LOG_LEVEL, _options);
-	}
+	}	
 }

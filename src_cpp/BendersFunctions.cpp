@@ -40,6 +40,8 @@ void init(BendersData & data, BendersOptions const& options) {
 
 	data.batch_size = options.BATCH_SIZE;
 	data.espilon_s = options.GAP / data.nslaves;
+
+	data.step_size = options.STEP_SIZE;
 }
 
 /*!
@@ -147,6 +149,13 @@ void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
 		stream << std::setw(15) << "NBR_NOCUT";
 	}
 	stream << std::endl;
+}
+
+void reset_iteration_data(BendersData& data, BendersOptions const& options)
+{
+	data.deletedcut = 0;
+	data.maxsimplexiter = 0;
+	data.minsimplexiter = std::numeric_limits<int>::max();
 }
 
 /*!
@@ -325,40 +334,51 @@ void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std
 *
 * \param status : status returned after optimization (0 if optimal)
 */
-void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero, int status) {
+void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero, int status, bool printsol) {
 	if (status == OPTIMAL) {
-		stream << std::endl;
-		stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-		stream << "*                                                                                               *" << std::endl;
-		stream << "*                                      Investment solution                                      *" << std::endl;
-		stream << "*                                                                                               *" << std::endl;
-		stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
-		stream << "|                                                                                               |" << std::endl;
-		for (auto const& kvp : point) {
-			if (!filter_non_zero || std::fabs(kvp.second) > 1e-10) {
-				stream << "|  " << std::setw(70) << std::left << kvp.first;
-				stream << " = ";
-				stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
-				stream << "|" << std::endl;
+		if (printsol) {
+			stream << std::endl;
+			stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+			stream << "*                                                                                               *" << std::endl;
+			stream << "*                                      Investment solution                                      *" << std::endl;
+			stream << "*                                                                                               *" << std::endl;
+			stream << "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *" << std::endl;
+			stream << "|                                                                                               |" << std::endl;
+			for (auto const& kvp : point) {
+				if (!filter_non_zero || std::fabs(kvp.second) > 1e-10) {
+					stream << "|  " << std::setw(70) << std::left << kvp.first;
+					stream << " = ";
+					stream << std::setw(20) << std::scientific << std::setprecision(10) << kvp.second;
+					stream << "|" << std::endl;
+				}
 			}
+			stream << "|_______________________________________________________________________________________________|" << std::endl;
+			stream << std::endl;
 		}
-		stream << "|_______________________________________________________________________________________________|" << std::endl;
-		stream << std::endl;
+		else {
+			stream << std::endl;
+			stream << "****************************************************" << std::endl;
+			stream << "               OPTIMAL SOLUTION FOUND               " << std::endl;
+			stream << "****************************************************" << std::endl;
+		}
 	}
 	else if(status == INFEASIBLE){
-		std::cout << "****************************************************" << std::endl;
-		std::cout << "               THE PROBLEM IS INFEASIBLE			  " << std::endl;
-		std::cout << "****************************************************" << std::endl;
+		stream << std::endl;
+		stream << "****************************************************" << std::endl;
+		stream << "               THE PROBLEM IS INFEASIBLE			  " << std::endl;
+		stream << "****************************************************" << std::endl;
 	}
 	else if (status == UNBOUNDED) {
-		std::cout << "****************************************************" << std::endl;
-		std::cout << "               THE PROBLEM IS UNBOUNDED			  " << std::endl;
-		std::cout << "****************************************************" << std::endl;
+		stream << std::endl;
+		stream << "****************************************************" << std::endl;
+		stream << "               THE PROBLEM IS UNBOUNDED			  " << std::endl;
+		stream << "****************************************************" << std::endl;
 	}
 	else {
-		std::cout << "****************************************************" << std::endl;
-		std::cout << "  ERROR : PROBLEM STATUS IS UNKNOWN			      " << std::endl;
-		std::cout << "****************************************************" << std::endl;
+		stream << std::endl;
+		stream << "****************************************************" << std::endl;
+		stream << "  ERROR : PROBLEM STATUS IS UNKNOWN			      " << std::endl;
+		stream << "****************************************************" << std::endl;
 	}
 }
 
@@ -408,16 +428,22 @@ void bound_simplex_iter(int simplexiter, BendersData & data) {
 *  \param options : stopping parameters
 */
 bool stopping_criterion(BendersData & data, BendersOptions const & options) {
-	data.deletedcut = 0;
-	data.maxsimplexiter = 0;
-	data.minsimplexiter = std::numeric_limits<int>::max();
-	return(
-		((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) || 
-		(data.lb + options.GAP >= data.best_ub) ||
-		(data.global_prb_status != 0) ||
-		(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT) ||
-		(data.n_slaves_no_cut == data.nslaves)
-		);
+	if (options.ALGORITHM == "ENHANCED_MULTICUT") {
+		return(
+			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
+			(data.global_prb_status != 0) ||
+			(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT) ||
+			(data.n_slaves_no_cut == data.nslaves)
+			);
+	}
+	else {
+		return(
+			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
+			(data.global_prb_status != 0) ||
+			(data.lb + options.GAP >= data.best_ub) ||
+			(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT)
+			);
+	}
 }
 
 /*!
@@ -547,9 +573,12 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 
 		ptr->fix_to(data.x_cut);
 		ptr->solve(handler->get_int(LPSTATUS), options, name_slave);
+
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
+
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
+
 		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		
@@ -670,9 +699,11 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 		for (auto const & kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
 			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
-			master->add_cut_slave(problem_to_id[kvp.first], handler->get_subgradient(), data.x0, handler->get_dbl(SLAVE_COST));
+			master->add_cut_slave(problem_to_id[kvp.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
+			
+			data.ub += handler->get_dbl(SLAVE_COST);
 
 			// Check if the cut has really cut or not
 			if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
@@ -760,8 +791,19 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 	}
 	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
-		data.x_stab = data.x0;
-		data.x_cut = data.x0;
+		if (data.it == 1) {
+			data.x_stab = data.x0;
+			data.x_cut = data.x0;
+		}
+		else {
+			data.x_stab = data.x_cut;
+			for (auto const& kvp : data.x0) {
+				data.x_cut[kvp.first] = data.step_size * data.x0[kvp.first] +
+					(1 - data.step_size) * data.x_stab[kvp.first];
+			}
+		}
+		//data.x_stab = data.x0;
+		//data.x_cut = data.x0;
 	}
 	else {
 		std::cout << "ALGORITHME " << options.ALGORITHM << " NON RECONNU" << std::endl;
@@ -828,5 +870,21 @@ void set_slaves_order(BendersData& data, BendersOptions const& options) {
 	else {
 		std::cout << "SORTING METHOD UNKNOWN. Please check README.txt to see available methods." << std::endl;
 		std::exit(0);
+	}
+}
+
+void compute_separation_point_cost(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options)
+{
+	data.invest_separation_cost = 0;
+	// Taking the obj function of master prob to compute c.x_cut
+	DblVector obj;
+	int n_cols = master->get_ncols();
+	obj.resize(n_cols, -1);
+	master->get_obj(obj, 0, n_cols - 1);
+
+	int col_id(0);
+	for (auto const& kvp : data.x_cut) {
+		col_id = master->_name_to_id[kvp.first];
+		data.invest_separation_cost += kvp.second * obj[col_id];
 	}
 }

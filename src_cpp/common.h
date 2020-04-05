@@ -141,7 +141,8 @@ struct BendersData {
 	double alpha;					/*!< Value of the weighted sum of the epigraph variables of the subproblems */
 	std::vector<double> alpha_i;	/*!< Vector of the value of the epigrpah variables of the subproblems */
 	double slave_cost;				/*!< Second stage cost at this iteration */
-	double invest_cost;				/*!< First stage cost at this iteration */
+	double invest_cost;				/*!< First stage cost of the master solution at this iteration */
+	double invest_separation_cost;	/*!< FIrst stage cost of the separation point*/
 	Point bestx;					/*!< Best point observed (lowest upper bound) */
 	Point x0;						/*!< Current solution of master problem */
 	int nslaves;					/*!< Number of subproblems */
@@ -167,6 +168,8 @@ struct BendersData {
 	bool has_cut;					/*!< Bool saying if a subproblem has been cut at the last iteration */
 	IntVector indices;				/*!< Vector of indices of subproblems to perform sampling, the order of this 
 									vector will tell the subproblems to sample */
+	double step_size;				/*!< Step size taken by enhanced multicut
+									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
 
 
 };

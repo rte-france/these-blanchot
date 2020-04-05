@@ -128,7 +128,7 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 }
 
 void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) {
-	
+
 	if (get_n_integer_vars() == 0) {
 		solve(lp_status, path_to_mps);
 	}
@@ -332,5 +332,17 @@ void SolverCPLEX::set_threads(int n_threads)
 	CPXsetintparam(_env, CPXPARAM_Threads, n_threads);
 }
 
+void SolverCPLEX::scaling(int scale) {
+	CPXsetintparam(_env, CPXPARAM_Read_Scale, scale);
+}
+
+void SolverCPLEX::presolve(int presolve) {
+	int status = CPXsetintparam(_env, CPXPARAM_Preprocessing_Presolve, presolve);
+}
+
+void SolverCPLEX::optimality_gap(double gap) {
+	int status = CPXsetdblparam(_env, CPXPARAM_Simplex_Tolerances_Optimality, gap);
+	CPXsetdblparam(_env, CPXPARAM_Barrier_ConvergeTol, gap);
+}
 
 #endif

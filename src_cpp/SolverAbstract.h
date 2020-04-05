@@ -104,4 +104,7 @@ public:
 	virtual void set_output_log_level(int loglevel) = 0;
 	virtual void set_algorithm(std::string const& algo) = 0;
 	virtual void set_threads(int n_threads) = 0;
+	virtual void scaling(int scale) = 0;
+	virtual void presolve(int presolve) = 0;
+	virtual void optimality_gap(double gap) = 0;
 };

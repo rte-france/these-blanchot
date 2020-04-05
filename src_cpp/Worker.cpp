@@ -105,6 +105,16 @@ void Worker::add_stream(std::ostream& stream)
 *  \param lp_status : problem status after optimization
 */
 void Worker::solve(int & lp_status, BendersOptions const& options, std::string const& path_to_mps) {
+
+	if (_is_master) {
+		_solver->presolve(options.MASTER_PRESOLVE);
+		_solver->scaling(options.MASTER_SCALING);
+	}
+	else {
+		_solver->presolve(options.SLAVE_PRESOLVE);
+		_solver->scaling(options.SLAVE_SCALING);
+	}
+
 	_solver->solve(lp_status, _path_to_mps);
 	write_errored_prob(lp_status, options, path_to_mps);
 }
@@ -115,6 +125,16 @@ void Worker::solve(int & lp_status, BendersOptions const& options, std::string c
 *  \param lp_status : problem status after optimization
 */
 void Worker::solve_integer(int& lp_status, BendersOptions const& options, std::string const& path_to_mps) {
+
+	if (_is_master) {
+		_solver->presolve(options.MASTER_PRESOLVE);
+		_solver->scaling(options.MASTER_SCALING);
+	}
+	else {
+		_solver->presolve(options.SLAVE_PRESOLVE);
+		_solver->scaling(options.SLAVE_SCALING);
+	}
+
 	_solver->solve_integer(lp_status, _path_to_mps);
 	write_errored_prob(lp_status, options, path_to_mps);
 }

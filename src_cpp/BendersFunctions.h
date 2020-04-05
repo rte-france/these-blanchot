@@ -13,6 +13,8 @@ void init_log_base(std::ostream& stream, int const log_level);
 void init_log_inout(std::ostream& stream, int const log_level);
 void init_log_enhanced_multicut(std::ostream& stream, int const log_level);
 
+void reset_iteration_data(BendersData & data, BendersOptions const& options);
+
 void print_log(std::ostream&stream, BendersData const & data, int const log_level, BendersOptions const& options);
 void print_log_base(std::ostream& stream, BendersData const& data, int const log_level);
 void print_log_inout(std::ostream& stream, BendersData const& data, int const log_level);
@@ -20,7 +22,7 @@ void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, 
 
 void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, 
 	std::string const & name, int const islaves);
-void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero,int status);
+void print_solution(std::ostream&stream, Point const & point, bool const filter_non_zero,int status, bool printsol);
 
 
 void update_best_ub(double & best_ub, double const & ub, Point & bestx, Point const & x0);
@@ -55,3 +57,5 @@ void update_in_out_stabilisation(WorkerMasterPtr & _master, BendersData& data);
 void compute_ub(WorkerMasterPtr& master, BendersData& data);
 
 void set_slaves_order(BendersData& data, BendersOptions const& options);
+
+void compute_separation_point_cost(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options);

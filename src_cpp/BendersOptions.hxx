@@ -40,7 +40,7 @@ BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 
-//Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER) 
+//Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER)
 BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
 
 //Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
@@ -67,5 +67,23 @@ BENDERS_OPTIONS_MACRO(TIME_LIMIT, double, -1)
 // LB set on epigraph variables
 BENDERS_OPTIONS_MACRO(THETA_LB, double, -1e10)
 
-// Iterations when printing a log line
+// Value of solver presolve for master problem
+BENDERS_OPTIONS_MACRO(MASTER_PRESOLVE, int, 1)
+
+// Value of scaling for master problem
+BENDERS_OPTIONS_MACRO(MASTER_SCALING, int, 0)
+
+// Value of solver presolve for slaves
+BENDERS_OPTIONS_MACRO(SLAVE_PRESOLVE, int, 1)
+
+// Value of scaling for slaces
+BENDERS_OPTIONS_MACRO(SLAVE_SCALING, int, 0)
+
+// Iterations when printing a log line, only for ENHANCED_MULTICUT
 BENDERS_OPTIONS_MACRO(LOG_NUMBER_ITE, int, 1)
+
+// Step size of enhanced multicut algorithm (x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )
+BENDERS_OPTIONS_MACRO(STEP_SIZE, float, 1.0)
+
+// Bool to say if the optimal solution appear in the log
+BENDERS_OPTIONS_MACRO(PRINT_SOLUTION, bool, 1)
