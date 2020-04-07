@@ -171,6 +171,8 @@ struct BendersData {
 	double step_size;				/*!< Step size taken by enhanced multicut
 									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
 
+	DblVector last_value;			/*!< Last value observed of a subproblem*/
+
 
 };
 
