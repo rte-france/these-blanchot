@@ -709,6 +709,12 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			data.ub += handler->get_dbl(SLAVE_COST);
 			data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
 
+			/*std::cout << "  " << kvp.first 
+				<< "  " << std::setprecision(8) << std::scientific << handler->get_dbl(SLAVE_COST) 
+				<< "  " << std::setprecision(8) << std::scientific << data.alpha_i[problem_to_id[kvp.first]]
+				<< "  " << std::setprecision(8) << std::scientific << handler->get_dbl(SLAVE_COST) - data.alpha_i[problem_to_id[kvp.first]]
+				<< std::endl;
+				*/
 			// Check if the cut has really cut or not
 			if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
 				counter += 1;
@@ -721,7 +727,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 	data.n_slaves_no_cut += counter;
 	if (counter < total_counter) {
 		data.has_cut = true;
-		data.n_slaves_no_cut == 0;
+		data.n_slaves_no_cut = 0;
 	}
 }
 
@@ -875,7 +881,25 @@ void set_slaves_order(BendersData& data, BendersOptions const& options) {
 		std::random_shuffle(data.indices.begin(), data.indices.end());
 	}
 	else if (options.SORTING_METHOD == "MAX_GAP"){
-
+		// il faut initialiser les valeurs avec une resolution de chaque SP
+		if (data.it <= data.nslaves) {
+			std::rotate(data.indices.begin(), data.indices.begin() + data.n_slaves_no_cut + 1, data.indices.end());
+		}
+		else {
+			std::sort(data.indices.begin(), data.indices.end(), [&](const int i, const int j)
+				{ 
+					if (abs((data.last_value[i] - data.alpha_i[i])) < -1e10) {
+						return true;
+					}
+					else {
+						return (abs((data.last_value[i] - data.alpha_i[i]) / data.last_value[i])
+						> abs((data.last_value[j] - data.alpha_i[j]) / data.last_value[j]));
+					} 
+				});
+		}
+		//for (auto const& v : data.indices) {
+		//	std::cout << "  " << v << "  " << data.last_value[v] << "  " << data.alpha_i[v] << "   " << (data.last_value[v] - data.alpha_i[v]) / data.last_value[v] << std::endl;
+		//}
 	}
 	else {
 		std::cout << "SORTING METHOD UNKNOWN. Please check README.txt to see available methods." << std::endl;
