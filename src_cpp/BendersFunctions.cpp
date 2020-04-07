@@ -872,7 +872,10 @@ void set_slaves_order(BendersData& data, BendersOptions const& options) {
 		std::rotate(data.indices.begin(), data.indices.begin() + data.n_slaves_no_cut + 1, data.indices.end());
 	}
 	else if (options.SORTING_METHOD == "RANDOM"){
-		std::shuffle(data.indices.begin(), data.indices.end());
+		std::random_shuffle(data.indices.begin(), data.indices.end());
+	}
+	else if (options.SORTING_METHOD == "MAX_GAP"){
+
 	}
 	else {
 		std::cout << "SORTING METHOD UNKNOWN. Please check README.txt to see available methods." << std::endl;
