@@ -135,13 +135,25 @@ void BendersMpi::step_1(mpi::environment & env, mpi::communicator & world) {
 
 	if (world.rank() == 0)
 	{
-		get_master_value(_master, _data, _options);
+		if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
+			get_master_value(_master, _data, _options);
+		}
+		else if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
+			if (_data.has_cut == true) {
+				set_slaves_order(_data, _options);
+				_data.n_slaves_no_cut = 0;
+				get_master_value(_master, _data, _options);
+				_data.has_cut = false;
+			}
+		}
+		else {
+			std::cout << "ALGORITHME NON RECONNU" << std::endl;
+			std::exit(0);
+		}
 	}
 	compute_x_cut(_options, _data);
 	broadcast(world, _data.x_cut, 0);
-	if (_options.RAND_AGGREGATION) {
-		std::random_shuffle(_slaves.begin(), _slaves.end());
-	}
+	
 	world.barrier();
 
 }
@@ -166,8 +178,9 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
 	}
 	else {
-		if (_options.RAND_AGGREGATION) {
-			get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data);
+
+		if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
+			get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
 		}
 		else {
 			get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
@@ -208,12 +221,12 @@ void BendersMpi::free(mpi::environment & env, mpi::communicator & world) {
 */
 void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ostream & stream) {
 	if (world.rank() == 0) {
-		init_log(stream, _options.LOG_LEVEL);
+		init_log(stream, _options.LOG_LEVEL, _options);
 		for (auto const & kvp : _problem_to_id) {
 			_all_cuts_storage[kvp.first] = SlaveCutStorage();
 		}
 	}
-	init(_data);
+	init(_data, _options);
 	world.barrier();
 
 	while (!_data.stop) {
@@ -229,12 +242,19 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		step_2(env, world);
 
 		if (world.rank() == 0) {
-			compute_ub(_master, _data);
-			update_in_out_stabilisation(_master, _data);
-			update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x_cut);
+
+			if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
+				compute_ub(_master, _data);
+				update_in_out_stabilisation(_master, _data);
+				update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x_cut);
+			}
+			
 			_data.timer_master = timer_master.elapsed();
-			print_log(stream, _data, _options.LOG_LEVEL);
+			print_log(stream, _data, _options.LOG_LEVEL, _options);
 			_data.stop = stopping_criterion(_data,_options);
+			if (_data.stop) {
+				std::cout << "ON A DIT STOP !" << std::endl;
+			}
 		}
 
 		broadcast(world, _data.stop, 0);

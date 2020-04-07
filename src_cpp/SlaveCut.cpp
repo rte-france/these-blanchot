@@ -44,7 +44,7 @@ StrVector & SlaveCutDataHandler::get_str() {
 }
 
 /*!
-*  \brief Get int variable of a slave cut (SIMPLEXITE, LPSTATUS)
+*  \brief Get int variable of a slave cut (SIMPLEXITE, LPSTATUS, HAS_CUT)
 */
 int & SlaveCutDataHandler::get_int(SlaveCutInt key) {
 	return get_int()[key];

@@ -40,7 +40,7 @@ BENDERS_OPTIONS_MACRO(INPUTROOT, std::string, ".")
 //Number of slaves to select for random aggregation, set to 0 if no random aggregation needed
 BENDERS_OPTIONS_MACRO(RAND_AGGREGATION, int, 0)
 
-//Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER) 
+//Method use to solve the master problem (either SIMPLEX, BARRIER or BARRIER_WO_CROSSOVER)
 BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
 
 //Set to 1 if Xpress output is wanted for the master, 2 for slaves, 3 for both, 0 otherwise 
@@ -52,12 +52,38 @@ BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
 //Bool to say if non optimal problem should be written in a file before exit
 BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
 
-// Algorithm used to solve the problem (BASE, IN-OUT)
+// Algorithm used to solve the problem (BASE, IN-OUT, ENHANCED_MULTICUT)
 BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "IN-OUT")
 
-// Time limit
+// Method to sample scenarios if ALGORITHM == ENHANCED_MULTICUT (ORDERED -- TO ADD : RANDOM, ORDERED_RD, MAX_GAP ?)
+BENDERS_OPTIONS_MACRO(SORTING_METHOD, std::string, "ORDERED")
+
+// Number of slaves solved at each iteration on each machine if ALGORITHM == ENHANCED_MULTICUT
+BENDERS_OPTIONS_MACRO(BATCH_SIZE, int, 1)
+
+// Time limit for Benders decomposition ( -1 for no limit )
 BENDERS_OPTIONS_MACRO(TIME_LIMIT, double, -1)
 
 // LB set on epigraph variables
 BENDERS_OPTIONS_MACRO(THETA_LB, double, -1e10)
 
+// Value of solver presolve for master problem
+BENDERS_OPTIONS_MACRO(MASTER_PRESOLVE, int, 1)
+
+// Value of scaling for master problem
+BENDERS_OPTIONS_MACRO(MASTER_SCALING, int, 0)
+
+// Value of solver presolve for slaves
+BENDERS_OPTIONS_MACRO(SLAVE_PRESOLVE, int, 1)
+
+// Value of scaling for slaces
+BENDERS_OPTIONS_MACRO(SLAVE_SCALING, int, 0)
+
+// Iterations when printing a log line, only for ENHANCED_MULTICUT
+BENDERS_OPTIONS_MACRO(LOG_NUMBER_ITE, int, 1)
+
+// Step size of enhanced multicut algorithm (x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )
+BENDERS_OPTIONS_MACRO(STEP_SIZE, float, 1.0)
+
+// Bool to say if the optimal solution appear in the log
+BENDERS_OPTIONS_MACRO(PRINT_SOLUTION, bool, 1)

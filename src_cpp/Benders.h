@@ -19,6 +19,9 @@ public:
 	void build_cut();
 	void run(std::ostream& stream);
 
+	void classic_iteration(std::ostream& stream);
+	void enhanced_multicut_iteration(std::ostream& stream);
+
 public:
 	WorkerMasterPtr _master; /*!<  Pointer to master problem */
 	SlavesMapPtr _map_slaves; /*!< Map of slaves problems <string, WorkerSlavePre> */

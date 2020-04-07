@@ -134,17 +134,18 @@ struct BendersData {
 	double best_ub;					/*!< Best upper bound found */
 	int maxsimplexiter;				/*!< Number max of simplex iterations observed in the slave resolutions */
 	int minsimplexiter;				/*!< Number min of simplex iterations observed in the slave resolutions */
-	int deletedcut;					/*!< Number of cuts not added at this iteration because they already exixst in Benders */
+	int deletedcut;					/*!< Number of cuts not added at this iteration because they 
+									already exixst in Benders */
 	int it;							/*!< Iteration of the algorithm */
 	bool stop;						/*!< True if one of the stopping criterion is observed */
 	double alpha;					/*!< Value of the weighted sum of the epigraph variables of the subproblems */
 	std::vector<double> alpha_i;	/*!< Vector of the value of the epigrpah variables of the subproblems */
 	double slave_cost;				/*!< Second stage cost at this iteration */
-	double invest_cost;				/*!< First stage cost at this iteration */
+	double invest_cost;				/*!< First stage cost of the master solution at this iteration */
+	double invest_separation_cost;	/*!< FIrst stage cost of the separation point*/
 	Point bestx;					/*!< Best point observed (lowest upper bound) */
 	Point x0;						/*!< Current solution of master problem */
 	int nslaves;					/*!< Number of subproblems */
-	int nrandom;					/*!< Number of slaves problems to sample randomly at one iteration if needed */
 
 	int master_status;				/*!< Solver status after master resolution */
 	int slave_status;				/*!< Worst solver status after resolution of the subproblems */
@@ -156,6 +157,20 @@ struct BendersData {
 	double stab_value;				/*!< Value of the stabilisation (between 0 and 1) */
 
 	Timer total_time;				/*!< Total time elapsed */
+
+	// Enhanced multicut
+	int nrandom;					/*!< Number of slaves problems to sample randomly at one iteration if needed (OUTDATED) */
+	int batch_size;					/*!< Number max of slaves to solve on each process (= total number of slaves
+									in sequential mode ) */
+	int n_slaves_no_cut;			/*< Counter of slaves solved in a particular first stage solution
+									which were not cut */
+	double espilon_s;				/*!< optimality gap on one subproblem */
+	bool has_cut;					/*!< Bool saying if a subproblem has been cut at the last iteration */
+	IntVector indices;				/*!< Vector of indices of subproblems to perform sampling, the order of this 
+									vector will tell the subproblems to sample */
+	double step_size;				/*!< Step size taken by enhanced multicut
+									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
+
 
 };
 

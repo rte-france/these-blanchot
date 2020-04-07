@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
 	std::cout << "Optimal value " << val << std::endl;
 
-	print_solution(std::cout, x0, true, status);
+	print_solution(std::cout, x0, true, status, options.PRINT_SOLUTION);
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;
 	full.free();
 
