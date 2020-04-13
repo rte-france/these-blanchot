@@ -262,6 +262,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	}
 
 	if (world.rank() == 0) {
-		print_solution(stream, _data.bestx, true, _data.global_prb_status);
+		print_solution(stream, _data.bestx, true, _data.global_prb_status, _options.PRINT_SOLUTION);
 	}
 }
