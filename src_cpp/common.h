@@ -9,7 +9,7 @@
 #define PATH_SEPARATOR "/" 
 #endif 
 
-//#define XPRESS
+#define XPRESS
 #define CPLEX
 
 #include <tuple>
@@ -170,6 +170,8 @@ struct BendersData {
 									vector will tell the subproblems to sample */
 	double step_size;				/*!< Step size taken by enhanced multicut
 									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
+
+	DblVector last_value;			/*!< Last value observed of a subproblem*/
 
 
 };

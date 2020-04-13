@@ -129,6 +129,7 @@ void Benders::run(std::ostream & stream) {
 void Benders::classic_iteration(std::ostream& stream) {
 	Timer timer_master;
 	++_data.it;
+	reset_iteration_data(_data, _options);
 	get_master_value(_master, _data, _options);
 
 	compute_x_cut(_options, _data);
@@ -161,8 +162,8 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 		_data.has_cut = false;
 		_data.n_slaves_no_cut = 0;
 
-		set_slaves_order(_data, _options);
 		get_master_value(_master, _data, _options);
+		set_slaves_order(_data, _options);
 		compute_x_cut(_options, _data);
 	}
 
