@@ -233,7 +233,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 		Timer timer_master;
 		update_random_option(env, world, _options, _data);
 		++_data.it;
-		_data.deletedcut = 0;
+		reset_iteration_data(_data, _options);
 
 		/*Solve Master problem, get optimal value and cost and send it to Slaves*/
 		step_1(env, world);
@@ -252,9 +252,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 			_data.timer_master = timer_master.elapsed();
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
 			_data.stop = stopping_criterion(_data,_options);
-			if (_data.stop) {
-				std::cout << "ON A DIT STOP !" << std::endl;
-			}
 		}
 
 		broadcast(world, _data.stop, 0);
