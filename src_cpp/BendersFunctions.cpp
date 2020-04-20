@@ -260,6 +260,7 @@ void print_log_inout(std::ostream& stream, BendersData const& data, int const lo
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.stab_value;
+		stream << std::setw(15) << std::setprecision(2) << data.nocutmaster;
 	}
 	stream << std::endl;
 }
@@ -488,7 +489,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
 
-	master->solve_integer(data.master_status, options, "master_");
+	master->solve_integer(data.master_status, data, options, "master_");
 	
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
@@ -522,7 +523,7 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 		ptr->fix_to(data.x_cut);
 
-		ptr->solve(handler->get_int(LPSTATUS), options, kvp.first);
+		ptr->solve(handler->get_int(LPSTATUS), data, options, kvp.first);
 
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
@@ -575,7 +576,7 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
 		ptr->fix_to(data.x_cut);
-		ptr->solve(handler->get_int(LPSTATUS), options, name_slave);
+		ptr->solve(handler->get_int(LPSTATUS), data, options, name_slave);
 
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
@@ -625,8 +626,18 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				data.deletedcut++;
 			}
 			else {
-				master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
-				all_cuts_storage[itmap.first].insert(cut);
+				if ( has_cut_master(master, data, options, problem_to_id[itmap.first], 
+					handler->get_dbl(SLAVE_COST), handler->get_subgradient()) ) 
+				{
+					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
+					all_cuts_storage[itmap.first].insert(cut);
+				}
+				else {
+					data.nocutmaster += 1;
+					//std::cout << "  NO CUT " << data.nocutmaster << std::endl;
+					//std::cout << "         " << itmap.first << "  " << data.alpha_i[problem_to_id[itmap.first]] << std::endl;
+
+				}
 			}
 
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
@@ -921,4 +932,17 @@ void compute_separation_point_cost(WorkerMasterPtr& master, BendersData& data, B
 		col_id = master->_name_to_id[kvp.first];
 		data.invest_separation_cost += kvp.second * obj[col_id];
 	}
+}
+
+bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options, int id, double val, Point subgrad)
+{
+	if (data.alpha == options.THETA_LB) {
+		return true;
+	}
+	
+	double delta_cut = val - data.alpha_i[id];
+	for (auto const& kvp : subgrad) {
+		delta_cut += kvp.second * (data.x0[kvp.first] - data.x_cut[kvp.first]);
+	}
+	return delta_cut >= options.CUT_MASTER_TOL;
 }

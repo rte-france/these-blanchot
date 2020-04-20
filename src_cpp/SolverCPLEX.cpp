@@ -124,6 +124,7 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 	}
 	else {
 		lp_status = UNKNOWN;
+		std::cout << "CPLEX STATUS IS : " << lp_status << std::endl;
 	}
 }
 
@@ -151,6 +152,7 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 		}
 		else {
 			lp_status = UNKNOWN;
+			std::cout << "CPLEX STATUS IS : " << lp_status << std::endl;
 		}
 	}
 }

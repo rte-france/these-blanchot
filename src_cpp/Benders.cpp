@@ -99,7 +99,7 @@ void Benders::run(std::ostream & stream) {
 		_all_cuts_storage[kvp.first] = SlaveCutStorage();
 	}
 	init(_data, _options);
-
+	_data.nocutmaster = 0;
 	while (!_data.stop) {
 		if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
 			classic_iteration(stream);

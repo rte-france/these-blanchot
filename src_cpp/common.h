@@ -173,6 +173,8 @@ struct BendersData {
 
 	DblVector last_value;			/*!< Last value observed of a subproblem*/
 
+	int nocutmaster;
+
 
 };
 
