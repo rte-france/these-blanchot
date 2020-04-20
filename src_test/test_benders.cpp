@@ -25,7 +25,7 @@ TEST_CASE("Lecture LP et MPS") {
 	REQUIRE(prob.get_ncols() == 1);
 
 	int lp_status(0);
-	prob.solve_integer(lp_status, options, "");
+	prob.solve_integer(lp_status, options, 1, "");
 	REQUIRE(lp_status == 0);
 	
 	DblVector ptr(prob.get_ncols(), 0);;
@@ -67,7 +67,7 @@ SCENARIO("Resolution instance LP") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status, options, "full");
+			full.solve_integer(status, options, 1, "full");
 
 			Point x0;
 			double val(0);
@@ -123,7 +123,7 @@ SCENARIO("Resolution instance MIP") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status, options, "full");
+			full.solve_integer(status, options, 1, "full");
 
 			Point x0;
 			double val(0);
@@ -180,7 +180,7 @@ SCENARIO("Resolution instance INFEASIBLE") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status, options, "");
+			full.solve_integer(status, options, 1, "");
 
 			Point x0;
 			double val(0);
@@ -234,7 +234,7 @@ SCENARIO("Resolution instance UNBOUDED") {
 			full.set_threads(1);
 
 			int status = 0;
-			full.solve_integer(status, options, "");
+			full.solve_integer(status, options, 1, "");
 
 			Point x0;
 			double val(0);

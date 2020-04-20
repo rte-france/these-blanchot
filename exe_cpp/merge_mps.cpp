@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 	full.set_threads(1);
 
 	int status = 0;
-	full.solve_integer(status, options, "full");
+	full.solve_integer(status, options, 1, "full");
 
 	Point x0;
 	double val(0);

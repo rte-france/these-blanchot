@@ -489,7 +489,7 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 	Timer timer_master;
 	data.alpha_i.resize(data.nslaves);
 
-	master->solve_integer(data.master_status, data, options, "master_");
+	master->solve_integer(data.master_status, options, 1, "master_");
 	
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
@@ -523,7 +523,7 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 		ptr->fix_to(data.x_cut);
 
-		ptr->solve(handler->get_int(LPSTATUS), data, options, kvp.first);
+		ptr->solve(handler->get_int(LPSTATUS), options, data.nslaves, kvp.first);
 
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
@@ -576,7 +576,7 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 
 		ptr->fix_to(data.x_cut);
-		ptr->solve(handler->get_int(LPSTATUS), data, options, name_slave);
+		ptr->solve(handler->get_int(LPSTATUS), options, data.nslaves, name_slave);
 
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
