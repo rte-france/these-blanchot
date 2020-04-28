@@ -195,7 +195,7 @@ void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 	}
 	else {
 		lp_status = UNKNOWN;
-		std::cout << "XPRESS STATUS IS : " << lp_status << std::endl;
+		std::cout << "XPRESS STATUS IS : " << xprs_status << std::endl;
 	}
 }
 
@@ -217,7 +217,7 @@ void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps)
 	}
 	else {
 		lp_status = UNKNOWN;
-		std::cout << "XPRESS STATUS IS : " << lp_status << std::endl;
+		std::cout << "XPRESS STATUS IS : " << xprs_status << std::endl;
 	}
 }
 

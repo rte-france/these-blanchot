@@ -122,9 +122,20 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 	else if (cpx_status == CPX_STAT_INForUNBD) {
 		lp_status = INForUNBOUND;
 	}
+	else if(cpx_status == CPX_STAT_OPTIMAL_INFEAS) {
+		DblVector solu;
+		int n = get_ncols();
+		solu.resize(n);
+		get_LP_sol(solu.data(), NULL, NULL, NULL);
+
+		for (int i(0); i < n; i++) {
+			//std::cout << i << " " << solu[i] << std::endl;
+		}
+		lp_status = OPTIMAL;
+	}
 	else {
 		lp_status = UNKNOWN;
-		std::cout << "CPLEX STATUS IS : " << lp_status << std::endl;
+		std::cout << "CPLEX STATUS IS : " << cpx_status << std::endl;
 	}
 }
 
@@ -152,7 +163,7 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 		}
 		else {
 			lp_status = UNKNOWN;
-			std::cout << "CPLEX STATUS IS : " << lp_status << std::endl;
+			std::cout << "CPLEX STATUS IS : " << cpx_status << std::endl;
 		}
 	}
 }
