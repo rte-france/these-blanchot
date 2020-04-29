@@ -99,7 +99,12 @@ void Benders::run(std::ostream & stream) {
 		_all_cuts_storage[kvp.first] = SlaveCutStorage();
 	}
 	init(_data, _options);
-	_data.nocutmaster = 0;
+
+	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
+		//master_loop(stream);
+	}
+
+
 	while (!_data.stop) {
 		if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
 			classic_iteration(stream);
@@ -189,6 +194,7 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 1. resolution of master problem
 		get_master_value(_master, _data, _options);
+		_data.has_cut = false;
 		
 		// 2. Choosing new order of subpoblems
 		set_slaves_order(_data, _options);
@@ -204,7 +210,7 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 6. update stab
 		if (_data.misprices == 0) {
-			_data.stab_value = std::max(0.01, 0.8 * _data.stab_value);
+			_data.step_size = std::max(0.01, 0.8 * _data.step_size);
 		}
 
 	}
@@ -212,8 +218,41 @@ void Benders::master_loop(std::ostream& stream) {
 
 void Benders::separation_loop(std::ostream& stream)
 {
+	while ( _data.has_cut == false ) {
+
+		// 1. Compute separation point
+		compute_x_cut(_options, _data);
+
+		// 2. Compute difference of first stage solutions objectives
+		compute_epsilon_x(_master, _options, _data);
+
+		// 3. Reset resolution indicator for point x_cut
+		_data.n_slaves_no_cut = 0;
+
+		// 4. Resolution of subproblems in x_cut
+		optimality_loop(stream);
+
+		// 5. stopping criterion
+		_data.stop = stopping_criterion(_data, _options);
+
+		// 6. udpate stab value
+		if (_data.has_cut == false) {
+			_data.misprices += 1;
+			_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
+		}
+	}
 }
 
 void Benders::optimality_loop(std::ostream& stream)
 {
+	do {
+		build_cut();
+
+		if (_data.it % _options.LOG_NUMBER_ITE == 0 || _data.stop) {
+			print_log(stream, _data, _options.LOG_LEVEL, _options);
+		}
+
+		++_data.it;
+
+	} while (_data.stay_in_x_cut);
 }

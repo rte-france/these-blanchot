@@ -44,6 +44,8 @@ void init(BendersData & data, BendersOptions const& options) {
 	data.step_size = options.STEP_SIZE;
 
 	data.last_value = std::vector<double>(data.nslaves, 1e20);
+	data.nocutmaster = 0;
+	data.misprices = 0;
 }
 
 /*!
@@ -149,6 +151,7 @@ void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
 		stream << std::setw(15) << "NBR_NOCUT";
+		stream << std::setw(15) << "STAB_VAL";
 	}
 	stream << std::endl;
 }
@@ -294,6 +297,7 @@ void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, 
 		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
 		stream << std::setw(15) << data.n_slaves_no_cut;
+		stream << std::setw(15) << data.step_size;
 	}
 	stream << std::endl;
 }
@@ -706,8 +710,10 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 	int nboundslaves(0);
 	
 	// Counter of number of subproblems which were not really cut this ite
-	int counter = 0;
+	int optcounter = 0;
 	int total_counter = 0;
+
+	data.stay_in_x_cut = false;
 
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
@@ -720,24 +726,33 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			data.ub += handler->get_dbl(SLAVE_COST);
 			data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
 
-			/*std::cout << "  " << kvp.first 
-				<< "  " << std::setprecision(8) << std::scientific << handler->get_dbl(SLAVE_COST) 
-				<< "  " << std::setprecision(8) << std::scientific << data.alpha_i[problem_to_id[kvp.first]]
-				<< "  " << std::setprecision(8) << std::scientific << handler->get_dbl(SLAVE_COST) - data.alpha_i[problem_to_id[kvp.first]]
-				<< std::endl;
-				*/
 			// Check if the cut has really cut or not
-			if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
-				counter += 1;
+			if (has_cut_master(master, data, options, problem_to_id[kvp.first],
+				handler->get_dbl(SLAVE_COST), handler->get_subgradient())) {
+				data.has_cut = true;
+			}
+			else {
+				data.misprices += 1;
+				data.nocutmaster += 1;
+			}
+
+			// Check local optimality
+			data.espilon_s = (options.GAP - data.epsilon_x) / data.nslaves;
+			if ( (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) ) {
+				optcounter += 1;
 			}
 			total_counter += 1;
 		}
 	}
 
-	// update number of slaves not cut
-	data.n_slaves_no_cut += counter;
-	if (counter < total_counter) {
-		data.has_cut = true;
+	// 
+	if (optcounter == total_counter) {
+		data.n_slaves_no_cut += optcounter;
+		if (data.n_slaves_no_cut < data.nslaves) {
+			data.stay_in_x_cut = true;
+		}
+	}
+	else {
 		data.n_slaves_no_cut = 0;
 	}
 }
@@ -945,4 +960,20 @@ bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions c
 		delta_cut += kvp.second * (data.x0[kvp.first] - data.x_cut[kvp.first]);
 	}
 	return delta_cut >= options.CUT_MASTER_TOL;
+}
+
+void compute_epsilon_x(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data)
+{
+	data.epsilon_x = 0;
+	// Taking the obj function of master prob to compute c.x_cut
+	DblVector obj;
+	int n_cols = master->get_ncols();
+	obj.resize(n_cols, -1);
+	master->get_obj(obj, 0, n_cols - 1);
+
+	int col_id(0);
+	for (auto const& kvp : data.x_cut) {
+		col_id = master->_name_to_id[kvp.first];
+		data.epsilon_x += (kvp.second - data.x0[kvp.first]) * obj[col_id];
+	}
 }

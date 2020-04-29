@@ -175,6 +175,8 @@ struct BendersData {
 
 	int nocutmaster;				/*!< Number of time the master is not cut */
 	int misprices;					/*!< Number if successive misprices */
+	double epsilon_x;
+	bool stay_in_x_cut;
 
 
 };

@@ -60,3 +60,4 @@ void set_slaves_order(BendersData& data, BendersOptions const& options);
 
 void compute_separation_point_cost(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options);
 bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options, int id, double val, Point subgrad);
+void compute_epsilon_x(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data);
