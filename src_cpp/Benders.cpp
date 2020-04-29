@@ -101,7 +101,7 @@ void Benders::run(std::ostream & stream) {
 	init(_data, _options);
 
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
-		//master_loop(stream);
+		master_loop(stream);
 	}
 
 
@@ -210,7 +210,11 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 6. update stab
 		if (_data.misprices == 0) {
-			_data.step_size = std::max(0.01, 0.8 * _data.step_size);
+			_data.step_size = std::max(0.1, 0.8 * _data.step_size);
+		}
+
+		if (_data.stop) {
+			print_log(stream, _data, _options.LOG_LEVEL, _options);
 		}
 
 	}
