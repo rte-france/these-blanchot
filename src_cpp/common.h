@@ -171,9 +171,10 @@ struct BendersData {
 	double step_size;				/*!< Step size taken by enhanced multicut
 									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
 
-	DblVector last_value;			/*!< Last value observed of a subproblem*/
+	DblVector last_value;			/*!< Last value observed of a subproblem */
 
-	int nocutmaster;
+	int nocutmaster;				/*!< Number of time the master is not cut */
+	int misprices;					/*!< Number if successive misprices */
 
 
 };

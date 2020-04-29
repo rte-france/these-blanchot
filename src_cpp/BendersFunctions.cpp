@@ -633,10 +633,10 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 					all_cuts_storage[itmap.first].insert(cut);
 				}
 				else {
-					data.nocutmaster += 1;
+					data.nocutmaster	+= 1;
+					data.misprices		+= 1;
 					//std::cout << "  NO CUT " << data.nocutmaster << std::endl;
 					//std::cout << "         " << itmap.first << "  " << data.alpha_i[problem_to_id[itmap.first]] << std::endl;
-
 				}
 			}
 

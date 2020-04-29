@@ -161,6 +161,7 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 	if (_data.has_cut == true) {
 		_data.has_cut = false;
 		_data.n_slaves_no_cut = 0;
+		_data.misprices = 0;
 
 		get_master_value(_master, _data, _options);
 		set_slaves_order(_data, _options);
