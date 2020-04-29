@@ -182,3 +182,38 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 		print_log(stream, _data, _options.LOG_LEVEL, _options);
 	}	
 }
+
+void Benders::master_loop(std::ostream& stream) {
+
+	while (!_data.stop) {
+
+		// 1. resolution of master problem
+		get_master_value(_master, _data, _options);
+		
+		// 2. Choosing new order of subpoblems
+		set_slaves_order(_data, _options);
+
+		// 3. reset misprice information
+		_data.misprices = 0;
+
+		// 4. settin in-point to last separation point
+		_data.x_stab = _data.x_cut;
+
+		// 5. cutting loop
+		separation_loop(stream);
+
+		// 6. update stab
+		if (_data.misprices == 0) {
+			_data.stab_value = std::max(0.01, 0.8 * _data.stab_value);
+		}
+
+	}
+}
+
+void Benders::separation_loop(std::ostream& stream)
+{
+}
+
+void Benders::optimality_loop(std::ostream& stream)
+{
+}
