@@ -630,7 +630,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				data.deletedcut++;
 			}
 			else {
-				if ( has_cut_master(master, data, options, problem_to_id[itmap.first], 
+				if ( 1==1 || has_cut_master(master, data, options, problem_to_id[itmap.first], 
 					handler->get_dbl(SLAVE_COST), handler->get_subgradient()) ) 
 				{
 					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));

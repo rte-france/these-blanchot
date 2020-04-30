@@ -138,7 +138,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	get_master_value(_master, _data, _options);
 
 	double best_alpha = 0;
-	double best_lb = 0;
+	double best_lb = -1e20;
 	double cur_lb = 0;
 
 	int partition = 10;
@@ -185,6 +185,9 @@ void Benders::classic_iteration(std::ostream& stream) {
 	}
 
 	_data.stab_value = best_alpha;
+	if (best_lb == _data.lb) {
+		_data.stab_value = 1.0;
+	}
 	
 	compute_x_cut(_options, _data);
 	build_cut();
