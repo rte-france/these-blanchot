@@ -977,3 +977,8 @@ void compute_epsilon_x(WorkerMasterPtr& master, BendersOptions const& options, B
 		data.epsilon_x += (kvp.second - data.x0[kvp.first]) * obj[col_id];
 	}
 }
+
+void del_last_rows(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data)
+{
+	master->delete_constraint(data.nslaves);
+}

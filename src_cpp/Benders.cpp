@@ -137,11 +137,60 @@ void Benders::classic_iteration(std::ostream& stream) {
 	reset_iteration_data(_data, _options);
 	get_master_value(_master, _data, _options);
 
+	double best_alpha = 0;
+	double best_lb = 0;
+	double cur_lb = 0;
+
+	int partition = 10;
+	int rows;
+
+	for (int i(1); i <= partition; i++) {
+		_data.stab_value = (1.0/partition) * i;
+		compute_x_cut(_options, _data);
+		cur_lb = 0;
+		
+		/*for (auto& kvp : _map_slaves) {
+			WorkerSlavePtr& ptr(kvp.second);
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
+			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+			ptr->fix_to(_data.x_cut);
+			ptr->solve(handler->get_int(LPSTATUS), _options, _data.nslaves, kvp.first);
+			ptr->get_value(handler->get_dbl(SLAVE_COST));
+
+			cur_lb += (handler->get_dbl(SLAVE_COST));
+		}
+		compute_separation_point_cost(_master, _data, _options);
+		cur_lb += _data.invest_separation_cost;*/
+
+		//std::cout << "BEFORE " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
+
+		build_cut();
+		// 1. resoudre master
+		get_master_value(_master, _data, _options);
+		//std::cout << "DURING " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
+		cur_lb = _data.lb;
+		std::cout	<< std::fixed		<< std::setprecision(2) << std::setw(10) << _data.stab_value 
+					<< std::scientific	<< std::setprecision(8) << std::setw(30) << cur_lb << std::endl;
+		// 2. supprimer rows
+		del_last_rows(_master, _options, _data);
+
+		// 3. resoudre master !
+		get_master_value(_master, _data, _options);
+		//std::cout << "AFTER  " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl << std::endl;
+
+		if (cur_lb > best_lb) {
+			best_lb = cur_lb;
+			best_alpha = _data.stab_value;
+		}
+	}
+
+	_data.stab_value = best_alpha;
+	
 	compute_x_cut(_options, _data);
 	build_cut();
-
 	compute_ub(_master, _data);
-	update_in_out_stabilisation(_master, _data);
+	
+	//update_in_out_stabilisation(_master, _data);
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 	_data.timer_master = timer_master.elapsed();
@@ -210,7 +259,7 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 6. update stab
 		if (_data.misprices == 0) {
-			_data.step_size = std::max(0.1, 0.8 * _data.step_size);
+			//_data.step_size = std::max(0.1, 0.8 * _data.step_size);
 		}
 
 		if (_data.stop) {
@@ -242,7 +291,7 @@ void Benders::separation_loop(std::ostream& stream)
 		// 6. udpate stab value
 		if (_data.has_cut == false) {
 			_data.misprices += 1;
-			_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
+			//_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
 		}
 	}
 }
