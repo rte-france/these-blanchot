@@ -250,6 +250,9 @@ void Benders::separation_loop(std::ostream& stream)
 void Benders::optimality_loop(std::ostream& stream)
 {
 	do {
+
+		reset_iteration_data(_data, _options);
+
 		build_cut();
 
 		if (_data.it % _options.LOG_NUMBER_ITE == 0 || _data.stop) {
