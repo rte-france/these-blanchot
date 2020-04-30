@@ -144,67 +144,90 @@ void Benders::classic_iteration(std::ostream& stream) {
 	double last_lb = _data.lb;
 	double cur_gap;
 	double best_gap = 1e20;
+	double best_ub = 1e20;
+	double last_ub = 1e20;
 
-	int partition = 10;
+	if (_options.ALPHA_STRAT == "ALL") {
 
-	for (int i(1); i <= partition; i++) {
-		_data.stab_value = (1.0/partition) * i;
-		compute_x_cut(_options, _data);
+		best_alpha = 0;
+		best_lb = -1e20;
 		cur_lb = 0;
-		_data.ub = 0;
-		cur_ub = 0;
+		cur_ub;
+		last_lb = _data.lb;
+		cur_gap;
+		best_gap = 1e20;
+		best_ub = 1e20;
+		last_ub = 1e20;
 		
-		/*for (auto& kvp : _map_slaves) {
-			WorkerSlavePtr& ptr(kvp.second);
-			SlaveCutDataPtr slave_cut_data(new SlaveCutData);
-			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			ptr->fix_to(_data.x_cut);
-			ptr->solve(handler->get_int(LPSTATUS), _options, _data.nslaves, kvp.first);
-			ptr->get_value(handler->get_dbl(SLAVE_COST));
+		int partition = 200;
 
-			cur_lb += (handler->get_dbl(SLAVE_COST));
+		for (int i(1); i <= partition; i++) {
+			_data.stab_value = (1.0 / partition) * i;
+			compute_x_cut(_options, _data);
+			cur_lb = 0;
+			_data.ub = 0;
+			cur_ub = 0;
+
+			/*for (auto& kvp : _map_slaves) {
+				WorkerSlavePtr& ptr(kvp.second);
+				SlaveCutDataPtr slave_cut_data(new SlaveCutData);
+				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+				ptr->fix_to(_data.x_cut);
+				ptr->solve(handler->get_int(LPSTATUS), _options, _data.nslaves, kvp.first);
+				ptr->get_value(handler->get_dbl(SLAVE_COST));
+
+				cur_lb += (handler->get_dbl(SLAVE_COST));
+			}
+			compute_separation_point_cost(_master, _data, _options);
+			cur_lb += _data.invest_separation_cost;*/
+
+			//std::cout << "BEFORE " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
+
+			build_cut();
+			// 1. resoudre master
+			get_master_value(_master, _data, _options);
+			//std::cout << "DURING " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
+			cur_lb = _data.lb;
+			compute_ub(_master, _data);
+			cur_ub = _data.ub;
+			cur_gap = _data.ub - cur_lb;
+			std::cout << std::fixed << std::setprecision(3) << std::setw(10) << _data.stab_value
+				<< std::scientific << std::setprecision(8) << std::setw(30) << _data.ub
+				<< std::scientific << std::setprecision(8) << std::setw(30) << cur_lb - last_lb
+				<< std::scientific << std::setprecision(8) << std::setw(30) << cur_gap << std::endl;
+
+			// 2. supprimer rows
+			del_last_rows(_master, _options, _data);
+
+			// 3. resoudre master !
+			get_master_value(_master, _data, _options);
+			//std::cout << "AFTER  " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl << std::endl;
+
+			if (cur_ub < best_ub) {
+				best_ub = cur_ub;
+				best_alpha = _data.stab_value;
+			}
+
+			if (cur_ub > last_ub) {
+				break;
+			}
+			last_ub = cur_ub;
 		}
-		compute_separation_point_cost(_master, _data, _options);
-		cur_lb += _data.invest_separation_cost;*/
 
-		//std::cout << "BEFORE " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
-
-		build_cut();
-		// 1. resoudre master
-		get_master_value(_master, _data, _options);
-		//std::cout << "DURING " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
-		cur_lb = _data.lb;
-		compute_ub(_master, _data);
-		cur_gap = _data.ub - cur_lb;
-		std::cout	<< std::fixed		<< std::setprecision(2) << std::setw(10) << _data.stab_value 
-					<< std::scientific	<< std::setprecision(8) << std::setw(30) << _data.ub
-					<< std::scientific << std::setprecision(8) << std::setw(30) << cur_lb - last_lb
-					<< std::scientific << std::setprecision(8) << std::setw(30) << cur_gap << std::endl;
-
-		// 2. supprimer rows
-		del_last_rows(_master, _options, _data);
-
-		// 3. resoudre master !
-		get_master_value(_master, _data, _options);
-		//std::cout << "AFTER  " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl << std::endl;
-
-		if (cur_gap < best_gap) {
-			best_gap = cur_gap;
-			best_alpha = _data.stab_value;
+		_data.stab_value = best_alpha;
+		if (best_lb == _data.lb) {
+			_data.stab_value = 1.0;
 		}
+		_data.ub = 0;
 	}
 
-	_data.stab_value = best_alpha;
-	if (best_lb == _data.lb) {
-		_data.stab_value = 1.0;
-	}
-	_data.ub = 0;
-	
 	compute_x_cut(_options, _data);
 	build_cut();
 	compute_ub(_master, _data);
 	
-	//update_in_out_stabilisation(_master, _data);
+	update_in_out_stabilisation(_master, _data);
+	_data.stab_value = best_alpha;
+
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
 	_data.timer_master = timer_master.elapsed();

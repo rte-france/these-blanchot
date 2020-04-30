@@ -90,3 +90,7 @@ BENDERS_OPTIONS_MACRO(PRINT_SOLUTION, bool, 1)
 
 // Bool to say if the optimal solution appear in the log
 BENDERS_OPTIONS_MACRO(CUT_MASTER_TOL, double, -1e-1)
+
+// Bool to say if the optimal solution appear in the log
+BENDERS_OPTIONS_MACRO(ALPHA_STRAT, std::string, "DYNAMIQUE")
+
