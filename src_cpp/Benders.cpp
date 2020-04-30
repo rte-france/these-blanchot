@@ -140,14 +140,19 @@ void Benders::classic_iteration(std::ostream& stream) {
 	double best_alpha = 0;
 	double best_lb = -1e20;
 	double cur_lb = 0;
+	double cur_ub;
+	double last_lb = _data.lb;
+	double cur_gap;
+	double best_gap = 1e20;
 
 	int partition = 10;
-	int rows;
 
 	for (int i(1); i <= partition; i++) {
 		_data.stab_value = (1.0/partition) * i;
 		compute_x_cut(_options, _data);
 		cur_lb = 0;
+		_data.ub = 0;
+		cur_ub = 0;
 		
 		/*for (auto& kvp : _map_slaves) {
 			WorkerSlavePtr& ptr(kvp.second);
@@ -169,8 +174,13 @@ void Benders::classic_iteration(std::ostream& stream) {
 		get_master_value(_master, _data, _options);
 		//std::cout << "DURING " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
 		cur_lb = _data.lb;
+		compute_ub(_master, _data);
+		cur_gap = _data.ub - cur_lb;
 		std::cout	<< std::fixed		<< std::setprecision(2) << std::setw(10) << _data.stab_value 
-					<< std::scientific	<< std::setprecision(8) << std::setw(30) << cur_lb << std::endl;
+					<< std::scientific	<< std::setprecision(8) << std::setw(30) << _data.ub
+					<< std::scientific << std::setprecision(8) << std::setw(30) << cur_lb - last_lb
+					<< std::scientific << std::setprecision(8) << std::setw(30) << cur_gap << std::endl;
+
 		// 2. supprimer rows
 		del_last_rows(_master, _options, _data);
 
@@ -178,8 +188,8 @@ void Benders::classic_iteration(std::ostream& stream) {
 		get_master_value(_master, _data, _options);
 		//std::cout << "AFTER  " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl << std::endl;
 
-		if (cur_lb > best_lb) {
-			best_lb = cur_lb;
+		if (cur_gap < best_gap) {
+			best_gap = cur_gap;
 			best_alpha = _data.stab_value;
 		}
 	}
@@ -188,6 +198,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	if (best_lb == _data.lb) {
 		_data.stab_value = 1.0;
 	}
+	_data.ub = 0;
 	
 	compute_x_cut(_options, _data);
 	build_cut();
