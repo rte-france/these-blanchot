@@ -187,6 +187,11 @@ void Worker::get_simplex_ite(int & result) {
 	_solver->get_simplex_ite(result);
 }
 
+void Worker::set_simplex_iter(int iter)
+{
+	return _solver->set_simplex_iter(iter);
+}
+
 /*!
 *  \brief Get the number of columns of the problem
 */

@@ -400,4 +400,8 @@ void SolverXPRESS::optimality_gap(double gap)
 	XPRSsetdblcontrol(_xprs, XPRS_OPTIMALITYTOL, gap);
 }
 
+void SolverXPRESS::set_simplex_iter(int iter)
+{
+}
+
 #endif

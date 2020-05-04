@@ -161,72 +161,100 @@ void Benders::classic_iteration(std::ostream& stream) {
 		
 		int partition = 200;
 
-		for (int i(1); i <= partition; i++) {
-			_data.stab_value = (1.0 / partition) * i;
+		bool mini = false;
+		double alphamin = 0.0;
+		double alphamax = 1.0;
+		int status;
+		double grad;
+		double val;
+		int iterations;
+
+		while (!mini) {
+			//_data.stab_value = (1.0 / partition) * i;
 			compute_x_cut(_options, _data);
 			cur_lb = 0;
 			_data.ub = 0;
 			cur_ub = 0;
+			grad = 0;
 
-			/*for (auto& kvp : _map_slaves) {
+			// 1. on evalue 0.01 au dessus
+			_data.stab_value += 0.05;
+			compute_x_cut(_options, _data);
+			for (auto& kvp : _map_slaves) {
 				WorkerSlavePtr& ptr(kvp.second);
-				SlaveCutDataPtr slave_cut_data(new SlaveCutData);
-				SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 				ptr->fix_to(_data.x_cut);
-				ptr->solve(handler->get_int(LPSTATUS), _options, _data.nslaves, kvp.first);
-				ptr->get_value(handler->get_dbl(SLAVE_COST));
-
-				cur_lb += (handler->get_dbl(SLAVE_COST));
+				ptr->solve(status, _options, _data.nslaves, kvp.first);
+				ptr->get_value(val);
+				grad += val;
 			}
 			compute_separation_point_cost(_master, _data, _options);
-			cur_lb += _data.invest_separation_cost;*/
+			grad += _data.invest_separation_cost;
+			
+			// 2. on evalue en le point
+			_data.stab_value -= 0.05;
+			compute_x_cut(_options, _data);
+			for (auto& kvp : _map_slaves) {
+				WorkerSlavePtr& ptr(kvp.second);
+				ptr->fix_to(_data.x_cut);
+				ptr->set_simplex_iter(1000);
+				ptr->solve(status, _options, _data.nslaves, kvp.first);
+				ptr->get_value(val);
+				ptr->set_simplex_iter(50000);
+				cur_ub += val;
+				ptr->get_simplex_ite(iterations);
+			}
+			compute_separation_point_cost(_master, _data, _options);
+			cur_ub += _data.invest_separation_cost;
 
-			//std::cout << "BEFORE " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
+			// 3. on evalue le gradient
+			grad -= cur_ub;
 
-			build_cut();
-			// 1. resoudre master
-			get_master_value(_master, _data, _options);
-			//std::cout << "DURING " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl;
-			cur_lb = _data.lb;
-			compute_ub(_master, _data);
-			cur_ub = _data.ub;
-			cur_gap = _data.ub - cur_lb;
-			std::cout << std::fixed << std::setprecision(3) << std::setw(10) << _data.stab_value
-				<< std::scientific << std::setprecision(8) << std::setw(30) << _data.ub
-				<< std::scientific << std::setprecision(8) << std::setw(30) << cur_lb - last_lb
-				<< std::scientific << std::setprecision(8) << std::setw(30) << cur_gap << std::endl;
+			if (grad > 0) {
+				alphamax = _data.stab_value;
+			}
+			else {
+				alphamin = _data.stab_value;
+			}
 
-			// 2. supprimer rows
-			del_last_rows(_master, _options, _data);
+			/*std::cout << std::fixed << std::setprecision(3) << std::setw(10) << _data.stab_value
+				<< std::scientific << std::setprecision(8) << std::setw(30) << cur_ub
+				<< std::scientific << std::setprecision(8) << std::setw(30) << grad
+				<< std::scientific << std::setprecision(8) << std::setw(30) << alphamin
+				<< std::scientific << std::setprecision(8) << std::setw(30) << alphamax
+				<< std::endl;*/
 
-			// 3. resoudre master !
-			get_master_value(_master, _data, _options);
-			//std::cout << "AFTER  " << std::setw(10) << _master->get_nrows() << "   " << std::setprecision(8) << _data.lb << std::endl << std::endl;
-
-			if (cur_ub < best_ub) {
+			/*if (cur_ub < best_ub) {
 				best_ub = cur_ub;
 				best_alpha = _data.stab_value;
+			}*/
+
+			if (alphamax - alphamin > 1e-2) {
+				_data.stab_value = alphamin + (alphamax - alphamin) / 2;
+			}
+			else {
+				mini = true;
+
 			}
 
-			if (cur_ub > last_ub) {
-				break;
+			if ( abs(grad) < 1e-3 ) {
+				mini = true;
 			}
-			last_ub = cur_ub;
-		}
 
-		_data.stab_value = best_alpha;
-		if (best_lb == _data.lb) {
-			_data.stab_value = 1.0;
 		}
-		_data.ub = 0;
 	}
+
+	best_alpha = _data.stab_value;
+	//_data.stab_value = best_alpha;
+	_data.ub = 0;
 
 	compute_x_cut(_options, _data);
 	build_cut();
 	compute_ub(_master, _data);
 	
 	update_in_out_stabilisation(_master, _data);
-	_data.stab_value = best_alpha;
+	if (_options.ALPHA_STRAT == "ALL") {
+		_data.stab_value = best_alpha;
+	}
 
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 

@@ -133,6 +133,9 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 		}
 		lp_status = OPTIMAL;
 	}
+	else if (cpx_status == CPX_STAT_ABORT_IT_LIM) {
+		lp_status = OPTIMAL;
+	}
 	else {
 		lp_status = UNKNOWN;
 		std::cout << "CPLEX STATUS IS : " << cpx_status << std::endl;
@@ -356,6 +359,11 @@ void SolverCPLEX::presolve(int presolve) {
 void SolverCPLEX::optimality_gap(double gap) {
 	int status = CPXsetdblparam(_env, CPXPARAM_Simplex_Tolerances_Optimality, gap);
 	CPXsetdblparam(_env, CPXPARAM_Barrier_ConvergeTol, gap);
+}
+
+void SolverCPLEX::set_simplex_iter(int iter)
+{
+	CPXsetintparam(_env, CPXPARAM_Simplex_Limits_Iterations, iter);
 }
 
 #endif

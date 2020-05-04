@@ -107,4 +107,5 @@ public:
 	virtual void scaling(int scale) = 0;
 	virtual void presolve(int presolve) = 0;
 	virtual void optimality_gap(double gap) = 0;
+	virtual void set_simplex_iter(int iter) = 0;
 };

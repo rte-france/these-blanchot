@@ -34,6 +34,7 @@ public:
 
 	void get_value(double & lb);
 	void get_simplex_ite(int & result);
+	void set_simplex_iter(int iter);
 
 	int get_ncols();
 	int get_nrows();
