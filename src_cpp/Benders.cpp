@@ -147,7 +147,12 @@ void Benders::classic_iteration(std::ostream& stream) {
 	double best_ub = 1e20;
 	double last_ub = 1e20;
 
-	if (_options.ALPHA_STRAT == "ALL") {
+	/***************************************
+	****************************************
+			   ON UPPER BOUND
+	****************************************
+	***************************************/
+	if (_options.ALPHA_STRAT == "UB") {
 
 		best_alpha = 0;
 		best_lb = -1e20;
@@ -228,6 +233,8 @@ void Benders::classic_iteration(std::ostream& stream) {
 				best_alpha = _data.stab_value;
 			}*/
 
+			best_alpha = _data.stab_value;
+
 			if (alphamax - alphamin > 1e-2) {
 				_data.stab_value = alphamin + (alphamax - alphamin) / 2;
 			}
@@ -242,9 +249,82 @@ void Benders::classic_iteration(std::ostream& stream) {
 
 		}
 	}
+	/***************************************
+	****************************************
+	           ON LOWER BOUND
+	****************************************
+	***************************************/
+	else if (_options.ALPHA_STRAT == "LB") {
+		best_alpha = 0;
+		best_lb = -1e20;
+		cur_lb = 0;
+		cur_ub;
+		last_lb = _data.lb;
+		cur_gap;
+		best_gap = 1e20;
+		best_ub = 1e20;
+		last_ub = 1e20;
 
-	best_alpha = _data.stab_value;
-	//_data.stab_value = best_alpha;
+		int partition = 100;
+
+		bool mini = false;
+		double alphamin = 0.0;
+		double alphamax = 1.0;
+		int status;
+		double grad;
+		double val;
+		int iterations;
+
+		std::string name = "bounds.txt";
+		if (_data.it == 1) {
+			std::ofstream sortie(name.c_str());
+		}
+		else {
+			std::ofstream sortie(name.c_str(), std::ios::app);
+		}
+		std::ofstream sortie(name.c_str(), std::ios::app);
+
+		sortie << std::setw(10) << _data.it;
+
+		for (int i(1); i <= partition; i++) {
+			// choix de alpha
+			_data.stab_value = float(i) / partition;
+			compute_x_cut(_options, _data);
+
+			// construire les coupes
+			build_cut();
+
+			// plein de trucs relatifs a tout le blabla
+			reset_iteration_data(_data, _options);
+			get_master_value(_master, _data, _options);
+			compute_ub(_master, _data);
+			cur_gap = _data.ub - _data.lb;
+
+			if (cur_gap <= best_gap) {
+				best_gap = cur_gap;
+				best_alpha = _data.stab_value;
+			}
+
+			// on ecrit le resultat dans un fichier pour faire des courbes parce que les courbes cest top
+			sortie << std::scientific << std::setprecision(8) << std::setw(30) << _data.lb << "_" << _data.ub;
+			/*std::cout	<< std::scientific << std::setprecision(2) << std::setw(10) << _data.stab_value 
+						<< std::scientific << std::setprecision(8) << std::setw(25) << cur_gap << std::endl;
+		
+			*/
+			// on supprime les coupes et on reprend l'ancienne solution du master
+			del_last_rows(_master, _options, _data);
+			reset_iteration_data(_data, _options);
+			get_master_value(_master, _data, _options);
+		}
+		sortie << std::endl;
+		//std::cout << std::endl;
+		sortie.close();
+	}
+
+	if (_options.ALPHA_STRAT == "UB" || _options.ALPHA_STRAT == "LB") {
+		_data.stab_value = best_alpha;
+	}
+	
 	_data.ub = 0;
 
 	compute_x_cut(_options, _data);
@@ -252,7 +332,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	compute_ub(_master, _data);
 	
 	update_in_out_stabilisation(_master, _data);
-	if (_options.ALPHA_STRAT == "ALL") {
+	if (_options.ALPHA_STRAT != "ALL") {
 		_data.stab_value = best_alpha;
 	}
 
@@ -306,12 +386,14 @@ void Benders::master_loop(std::ostream& stream) {
 
 	while (!_data.stop) {
 
+		//_data.step_size = 0.1;
+
 		// 1. resolution of master problem
 		get_master_value(_master, _data, _options);
 		_data.has_cut = false;
 		
 		// 2. Choosing new order of subpoblems
-		set_slaves_order(_data, _options);
+		//set_slaves_order(_data, _options);
 
 		// 3. reset misprice information
 		_data.misprices = 0;
@@ -338,6 +420,8 @@ void Benders::separation_loop(std::ostream& stream)
 {
 	while ( _data.has_cut == false ) {
 
+		set_slaves_order(_data, _options);
+
 		// 1. Compute separation point
 		compute_x_cut(_options, _data);
 
@@ -356,7 +440,7 @@ void Benders::separation_loop(std::ostream& stream)
 		// 6. udpate stab value
 		if (_data.has_cut == false) {
 			_data.misprices += 1;
-			//_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
+			_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
 		}
 	}
 }

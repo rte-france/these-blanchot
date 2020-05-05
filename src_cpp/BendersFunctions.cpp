@@ -901,7 +901,7 @@ void compute_ub(WorkerMasterPtr& master, BendersData& data) {
 */
 void set_slaves_order(BendersData& data, BendersOptions const& options) {
 	if (options.SORTING_METHOD == "ORDERED") {
-		std::rotate(data.indices.begin(), data.indices.begin() + data.n_slaves_no_cut + 1, data.indices.end());
+		std::rotate(data.indices.begin(), data.indices.begin() + data.n_slaves_no_cut + options.BATCH_SIZE, data.indices.end());
 	}
 	else if (options.SORTING_METHOD == "RANDOM"){
 		std::random_shuffle(data.indices.begin(), data.indices.end());
