@@ -161,6 +161,9 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 		else if (cpx_status == CPXMIP_INForUNBD) {
 			lp_status = INForUNBOUND;
 		}
+		else if (cpx_status == 102) {
+			lp_status = OPTIMAL;
+		}
 		else {
 			lp_status = UNKNOWN;
 			std::cout << "CPLEX STATUS IS : " << cpx_status << std::endl;
