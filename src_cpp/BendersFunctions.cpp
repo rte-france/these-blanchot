@@ -163,6 +163,7 @@ void reset_iteration_data(BendersData& data, BendersOptions const& options)
 	data.minsimplexiter = std::numeric_limits<int>::max();
 }
 
+
 /*!
 *  \brief Print iteration log
 *
@@ -742,6 +743,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 				optcounter += 1;
 			}
 			total_counter += 1;
+			data.n_slaves_solved += 1;
 		}
 	}
 

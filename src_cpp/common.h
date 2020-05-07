@@ -177,6 +177,7 @@ struct BendersData {
 	int misprices;					/*!< Number if successive misprices */
 	double epsilon_x;
 	bool stay_in_x_cut;
+	int n_slaves_solved;
 
 
 };

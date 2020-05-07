@@ -386,8 +386,6 @@ void Benders::master_loop(std::ostream& stream) {
 
 	while (!_data.stop) {
 
-		//_data.step_size = 0.1;
-
 		// 1. resolution of master problem
 		get_master_value(_master, _data, _options);
 		_data.has_cut = false;
@@ -405,9 +403,17 @@ void Benders::master_loop(std::ostream& stream) {
 		separation_loop(stream);
 
 		// 6. update stab
-		if (_data.misprices == 0) {
-			//_data.step_size = std::max(0.1, 0.8 * _data.step_size);
+		if (_data.ub <= _data.best_ub + 1e-3) {
+			//_data.best_ub = _data.ub;
+			_data.step_size = std::min(1.0,   _data.step_size / (1.0 - 0.2*(float(_options.BATCH_SIZE)/float(_data.nslaves))) );
 		}
+		else {
+			//std::cout << _data.step_size << "    ";
+			_data.step_size = std::max(0.01, (1.0 - 0.2 * (float(_options.BATCH_SIZE)/ float(_data.nslaves))) * _data.step_size);
+			//std::cout << _data.step_size << std::endl;
+		}
+		double beta = 1.0;
+		_data.best_ub = _data.ub ;
 
 		if (_data.stop) {
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
@@ -420,12 +426,14 @@ void Benders::separation_loop(std::ostream& stream)
 {
 	while ( _data.has_cut == false ) {
 
+		_data.n_slaves_solved = 0;
 		set_slaves_order(_data, _options);
 
 		// 1. Compute separation point
 		compute_x_cut(_options, _data);
 
 		// 2. Compute difference of first stage solutions objectives
+		compute_separation_point_cost(_master, _data, _options);
 		compute_epsilon_x(_master, _options, _data);
 
 		// 3. Reset resolution indicator for point x_cut
@@ -460,4 +468,8 @@ void Benders::optimality_loop(std::ostream& stream)
 		++_data.it;
 
 	} while (_data.stay_in_x_cut);
+
+	_data.ub /= float(_data.n_slaves_solved) / float(_data.nslaves);
+	_data.ub += _data.invest_separation_cost;
+	//std::cout << "     " << _data.step_size << "   " << _data.n_slaves_solved << "     " << std::setprecision(8) << _data.best_ub << "      " << _data.ub << std::endl;
 }
