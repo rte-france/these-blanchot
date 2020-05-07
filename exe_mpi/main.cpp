@@ -20,7 +20,9 @@ int main(int argc, char** argv)
 		exit(0);
 	}
 	if (world.rank() == 0) {
-		options.print(std::cout);
+		if (options.PRINT_OPTIONS) {
+			options.print(std::cout);
+		}
 	}
 	if (world.size() == 1) {
 		sequential_launch(options);

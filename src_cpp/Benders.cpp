@@ -403,17 +403,27 @@ void Benders::master_loop(std::ostream& stream) {
 		separation_loop(stream);
 
 		// 6. update stab
-		if (_data.ub <= _data.best_ub + 1e-3) {
-			//_data.best_ub = _data.ub;
-			_data.step_size = std::min(1.0,   _data.step_size / (1.0 - 0.2*(float(_options.BATCH_SIZE)/float(_data.nslaves))) );
+		if (_options.ALPHA_STRAT == "DYNAMIQUE") {
+			if (_data.ub <= _data.best_ub + 1e-3) {
+				//_data.best_ub = _data.ub;
+				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_options.BATCH_SIZE) / float(_data.nslaves))));
+			}
+			else {
+				//std::cout << _data.step_size << "    ";
+				_data.step_size = std::max(0.01, (1.0 - 0.9 * (float(_options.BATCH_SIZE) / float(_data.nslaves))) * _data.step_size);
+				//std::cout << _data.step_size << std::endl;
+			}
+			double beta = 0.01;
+			//_data.best_ub = std::min(_data.best_ub, _data.ub);
+			_data.best_ub = _data.ub;
+		}
+		else if (_options.ALPHA_STRAT == "STATIQUE") {
+			_data.step_size = _options.STEP_SIZE;
 		}
 		else {
-			//std::cout << _data.step_size << "    ";
-			_data.step_size = std::max(0.01, (1.0 - 0.2 * (float(_options.BATCH_SIZE)/ float(_data.nslaves))) * _data.step_size);
-			//std::cout << _data.step_size << std::endl;
+			std::cout << "BAD STRATEGY" << std::endl;
+			std::exit(0);
 		}
-		double beta = 1.0;
-		_data.best_ub = _data.ub ;
 
 		if (_data.stop) {
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
@@ -471,5 +481,8 @@ void Benders::optimality_loop(std::ostream& stream)
 
 	_data.ub /= float(_data.n_slaves_solved) / float(_data.nslaves);
 	_data.ub += _data.invest_separation_cost;
+	if (_data.it == 1) {
+		_data.best_ub = _data.ub;
+	}
 	//std::cout << "     " << _data.step_size << "   " << _data.n_slaves_solved << "     " << std::setprecision(8) << _data.best_ub << "      " << _data.ub << std::endl;
 }
