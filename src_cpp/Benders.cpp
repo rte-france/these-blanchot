@@ -384,6 +384,13 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 
 void Benders::master_loop(std::ostream& stream) {
 
+	double ub_memory = 0;
+	double beta = 1.0 - (1.0 / (1.0 * _data.nslaves));
+	double grad;
+	double last_grad = 0;
+
+	double last_ub = 0;
+
 	while (!_data.stop) {
 
 		// 1. resolution of master problem
@@ -404,18 +411,64 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 6. update stab
 		if (_options.ALPHA_STRAT == "DYNAMIQUE") {
-			if (_data.ub <= _data.best_ub + 1e-3) {
-				//_data.best_ub = _data.ub;
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_options.BATCH_SIZE) / float(_data.nslaves))));
+			
+			if (_data.it == 1) {
+				ub_memory = _data.ub;
+				_data.best_ub = _data.ub;
+				last_ub = _data.ub;
+			}
+
+			bool print = 0;
+			if (print) {
+				std::cout << "     " << _data.step_size
+					<< "   " << _data.n_slaves_solved
+					<< std::setprecision(8)
+					<< "      " << ub_memory
+					<< "      " << _data.best_ub
+					<< "      " << _data.ub << std::endl;
+			}
+			
+			/*if (_data.ub <= _data.best_ub + 1e-3) {
+				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			}
+			else if(_data.ub >= ub_memory){
+				std::cout << "coucou" << std::endl;
+				std::cout << "     " << _data.step_size
+					<< "   " << _data.n_slaves_solved
+					<< std::setprecision(8)
+					<< "      " << ub_memory
+					<< "      " << _data.best_ub
+					<< "      " << _data.ub << std::endl;
+				_data.step_size = std::max(0.01, 0.5 * _data.step_size);
 			}
 			else {
-				//std::cout << _data.step_size << "    ";
-				_data.step_size = std::max(0.01, (1.0 - 0.9 * (float(_options.BATCH_SIZE) / float(_data.nslaves))) * _data.step_size);
-				//std::cout << _data.step_size << std::endl;
+				_data.step_size = std::max(0.01, (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))) * _data.step_size);
 			}
-			double beta = 0.01;
-			//_data.best_ub = std::min(_data.best_ub, _data.ub);
+
+			if (last_ub - _data.ub < last_grad) {
+				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			}
+			else {
+				_data.step_size = std::min(1.0, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			}*/
+
+			if (_data.ub < last_ub) {
+				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			}
+			else{
+				//std::cout << int(100 * (_data.ub / last_ub  - 1 )) << std::endl;
+				_data.step_size = std::max(0.01, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			}
+
+			last_grad = std::max(0.0, last_ub - _data.ub);
+
 			_data.best_ub = _data.ub;
+			last_ub = _data.ub;
+			
+			grad = ub_memory;
+			ub_memory = beta * ub_memory + (1-beta) * _data.ub;
+			grad -= ub_memory;
+			//std::cout << grad << std::endl;
 		}
 		else if (_options.ALPHA_STRAT == "STATIQUE") {
 			_data.step_size = _options.STEP_SIZE;
@@ -481,8 +534,4 @@ void Benders::optimality_loop(std::ostream& stream)
 
 	_data.ub /= float(_data.n_slaves_solved) / float(_data.nslaves);
 	_data.ub += _data.invest_separation_cost;
-	if (_data.it == 1) {
-		_data.best_ub = _data.ub;
-	}
-	//std::cout << "     " << _data.step_size << "   " << _data.n_slaves_solved << "     " << std::setprecision(8) << _data.best_ub << "      " << _data.ub << std::endl;
 }
