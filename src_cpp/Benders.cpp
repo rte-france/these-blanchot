@@ -452,7 +452,7 @@ void Benders::master_loop(std::ostream& stream) {
 				_data.step_size = std::min(1.0, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}*/
 
-			if (_data.ub < last_ub) {
+			if (_data.ub > last_ub) {
 				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}
 			else{
