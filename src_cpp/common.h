@@ -178,6 +178,7 @@ struct BendersData {
 	double epsilon_x;
 	bool stay_in_x_cut;
 	int n_slaves_solved;
+	Point x_mem;
 
 
 };

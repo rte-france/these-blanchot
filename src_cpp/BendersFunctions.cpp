@@ -832,11 +832,16 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		if (data.it == 1) {
 			data.x_stab = data.x0;
 			data.x_cut = data.x0;
+			data.x_mem = data.x0;
 		}
 		else {
 			data.x_stab = data.x_cut;
-			for (auto const& kvp : data.x0) {
-				data.x_cut[kvp.first] = data.step_size * data.x0[kvp.first] +
+			for (auto const& kvp : data.x_mem) {
+				// 1. compute memory 
+				data.x_mem[kvp.first] = (1 - options.BETA) * data.x0[kvp.first] +
+					options.BETA * data.x_mem[kvp.first];
+				// 2. compute x_cut
+				data.x_cut[kvp.first] = data.step_size * data.x_mem[kvp.first] +
 					(1 - data.step_size) * data.x_stab[kvp.first];
 			}
 		}

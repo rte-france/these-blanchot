@@ -97,3 +97,6 @@ BENDERS_OPTIONS_MACRO(ALPHA_STRAT, std::string, "DYNAMIQUE")
 // Bool to say if the options appear in the log
 BENDERS_OPTIONS_MACRO(PRINT_OPTIONS, bool, 1)
 
+// memory parameter (0 without memory, beta in [0;1[)
+BENDERS_OPTIONS_MACRO(BETA, double, 1.0)
+
