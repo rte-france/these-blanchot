@@ -836,14 +836,34 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 		else {
 			data.x_stab = data.x_cut;
-			for (auto const& kvp : data.x_mem) {
-				// 1. compute memory 
-				data.x_mem[kvp.first] = (1 - options.BETA) * data.x0[kvp.first] +
-					options.BETA * data.x_mem[kvp.first];
-				// 2. compute x_cut
-				data.x_cut[kvp.first] = data.step_size * data.x_mem[kvp.first] +
-					(1 - data.step_size) * data.x_stab[kvp.first];
+			if (options.MEMORY_TYPE == "DIRECTION") {
+				for (auto const& kvp : data.x_mem) {
+					data.x_mem[kvp.first] = (1.0 - options.BETA) * ( data.x0[kvp.first] - data.x_cut[kvp.first] )+
+						options.BETA * data.x_mem[kvp.first];
+
+					data.x_cut[kvp.first] += data.step_size * data.x_mem[kvp.first];
+				}
 			}
+			else if (options.MEMORY_TYPE == "SOLUTION") {
+				for (auto const& kvp : data.x_mem) {
+					data.x_mem[kvp.first] = (1.0 - options.BETA) * data.x0[kvp.first] +
+						options.BETA * data.x_mem[kvp.first];
+
+					data.x_cut[kvp.first] = data.step_size * data.x_mem[kvp.first] +
+						(1.0 - data.step_size) * data.x_stab[kvp.first];
+				}
+			}
+			else if (options.MEMORY_TYPE == "WITHOUT") {
+				for (auto const& kvp : data.x0) {
+					data.x_cut[kvp.first] = data.step_size * data.x0[kvp.first] +
+						(1.0 - data.step_size) * data.x_stab[kvp.first];
+				}
+			}
+			else {
+				std::cout << "WRONG MEMORY TYPE" << std::endl;
+				std::exit(0);
+			}
+			
 		}
 		//data.x_stab = data.x0;
 		//data.x_cut = data.x0;
