@@ -181,17 +181,27 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	int ncoeffs(1 + (int)_name_to_id.size());
 	std::vector<char> rowtype(1, 'L');
 	std::vector<double> rowrhs(1, 0);
-	std::vector<double> matval(ncoeffs, 1);
+	std::vector<double> matval(ncoeffs, 0);
 	std::vector<int> mstart(nrows + 1, 0);
 	std::vector<int> mclind(ncoeffs);
 
 	rowrhs.front() -= rhs;
 
 	for (auto const & kvp : _name_to_id) {
-		rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
-		mclind[kvp.second] = kvp.second;
-		matval[kvp.second] = s.find(kvp.first)->second;
+		if (s.find(kvp.first) != s.end()) {
+			//std::cout << kvp.first << "   " << x0.find(kvp.first)->second << "   " << s.find(kvp.first)->second << std::endl;
+			rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
+			mclind[kvp.second] = kvp.second;
+			matval[kvp.second] = s.find(kvp.first)->second;
+		}
+		else {
+			//std::cout << kvp.first << "   " << x0.find(kvp.first)->second << "   " << 0.0 << std::endl;
+			rowrhs.front() += 0.0;
+			mclind[kvp.second] = kvp.second;
+			matval[kvp.second] = 0.0;
+		}
 	}
+
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 	mstart.back() = (int)matval.size();
@@ -226,12 +236,13 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 	auto const it(_name_to_id.find(alpha));
 	if (it == _name_to_id.end()) {
 		double lb(options.THETA_LB); /*!< Lower Bound */
+		double global_lb = lb * nslaves;
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
 		double zero(0);
 		std::vector<int> start(2, 0);
 		_id_alpha = _solver->get_ncols(); /* Set the number of columns in _id_alpha */
-		_solver->add_cols(1, 0, &obj, start.data(), NULL, NULL, &lb, &ub); /* Add variable alpha and its parameters */
+		_solver->add_cols(1, 0, &obj, start.data(), NULL, NULL, &global_lb, &ub); /* Add variable alpha and its parameters */
 		_solver->add_name(2, alpha.c_str(), _id_alpha);
 
 		_id_alpha_i.resize(nslaves, -1);
