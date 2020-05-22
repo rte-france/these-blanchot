@@ -188,7 +188,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	rowrhs.front() -= rhs;
 
 	for (auto const & kvp : _name_to_id) {
-		std::cout << kvp.first << "  " << s.find(kvp.first)->second << "    " << x0.find(kvp.first)->second << std::endl;
+		//std::cout << kvp.first << "  " << s.find(kvp.first)->second << "    " << x0.find(kvp.first)->second << std::endl;
 		rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
 		mclind[kvp.second] = kvp.second;
 		matval[kvp.second] = s.find(kvp.first)->second;
