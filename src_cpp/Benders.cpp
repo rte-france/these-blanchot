@@ -434,7 +434,7 @@ void Benders::master_loop(std::ostream& stream) {
 				//lbk_1 = _data.lb;
 			}
 
-			bool print = 1;
+			bool print = 0;
 			if (print) {
 				std::cout << "     " << _data.step_size
 					<< "   " << lbk_2
@@ -447,25 +447,23 @@ void Benders::master_loop(std::ostream& stream) {
 
 			// 1. si on ralentit
 
-			if (_data.lb - lbk_1 <= m*(lbk_1 - lbk_2) ) {
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			if (_data.lb - lbk_1 <= m*(lbk_1 - lbk_2) + 1e-6) {
+				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.03));
 				hausse += 1;
 			}
 			else {
 				baisse += 1;
-				//std::cout << "COUCOU " << _data.step_size << std::endl;
-				_data.step_size = std::min(1.0, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+				_data.step_size = std::max(0.1, _data.step_size * (1.0 - 0.03));
 			}
 
 			/*if (_data.ub < last_ub) {
 				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}
 			else {
-				std::cout << int(100 * (_data.ub / last_ub  - 1 )) << std::endl;
 				_data.step_size = std::max(0.01, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}*/
 
-			if (_data.it % 100 == 0) {
+			if (_data.it % 100000 == 0) {
 				std::cout << "   BAISSE " << baisse << std::endl;
 				std::cout << "   HAUSSE " << hausse << std::endl;
 			}
