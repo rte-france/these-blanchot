@@ -394,7 +394,6 @@ void Benders::master_loop(std::ostream& stream) {
 	double lbk_2 = 0.0;
 	double lbk_1 = 0.0;
 	_data.n_slaves_solved = 1;
-	double m = 1.0;
 
 	int baisse = 0;
 	int hausse = 0;
@@ -441,13 +440,13 @@ void Benders::master_loop(std::ostream& stream) {
 					<< "   " << lbk_1
 					<< "   " << _data.lb
 					<< "   " << _data.lb - lbk_1
-					<< "   " << m * (lbk_1 - lbk_2)
+					<< "   " << lbk_1 - lbk_2
 					<< std::endl;
 			}
 
 			// 1. si on ralentit
 
-			if (_data.lb - lbk_1 <= m*(lbk_1 - lbk_2) + 1e-6) {
+			if (_data.lb - lbk_1 <= lbk_1 - lbk_2 + 1e-6) {
 				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.03));
 				hausse += 1;
 			}
@@ -462,11 +461,6 @@ void Benders::master_loop(std::ostream& stream) {
 			else {
 				_data.step_size = std::max(0.01, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}*/
-
-			if (_data.it % 100000 == 0) {
-				std::cout << "   BAISSE " << baisse << std::endl;
-				std::cout << "   HAUSSE " << hausse << std::endl;
-			}
 
 			last_grad = std::max(0.0, last_ub - _data.ub);
 
