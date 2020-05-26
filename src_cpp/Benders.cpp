@@ -391,7 +391,20 @@ void Benders::master_loop(std::ostream& stream) {
 
 	double last_ub = 0;
 
+	double lbk_2 = 0.0;
+	double lbk_1 = 0.0;
+	_data.n_slaves_solved = 1;
+	double m = 1.0;
+
+	int baisse = 0;
+	int hausse = 0;
+
 	while (!_data.stop) {
+
+		if (_data.it > 1) {
+			lbk_2 = lbk_1;
+			lbk_1 = _data.lb;
+		}
 
 		// 1. resolution of master problem
 		get_master_value(_master, _data, _options);
@@ -406,67 +419,64 @@ void Benders::master_loop(std::ostream& stream) {
 		// 4. settin in-point to last separation point
 		_data.x_stab = _data.x_cut;
 
-		// 5. cutting loop
-		separation_loop(stream);
 
 		// 6. update stab
 		if (_options.ALPHA_STRAT == "DYNAMIQUE") {
-			
+
 			if (_data.it == 1) {
 				ub_memory = _data.ub;
 				_data.best_ub = _data.ub;
 				last_ub = _data.ub;
+				lbk_1 = _data.lb;
+			}
+			else {
+				//lbk_2 = lbk_1;
+				//lbk_1 = _data.lb;
 			}
 
-			bool print = 0;
+			bool print = 1;
 			if (print) {
 				std::cout << "     " << _data.step_size
-					<< "   " << _data.n_slaves_solved
-					<< std::setprecision(8)
-					<< "      " << ub_memory
-					<< "      " << _data.best_ub
-					<< "      " << _data.ub << std::endl;
-			}
-			
-			/*if (_data.ub <= _data.best_ub + 1e-3) {
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
-			}
-			else if(_data.ub >= ub_memory){
-				std::cout << "coucou" << std::endl;
-				std::cout << "     " << _data.step_size
-					<< "   " << _data.n_slaves_solved
-					<< std::setprecision(8)
-					<< "      " << ub_memory
-					<< "      " << _data.best_ub
-					<< "      " << _data.ub << std::endl;
-				_data.step_size = std::max(0.01, 0.5 * _data.step_size);
-			}
-			else {
-				_data.step_size = std::max(0.01, (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))) * _data.step_size);
+					<< "   " << lbk_2
+					<< "   " << lbk_1
+					<< "   " << _data.lb
+					<< "   " << _data.lb - lbk_1
+					<< "   " << m * (lbk_1 - lbk_2)
+					<< std::endl;
 			}
 
-			if (last_ub - _data.ub < last_grad) {
+			// 1. si on ralentit
+
+			if (_data.lb - lbk_1 <= m*(lbk_1 - lbk_2) ) {
+				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+				hausse += 1;
+			}
+			else {
+				baisse += 1;
+				//std::cout << "COUCOU " << _data.step_size << std::endl;
+				_data.step_size = std::min(1.0, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			}
+
+			/*if (_data.ub < last_ub) {
 				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}
 			else {
-				_data.step_size = std::min(1.0, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+				std::cout << int(100 * (_data.ub / last_ub  - 1 )) << std::endl;
+				_data.step_size = std::max(0.01, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
 			}*/
 
-			if (_data.ub < last_ub) {
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
-			}
-			else{
-				//std::cout << int(100 * (_data.ub / last_ub  - 1 )) << std::endl;
-				_data.step_size = std::max(0.01, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
+			if (_data.it % 100 == 0) {
+				std::cout << "   BAISSE " << baisse << std::endl;
+				std::cout << "   HAUSSE " << hausse << std::endl;
 			}
 
 			last_grad = std::max(0.0, last_ub - _data.ub);
 
 			_data.best_ub = _data.ub;
 			last_ub = _data.ub;
-			
+
 			grad = ub_memory;
-			ub_memory = beta * ub_memory + (1-beta) * _data.ub;
+			ub_memory = beta * ub_memory + (1 - beta) * _data.ub;
 			grad -= ub_memory;
 			//std::cout << grad << std::endl;
 		}
@@ -477,6 +487,11 @@ void Benders::master_loop(std::ostream& stream) {
 			std::cout << "BAD STRATEGY" << std::endl;
 			std::exit(0);
 		}
+
+		// 5. cutting loop
+		separation_loop(stream);
+
+		
 
 		if (_data.stop) {
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
@@ -512,6 +527,7 @@ void Benders::separation_loop(std::ostream& stream)
 		if (_data.has_cut == false) {
 			_data.misprices += 1;
 			_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
+			std::cout << "MISPRICE : " << _data.step_size << std::endl;
 		}
 	}
 }

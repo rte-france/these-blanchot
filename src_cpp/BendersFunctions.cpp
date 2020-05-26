@@ -42,6 +42,7 @@ void init(BendersData & data, BendersOptions const& options) {
 	data.espilon_s = options.GAP / data.nslaves;
 
 	data.step_size = options.STEP_SIZE;
+	std::cout << "STEP SIZE INIT " << data.step_size << std::endl;
 
 	data.last_value = std::vector<double>(data.nslaves, 1e20);
 	data.nocutmaster = 0;
