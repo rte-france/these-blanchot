@@ -136,194 +136,6 @@ void Benders::classic_iteration(std::ostream& stream) {
 	++_data.it;
 	reset_iteration_data(_data, _options);
 	get_master_value(_master, _data, _options);
-
-	double best_alpha = 0;
-	double best_lb = -1e20;
-	double cur_lb = 0;
-	double cur_ub;
-	double last_lb = _data.lb;
-	double cur_gap;
-	double best_gap = 1e20;
-	double best_ub = 1e20;
-	double last_ub = 1e20;
-
-	/***************************************
-	****************************************
-			   ON UPPER BOUND
-	****************************************
-	***************************************/
-	if (_options.ALPHA_STRAT == "UB") {
-
-		best_alpha = 0;
-		best_lb = -1e20;
-		cur_lb = 0;
-		cur_ub;
-		last_lb = _data.lb;
-		cur_gap;
-		best_gap = 1e20;
-		best_ub = 1e20;
-		last_ub = 1e20;
-		
-		int partition = 200;
-
-		bool mini = false;
-		double alphamin = 0.0;
-		double alphamax = 1.0;
-		int status;
-		double grad;
-		double val;
-		int iterations;
-
-		while (!mini) {
-			//_data.stab_value = (1.0 / partition) * i;
-			compute_x_cut(_options, _data);
-			cur_lb = 0;
-			_data.ub = 0;
-			cur_ub = 0;
-			grad = 0;
-
-			// 1. on evalue 0.01 au dessus
-			_data.stab_value += 0.05;
-			compute_x_cut(_options, _data);
-			for (auto& kvp : _map_slaves) {
-				WorkerSlavePtr& ptr(kvp.second);
-				ptr->fix_to(_data.x_cut);
-				ptr->solve(status, _options, _data.nslaves, kvp.first);
-				ptr->get_value(val);
-				grad += val;
-			}
-			compute_separation_point_cost(_master, _data, _options);
-			grad += _data.invest_separation_cost;
-			
-			// 2. on evalue en le point
-			_data.stab_value -= 0.05;
-			compute_x_cut(_options, _data);
-			for (auto& kvp : _map_slaves) {
-				WorkerSlavePtr& ptr(kvp.second);
-				ptr->fix_to(_data.x_cut);
-				ptr->set_simplex_iter(1000);
-				ptr->solve(status, _options, _data.nslaves, kvp.first);
-				ptr->get_value(val);
-				ptr->set_simplex_iter(50000);
-				cur_ub += val;
-				ptr->get_simplex_ite(iterations);
-			}
-			compute_separation_point_cost(_master, _data, _options);
-			cur_ub += _data.invest_separation_cost;
-
-			// 3. on evalue le gradient
-			grad -= cur_ub;
-
-			if (grad > 0) {
-				alphamax = _data.stab_value;
-			}
-			else {
-				alphamin = _data.stab_value;
-			}
-
-			/*std::cout << std::fixed << std::setprecision(3) << std::setw(10) << _data.stab_value
-				<< std::scientific << std::setprecision(8) << std::setw(30) << cur_ub
-				<< std::scientific << std::setprecision(8) << std::setw(30) << grad
-				<< std::scientific << std::setprecision(8) << std::setw(30) << alphamin
-				<< std::scientific << std::setprecision(8) << std::setw(30) << alphamax
-				<< std::endl;*/
-
-			/*if (cur_ub < best_ub) {
-				best_ub = cur_ub;
-				best_alpha = _data.stab_value;
-			}*/
-
-			best_alpha = _data.stab_value;
-
-			if (alphamax - alphamin > 1e-2) {
-				_data.stab_value = alphamin + (alphamax - alphamin) / 2;
-			}
-			else {
-				mini = true;
-
-			}
-
-			if ( abs(grad) < 1e-3 ) {
-				mini = true;
-			}
-
-		}
-	}
-	/***************************************
-	****************************************
-	           ON LOWER BOUND
-	****************************************
-	***************************************/
-	else if (_options.ALPHA_STRAT == "LB") {
-		best_alpha = 0;
-		best_lb = -1e20;
-		cur_lb = 0;
-		cur_ub;
-		last_lb = _data.lb;
-		cur_gap;
-		best_gap = 1e20;
-		best_ub = 1e20;
-		last_ub = 1e20;
-
-		int partition = 100;
-
-		bool mini = false;
-		double alphamin = 0.0;
-		double alphamax = 1.0;
-		int status;
-		double grad;
-		double val;
-		int iterations;
-
-		std::string name = "bounds.txt";
-		if (_data.it == 1) {
-			std::ofstream sortie(name.c_str());
-		}
-		else {
-			std::ofstream sortie(name.c_str(), std::ios::app);
-		}
-		std::ofstream sortie(name.c_str(), std::ios::app);
-
-		sortie << std::setw(10) << _data.it;
-
-		for (int i(1); i <= partition; i++) {
-			// choix de alpha
-			_data.stab_value = float(i) / partition;
-			compute_x_cut(_options, _data);
-
-			// construire les coupes
-			build_cut();
-
-			// plein de trucs relatifs a tout le blabla
-			reset_iteration_data(_data, _options);
-			get_master_value(_master, _data, _options);
-			compute_ub(_master, _data);
-			cur_gap = _data.ub - _data.lb;
-
-			if (cur_gap <= best_gap) {
-				best_gap = cur_gap;
-				best_alpha = _data.stab_value;
-			}
-
-			// on ecrit le resultat dans un fichier pour faire des courbes parce que les courbes cest top
-			sortie << std::scientific << std::setprecision(8) << std::setw(30) << _data.lb << "_" << _data.ub;
-			/*std::cout	<< std::scientific << std::setprecision(2) << std::setw(10) << _data.stab_value 
-						<< std::scientific << std::setprecision(8) << std::setw(25) << cur_gap << std::endl;
-		
-			*/
-			// on supprime les coupes et on reprend l'ancienne solution du master
-			del_last_rows(_master, _options, _data);
-			reset_iteration_data(_data, _options);
-			get_master_value(_master, _data, _options);
-		}
-		sortie << std::endl;
-		//std::cout << std::endl;
-		sortie.close();
-	}
-
-	if (_options.ALPHA_STRAT == "UB" || _options.ALPHA_STRAT == "LB") {
-		_data.stab_value = best_alpha;
-	}
 	
 	_data.ub = 0;
 
@@ -332,9 +144,6 @@ void Benders::classic_iteration(std::ostream& stream) {
 	compute_ub(_master, _data);
 	
 	update_in_out_stabilisation(_master, _data);
-	if (_options.ALPHA_STRAT != "ALL") {
-		_data.stab_value = best_alpha;
-	}
 
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 
@@ -419,6 +228,9 @@ void Benders::master_loop(std::ostream& stream) {
 		_data.x_stab = _data.x_cut;
 
 
+		// 5. cutting loop
+		separation_loop(stream);
+
 		// 6. update stab
 		if (_options.ALPHA_STRAT == "DYNAMIQUE") {
 
@@ -479,10 +291,6 @@ void Benders::master_loop(std::ostream& stream) {
 			std::cout << "BAD STRATEGY" << std::endl;
 			std::exit(0);
 		}
-
-		// 5. cutting loop
-		separation_loop(stream);
-
 		
 
 		if (_data.stop) {
