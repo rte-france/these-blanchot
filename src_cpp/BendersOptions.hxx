@@ -20,7 +20,7 @@ BENDERS_OPTIONS_MACRO(DELETE_CUT, bool, false)
 BENDERS_OPTIONS_MACRO(LOG_OUTPUT, std::string, "COMMAND")
 
 //UNIFORM (1/n), CONSTANT (to set in SLAVE_WEIGHT_VALUE), or a txt file linking each slave to its weight 
-BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT, std::string, "CONSTANT")
+BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT, std::string, "UNIFORM")
 
 //If SLAVE_WEIGHT is CONSTANT, set here the divisor required 
 BENDERS_OPTIONS_MACRO(SLAVE_WEIGHT_VALUE, double, 1)
@@ -47,7 +47,7 @@ BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
 BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 
 //Choice of the solver to use (XPRESS only for now)
-BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
+BENDERS_OPTIONS_MACRO(SOLVER, std::string, "CPLEX")
 
 //Bool to say if non optimal problem should be written in a file before exit
 BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)

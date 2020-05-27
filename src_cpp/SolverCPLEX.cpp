@@ -106,9 +106,13 @@ void SolverCPLEX::read_prob(const char* prob_name, const char* flags)
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 
 	int status = CPXlpopt(_env, _prb);
+	
+	//std::cout << "STATUS " << status << std::endl;
 
 	int cpx_status(0);
 	cpx_status = CPXgetstat(_env, _prb);
+
+	//std::cout << "LP STAT = " << cpx_status << std::endl;
 
 	if (cpx_status == CPX_STAT_OPTIMAL) {
 		lp_status = OPTIMAL;

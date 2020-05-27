@@ -95,8 +95,5 @@ void usage(int argc) {
 		input.write_default();
 		std::exit(0);
 	}
-	else {
-		std::cout << "argc = " << argc << std::endl;
-	}
 }
 

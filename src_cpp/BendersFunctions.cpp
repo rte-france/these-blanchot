@@ -640,6 +640,8 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				else {
 					data.nocutmaster	+= 1;
 					data.misprices		+= 1;
+					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
+					all_cuts_storage[itmap.first].insert(cut);
 					//std::cout << "  NO CUT " << data.nocutmaster << std::endl;
 					//std::cout << "         " << itmap.first << "  " << data.alpha_i[problem_to_id[itmap.first]] << std::endl;
 				}
