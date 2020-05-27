@@ -106,3 +106,12 @@ BENDERS_OPTIONS_MACRO(MEMORY_TYPE, std::string, "WITHOUT")
 // DECOMPOSED or SMPS
 BENDERS_OPTIONS_MACRO(DATA_FORMAT, std::string, "DECOMPOSED")
 
+// Name of .tim file if data format is SMPS
+BENDERS_OPTIONS_MACRO(TIMEFILE_NAME, std::string, "instance.tim")
+
+// Name of .cor file if data format is SMPS
+BENDERS_OPTIONS_MACRO(CORFILE_NAME, std::string, "instance.cor")
+
+// Name of .sto file if data format is SMPS
+BENDERS_OPTIONS_MACRO(STOFILE_NAME, std::string, "instance.sto")
+

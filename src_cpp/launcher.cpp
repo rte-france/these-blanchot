@@ -1,6 +1,7 @@
 #include "launcher.h"
 #include "Benders.h"
 #include "Timer.h"
+#include "DataSMPS.h"
 
 #include "BendersOptions.h"
 
@@ -76,6 +77,14 @@ void sequential_launch(BendersOptions const & options) {
 	Timer timer;
 
 	CouplingMap input;
+
+	std::string col_stage = "";
+	std::string row_stage = "";
+	if (options.DATA_FORMAT == "SMPS") {
+		std::string time_path = options.INPUTROOT + '/' +  options.TIMEFILE_NAME;
+		analyze_time_file(time_path, col_stage, row_stage);
+	}
+
 	build_input(options, input);
 	Benders benders(input, options);
 	benders.run(std::cout);
