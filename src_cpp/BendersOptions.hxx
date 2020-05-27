@@ -103,3 +103,6 @@ BENDERS_OPTIONS_MACRO(BETA, double, 0.0)
 // memory parameter (0 without memory, beta in [0;1[)
 BENDERS_OPTIONS_MACRO(MEMORY_TYPE, std::string, "WITHOUT")
 
+// DECOMPOSED or SMPS
+BENDERS_OPTIONS_MACRO(DATA_FORMAT, std::string, "DECOMPOSED")
+
