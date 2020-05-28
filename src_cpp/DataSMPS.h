@@ -19,4 +19,6 @@ void write_mps_line(int period, std::ofstream& master_file, std::ofstream& slave
 void write_struct_master(std::string const& colname, std::ofstream& struct_file, 
 	StrSet& written_vars, StrSet& first_stage_vars);
 
-void analyze_rhs_line(std::string const& line, std::ofstream& master_file, std::ofstream& slave_file, std::vector<StrSet> const& rows);
+void analyze_rhs_line(std::string const& line, std::ofstream& master_file, 
+	std::ofstream& slave_file, std::vector<StrSet> const& rows);
+
