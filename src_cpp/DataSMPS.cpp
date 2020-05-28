@@ -87,7 +87,7 @@ void generate_base_of_instance(std::string const& cor_path, std::string const& i
 				rows, written_vars, first_stage_vars, period_col);
 		}
 		else if (current_part == "RHS") {
-
+			analyze_rhs_line(line, master_file, slave_file, rows);
 		}
 	}
 
@@ -131,8 +131,8 @@ void analyze_row_line(std::string const& line, std::vector<StrSet>& rows, std::s
 }
 
 void analysze_col_line(std::string const& line, std::string const& col_stage, std::ofstream& master_file, 
-	std::ofstream& slave_file, std::ofstream& struct_file, std::vector<StrSet> rows, 
-	StrSet written_vars, StrSet first_stage_vars, int& current_period)
+	std::ofstream& slave_file, std::ofstream& struct_file, std::vector<StrSet>& rows, 
+	StrSet& written_vars, StrSet& first_stage_vars, int& current_period)
 {
 	std::string c_colname, c_rowname, c_rowval;
 	std::stringstream ss(line);
@@ -148,12 +148,13 @@ void analysze_col_line(std::string const& line, std::string const& col_stage, st
 	}
 
 	if (current_period == 0) {
-
+		write_struct_master(c_colname, struct_file, written_vars, first_stage_vars);
 	}
+
 }
 
 void write_mps_line(int period, std::ofstream& master_file, std::ofstream& slave_file, 
-	std::string const& colname, std::string const& rowname, std::string const& val, std::vector<StrSet> rows)
+	std::string const& colname, std::string const& rowname, std::string const& val, std::vector<StrSet> const& rows)
 {
 	if (rows[0].find(rowname) != rows[0].end() && period == 0) {
 		master_file << "    " << std::left 
@@ -166,6 +167,31 @@ void write_mps_line(int period, std::ofstream& master_file, std::ofstream& slave
 			<< std::setw(10) << colname
 			<< std::setw(10) << rowname
 			<< std::setw(10) << val << std::endl;
+	}
+}
+
+void write_struct_master(std::string const& colname, std::ofstream& struct_file, StrSet& written_vars, StrSet& first_stage_vars)
+{
+	if (written_vars.find(colname) == written_vars.end()) {
+		written_vars.insert(colname);
+		first_stage_vars.insert(colname);
+
+		struct_file
+			<< std::setw(25) << std::left << "master"
+			<< std::setw(15) << std::left << colname
+			<< std::setw(10) << std::left << written_vars.size() << std::endl;
+	}
+}
+
+void analyze_rhs_line(std::string const& line, std::ofstream& master_file, std::ofstream& slave_file, std::vector<StrSet> const& rows)
+{
+	std::stringstream ss(line);
+	std::string c_type, c_rowname, c_rhs;
+
+	ss >> c_type;
+	while (ss >> c_rowname) {
+		ss >> c_rhs;
+		write_mps_line(0, master_file, slave_file, c_type, c_rowname, c_rhs, rows);
 	}
 }
 
