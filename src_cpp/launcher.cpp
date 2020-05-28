@@ -80,9 +80,12 @@ void sequential_launch(BendersOptions const & options) {
 
 	std::string col_stage = "";
 	std::string row_stage = "";
+	StrSet first_stage_vars;
 	if (options.DATA_FORMAT == "SMPS") {
 		std::string time_path = options.INPUTROOT + '/' +  options.TIMEFILE_NAME;
+		std::string cor_path = options.INPUTROOT + '/' + options.CORFILE_NAME;
 		analyze_time_file(time_path, col_stage, row_stage);
+		generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
 	}
 
 	build_input(options, input);

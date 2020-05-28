@@ -35,9 +35,138 @@ void analyze_time_file(std::string const& time_path, std::string& col_stage, std
 		std::cout << "TIME FILE " << time_path << " DOES NOT EXIST" << std::endl;
 		std::exit(0);
 	}
-	std::cout << "COL : " << col_stage << std::endl;
-	std::cout << "ROW : " << row_stage << std::endl;
-	std::exit(0);
 
 	time_file.close();
 }
+
+/*!< Generates master prob, struct file and base of slave problems slave_init.mps*/
+void generate_base_of_instance(std::string const& cor_path, std::string const& inst_folder, 
+	StrSet first_stage_vars, std::string const& col_stage, std::string const& row_stage) {
+
+	std::ifstream cor_file(cor_path);
+
+	std::ofstream master_file(inst_folder	+ "/master.mps");
+	std::ofstream slave_file(inst_folder	+ "/slave_init.mps");
+	std::ofstream struct_file(inst_folder	+ "/structure.txt");
+
+	std::string current_part = "";
+	
+	// Contient les noms des contraintes pour chaque stage (master & slave)
+	std::vector<StrSet> rows;
+	rows.resize(2);
+
+	StrSet written_vars;
+	int period_row = 0;
+	int period_col = 0;
+
+	// On parcourt cor_file pour ecrire respectivement les lignes dans master ou slave
+	std::string line, mot;
+	std::stringstream ss;
+	while (getline(cor_file, line)) {
+		
+		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
+		if (line[0] == '*') {
+
+		}
+		else if (line[0] != ' ') {
+			ss << line;
+			ss >> current_part;
+			ss.str("");
+			ss.clear();
+
+			period_col = 0;
+			period_row = 0;
+			master_file << line << std::endl;
+			slave_file << line << std::endl;
+		}
+		else if (current_part == "ROWS") {
+			analyze_row_line(line, rows, row_stage, master_file, slave_file, period_row);
+		}
+		else if (current_part == "COLUMNS") {
+			analysze_col_line(line, col_stage, master_file, slave_file, struct_file,
+				rows, written_vars, first_stage_vars, period_col);
+		}
+		else if (current_part == "RHS") {
+
+		}
+	}
+
+	cor_file.close();
+	master_file.close();
+	slave_file.close();
+	struct_file.close();
+}
+
+void analyze_row_line(std::string const& line, std::vector<StrSet>& rows, std::string const& row_stage, 
+	std::ofstream& master_file, std::ofstream& slave_file, int& period_row)
+{
+	std::stringstream ss(line);
+	std::string c_rowtype, c_rowname;
+	ss >> c_rowtype >> c_rowname;
+
+	// 1. On ajoute l'objectif dans les deux periodes master & slave
+	if(c_rowtype == "N"){
+		rows[0].insert(c_rowname);
+		rows[1].insert(c_rowname);
+		slave_file << line << std::endl;
+	}
+
+	// row_stage est la premiere ligne du stage 2
+	// quand on la rencontre, on incremente la periode
+	if (c_rowname == row_stage) {
+		period_row += 1;
+	}
+	rows[period_row].insert(c_rowname);
+
+	if (period_row == 0) {
+		master_file << line << std::endl;
+	}
+	else if(period_row == 1) {
+		slave_file << line << std::endl;
+	}
+	else {
+		std::cout << "INVALID PERIOD : THE PROBLEM HAS MORE THAN 2 STAGES." << std::endl;
+		std::exit(0);
+	}
+}
+
+void analysze_col_line(std::string const& line, std::string const& col_stage, std::ofstream& master_file, 
+	std::ofstream& slave_file, std::ofstream& struct_file, std::vector<StrSet> rows, 
+	StrSet written_vars, StrSet first_stage_vars, int& current_period)
+{
+	std::string c_colname, c_rowname, c_rowval;
+	std::stringstream ss(line);
+	ss >> c_colname;
+
+	if (c_colname == col_stage) {
+		current_period = 1;
+	}
+
+	while (ss >> c_rowname) {
+		ss >> c_rowval;
+		write_mps_line(current_period, master_file, slave_file, c_colname, c_rowname, c_rowval, rows);
+	}
+
+	if (current_period == 0) {
+
+	}
+}
+
+void write_mps_line(int period, std::ofstream& master_file, std::ofstream& slave_file, 
+	std::string const& colname, std::string const& rowname, std::string const& val, std::vector<StrSet> rows)
+{
+	if (rows[0].find(rowname) != rows[0].end() && period == 0) {
+		master_file << "    " << std::left 
+			<< std::setw(10) << colname
+			<< std::setw(10) << rowname
+			<< std::setw(10) << val << std::endl;
+	}
+	else {
+		slave_file << "    " << std::left
+			<< std::setw(10) << colname
+			<< std::setw(10) << rowname
+			<< std::setw(10) << val << std::endl;
+	}
+}
+
+
