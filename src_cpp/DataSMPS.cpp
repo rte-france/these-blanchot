@@ -93,32 +93,7 @@ void generate_base_of_instance(std::string const& cor_path, std::string const& i
 	master_file.close();
 	slave_file.close();
 
-	// On parcourt le slave_init.mps ecrit pour generer la partie struct associee aux slaves
-	std::ifstream slave_file_read(inst_folder + "/slave_init.mps");
-	std::string colname;
-	written_vars.clear();
-	while (getline(slave_file_read, line)) {
-		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
-		if (line[0] != '*' || line[0] == ' ') {
-			ss << line;
-			ss >> colname;
-			ss.str("");
-			ss.clear();
-
-			// Si la colonne qu'on lit est une variable de premier niveau inconnue (not in written_vars)
-			// on l'ajoute a struct
-			if (first_stage_vars.find(colname) != first_stage_vars.end() 
-				&& written_vars.find(colname) == written_vars.end() )  {
-				struct_file
-					<< std::setw(25) << std::left << "slave"
-					<< std::setw(15) << std::left << colname
-					<< std::setw(10) << std::left << written_vars.size() << std::endl;
-			}
-			written_vars.insert(colname);
-		}
-
-	}
-	slave_file_read.close();
+	write_struct_slave(inst_folder + "/slave_init.mps", first_stage_vars, struct_file);
 
 	struct_file.close();
 }
@@ -216,6 +191,7 @@ void write_struct_slave(std::string const& slave_path, StrSet const& first_stage
 	std::ifstream slave_file_read(slave_path);
 	std::string line, colname;
 	StrSet written_vars;
+	written_vars.clear();
 	std::stringstream ss;
 	while (getline(slave_file_read, line)) {
 		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
@@ -233,8 +209,9 @@ void write_struct_slave(std::string const& slave_path, StrSet const& first_stage
 					<< std::setw(25) << std::left << "slave"
 					<< std::setw(15) << std::left << colname
 					<< std::setw(10) << std::left << written_vars.size() << std::endl;
+				written_vars.insert(colname);
 			}
-			written_vars.insert(colname);
+			
 		}
 
 	}
@@ -298,9 +275,65 @@ void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_pat
 	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
 }
 
-void build_input_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks)
+void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks)
 {
+	coupling_map.clear();
+	std::ifstream summary(options.get_structure_path(), std::ios::in);
+	if (!summary) {
+		std::cout << "Cannot open file summary " << options.get_structure_path() << std::endl;
+		std::exit(0);
+	}
+	std::string line;
 
+	// 1. Getting the number of subproblems
+	int n_sp = 1;
+	for (auto const& kvp : blocks) {
+		n_sp *= kvp.second;
+	}
+	if (options.SLAVE_NUMBER > n_sp) {
+		std::cout << "Le nombre de slave doit etre inferieur a " << n_sp << std::endl;
+		std::exit(0);
+	}
+	else if(options.SLAVE_NUMBER >= 0){
+		n_sp = options.SLAVE_NUMBER;
+	}
+
+	std::string c_sp_name;
+	while (std::getline(summary, line))
+	{
+		std::stringstream buffer(line);
+		std::string problem_name;
+		std::string variable_name;
+		int variable_id;
+		buffer >> problem_name;
+		buffer >> variable_name;
+		buffer >> variable_id;
+		if (problem_name == "slave") {
+			for (int k(0); k < n_sp; k++) {
+				c_sp_name = "SP_" + std::to_string(k);
+				coupling_map[c_sp_name][variable_name] = variable_id;
+			}
+		}
+		else if (problem_name == options.MASTER_NAME) {
+			coupling_map[problem_name][variable_name] = variable_id;
+		}
+		
+	}
+	/*int n(0);
+	if (options.SLAVE_NUMBER >= 0) {
+		CouplingMap trimmer;
+		for (auto const& problem : coupling_map) {
+			if (problem.first == options.MASTER_NAME)
+				trimmer.insert(problem);
+			else if (n < options.SLAVE_NUMBER) {
+				trimmer.insert(problem);
+				++n;
+			}
+		}
+		coupling_map = trimmer;
+	}*/
+	
+	summary.close();
 }
 
 

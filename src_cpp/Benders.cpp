@@ -26,10 +26,18 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		
 		auto const it_master = problem_list.find(_options.MASTER_NAME);
 		Str2Int const & master_variable(it_master->second);
+		std::string slave_path;
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
 				_problem_to_id[it->first] = i;
-				_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
+				if (options.DATA_FORMAT == "DECOMPOSED") {
+					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first),
+						_options.slave_weight(_data.nslaves, it->first), _options));
+				}
+				else if (options.DATA_FORMAT == "SMPS") {
+					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
+						_options.slave_weight(_data.nslaves, it->first), _options));
+				}
 				_slaves.push_back(it->first);
 				i++;
 			}

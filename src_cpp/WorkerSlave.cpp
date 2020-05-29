@@ -14,7 +14,8 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options) {
+WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, 
+	double const & slave_weight, BendersOptions const & options) {
 	init(variable_map, path_to_mps, options.SOLVER);
 	_solver->set_output_log_level(options.XPRESS_TRACE);
 

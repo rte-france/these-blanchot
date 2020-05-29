@@ -32,4 +32,4 @@ void analyze_rhs_line(std::string const& line, std::ofstream& master_file,
 
 void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_path);
 
-void build_input_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks);
+void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks);
