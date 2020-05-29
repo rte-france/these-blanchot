@@ -3,7 +3,7 @@
 #include "WorkerMaster.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
-
+#include "DataSMPS.h"
 
 /*!
 * \class Benders
@@ -11,7 +11,8 @@
 */
 class Benders {
 public:
-	Benders(CouplingMap const & problem_list, BendersOptions const & options);
+	Benders(CouplingMap const & problem_list, BendersOptions const & options, 
+		Str2Int const& blocks, std::string const& sto_path);
 	virtual ~Benders();
 
 	void free();

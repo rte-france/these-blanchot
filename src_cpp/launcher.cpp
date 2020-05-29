@@ -78,16 +78,15 @@ void sequential_launch(BendersOptions const & options) {
 
 	CouplingMap input;
 
+	std::string col_stage = "";
+	std::string row_stage = "";
+	StrSet first_stage_vars;
+	Str2Int blocks;
+
+	std::string time_path = options.INPUTROOT + '/' + options.TIMEFILE_NAME;
+	std::string cor_path = options.INPUTROOT + '/' + options.CORFILE_NAME;
+	std::string sto_path = options.INPUTROOT + '/' + options.STOFILE_NAME;
 	if (options.DATA_FORMAT == "SMPS") {
-		std::string col_stage = "";
-		std::string row_stage = "";
-		StrSet first_stage_vars;
-		Str2Int blocks;
-
-		std::string time_path	= options.INPUTROOT + '/' + options.TIMEFILE_NAME;
-		std::string cor_path	= options.INPUTROOT + '/' + options.CORFILE_NAME;
-		std::string sto_path	= options.INPUTROOT + '/' + options.STOFILE_NAME;
-
 		analyze_time_file(time_path, col_stage, row_stage);
 		generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
 		generate_number_of_realisations(blocks, sto_path);
@@ -97,7 +96,7 @@ void sequential_launch(BendersOptions const & options) {
 		build_input(options, input);
 	}
 		
-	Benders benders(input, options);
+	Benders benders(input, options, blocks, sto_path);
 	benders.run(std::cout);
 	benders.free();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

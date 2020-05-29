@@ -46,6 +46,9 @@ public:
 
 	virtual int get_n_integer_vars() const;
 
+	virtual int get_row_index(std::string const& name) const;
+	virtual int get_col_index(std::string const& name) const;
+
 	virtual void free();
 
 // Methods to tranform a problem
@@ -61,6 +64,9 @@ public:
 	virtual void chg_obj(int nels, const int* mindex, const double* obj);
 	virtual void chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd);
 	virtual void chg_col_type(int nels, const int* mindex, const char* qctype) const;
+
+	virtual void chg_rhs(int id_row, double val);
+	virtual void chg_coef(int id_row, int id_col, double val);
 
 // Methods to get a solution
 public:

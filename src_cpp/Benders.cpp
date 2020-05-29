@@ -13,7 +13,8 @@ Benders::~Benders() {
 *
 *  \param options : set of options fixed by the user 
 */
-Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) : _options(options) {
+Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, 
+	Str2Int const& blocks, std::string const& sto_path) : _options(options) {
 
 	if (!problem_list.empty()) {
 
@@ -27,8 +28,25 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		auto const it_master = problem_list.find(_options.MASTER_NAME);
 		Str2Int const & master_variable(it_master->second);
 		std::string slave_path;
+		// One realisation is a line in a MPS file, with two keys :
+		// Either : RIGHT ROWNAME for a RHS
+		// Or : COLNAME ROWNAME for a matrix element
+		// and a value associated to this element
+		StrPair2Dbl realisation;
+		Str2Int real_counter;
+		for (auto const& kvp : blocks) {
+			real_counter[kvp.first] = 0;
+		}
+		//std::ifstream sto_file(sto_path);
+		double proba;
 		for(int i(0); i < _data.nslaves; ++it) {
+
 			if (it != it_master) {
+
+				//sto_file.clear();
+				//sto_file.seekg(0, std::ios::beg);
+				proba = find_rand_realisation_lines(realisation, sto_path, real_counter);
+
 				_problem_to_id[it->first] = i;
 				if (options.DATA_FORMAT == "DECOMPOSED") {
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first),
@@ -36,10 +54,13 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				}
 				else if (options.DATA_FORMAT == "SMPS") {
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
-						_options.slave_weight(_data.nslaves, it->first), _options));
+						_options.slave_weight(_data.nslaves, it->first), _options, realisation));
 				}
 				_slaves.push_back(it->first);
 				i++;
+				if (i < _data.nslaves) {
+					go_to_next_realisation(blocks, real_counter);
+				}
 			}
 		}
 

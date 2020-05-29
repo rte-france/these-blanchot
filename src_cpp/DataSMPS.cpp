@@ -246,18 +246,20 @@ void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_pat
 		}
 		else if (part_type == "INDEP") {
 			ss >> key1 >> key2;
-			keyT = key1 + "  " + key2;
+			keyT = key1 + " " + key2;
 			if (blocks.find(keyT) == blocks.end()) {
 				blocks[keyT] = 0;
 			}
 			blocks[keyT] += 1;
 		}
-		else if (part_type == "BL") {
+		else if (part_type == "BLOCKS") {
 			ss >> key1 >> keyT;
-			if (blocks.find(keyT) == blocks.end()) {
-				blocks[keyT] = 0;
+			if (key1 == "BL") {
+				if (blocks.find(keyT) == blocks.end()) {
+					blocks[keyT] = 0;
+				}
+				blocks[keyT] += 1;
 			}
-			blocks[keyT] += 1;
 		}
 		else {
 			std::cout << "UNKNOWN PART TYPE IN .STO FILE." << std::endl;
@@ -319,21 +321,68 @@ void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, 
 		}
 		
 	}
-	/*int n(0);
-	if (options.SLAVE_NUMBER >= 0) {
-		CouplingMap trimmer;
-		for (auto const& problem : coupling_map) {
-			if (problem.first == options.MASTER_NAME)
-				trimmer.insert(problem);
-			else if (n < options.SLAVE_NUMBER) {
-				trimmer.insert(problem);
-				++n;
-			}
-		}
-		coupling_map = trimmer;
-	}*/
 	
 	summary.close();
+}
+
+void go_to_next_realisation(Str2Int const& blocks, Str2Int& real_counter)
+{
+	int ind = 0;
+	auto it(blocks.begin());
+	real_counter[it->first]++;
+
+	while (real_counter[it->first] == it->second) {
+		real_counter[it->first] = 0;
+		it++;
+		real_counter[it->first] +=1;
+	}
+}
+
+double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& sto_path, Str2Int const& real_counter)
+{
+
+	double proba_tot = 1;
+	Str2Int c_counter;
+	for (auto const& kvp : real_counter) {
+		c_counter[kvp.first] = -1;
+	}
+
+	std::ifstream sto_file(sto_path);
+	std::string part_type = "";
+	std::string line, key1, key2, period, value, proba;
+	std::string name_of_real;
+	std::stringstream ss;
+
+	while (getline(sto_file, line)) {
+		if (line[0] != ' ') {
+			ss << line;
+			ss >> part_type;
+			ss.str("");
+			ss.clear();
+		}
+		else if (part_type == "INDEP") {
+			ss << line;
+			ss >> key1 >> key2 >> value >> period >> proba;
+			ss.str("");
+			ss.clear();
+
+			name_of_real = key1 + " " + key2;
+			c_counter[name_of_real] += 1;
+
+			if (c_counter[name_of_real] == real_counter.at(name_of_real) ) {
+				realisation[std::pair<std::string, std::string>(key1, key2)] = std::stod(value);
+				proba_tot *= std::stod(proba);
+			}
+		}
+		else if (part_type == "BLOCKS") {
+			std::cout << "A CODER : BLOCK PART OF STO FILES" << std::endl;
+			std::exit(0);
+		}
+	}
+
+	sto_file.close();
+
+	return proba_tot;
 }
 
 

@@ -240,6 +240,20 @@ int SolverCPLEX::get_n_integer_vars() const
 	return n_int_vars + n_bin_vars;
 }
 
+int SolverCPLEX::get_row_index(std::string const& name) const
+{
+	int id;
+	CPXgetrowindex(_env, _prb, name.c_str(), &id);
+	return id;
+}
+
+int SolverCPLEX::get_col_index(std::string const& name) const
+{
+	int id;
+	CPXgetcolindex(_env, _prb, name.c_str(), &id);
+	return id;
+}
+
 void SolverCPLEX::free() {
 	CPXfreeprob(_env, &_prb);
 }
@@ -294,6 +308,20 @@ void SolverCPLEX::chg_col_type(int nels, const int* mindex, const char* qctype) 
 	if (get_n_integer_vars() == 0) {
 		CPXchgprobtype(_env, _prb, CPXPROB_LP);
 	}
+}
+
+void SolverCPLEX::chg_rhs(int id_row, double val)
+{
+	int ids[1];
+	ids[0] = id_row;
+	double vals[1];
+	vals[0] = val;
+	CPXchgrhs(_env, _prb, 1, ids, vals);
+}
+
+void SolverCPLEX::chg_coef(int id_row, int id_col, double val)
+{
+	CPXchgcoef(_env, _prb, id_row, id_col, val);
 }
 
 void SolverCPLEX::get_basis(int* rstatus, int* cstatus) const {

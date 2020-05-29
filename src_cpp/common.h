@@ -53,7 +53,7 @@ typedef std::map <std::string, IntVector> SlaveCutId;
 
 typedef std::pair<std::string, std::string> mps_coupling;
 typedef std::list<mps_coupling> mps_coupling_list;
-
+typedef std::map<std::pair<std::string, std::string>, double> StrPair2Dbl;
 
 /*!
 * \class Predicate

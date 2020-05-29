@@ -34,10 +34,61 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	}
 	_solver->chg_obj(mps_ncols, sequence.data(), o.data());
 	_solver->set_algorithm("DUAL");
-
 }
+
+/*!
+*  \brief Constructor of a Worker Slave
+*
+*  \param variable_map : Map of linking each variable of the problem to its id
+*
+*  \param problem_name : Name of the problem
+*
+*/
+WorkerSlave::WorkerSlave(Str2Int const& variable_map, std::string const& path_to_mps,
+	double const& slave_weight, BendersOptions const& options, StrPair2Dbl realisation) {
+	init(variable_map, path_to_mps, options.SOLVER);
+
+	set_realisation_to_prob(realisation);
+
+	_solver->set_output_log_level(options.XPRESS_TRACE);
+
+	int mps_ncols;
+	mps_ncols = _solver->get_ncols();
+
+	DblVector o(mps_ncols, 0);
+	IntVector sequence(mps_ncols);
+	for (int i(0); i < mps_ncols; ++i) {
+		sequence[i] = i;
+	}
+	_solver->get_obj(o.data(), 0, mps_ncols - 1);
+
+	for (auto& c : o) {
+		c *= slave_weight;
+	}
+	_solver->chg_obj(mps_ncols, sequence.data(), o.data());
+	_solver->set_algorithm("DUAL");
+}
+
 WorkerSlave::~WorkerSlave() {
 
+}
+
+void WorkerSlave::set_realisation_to_prob(StrPair2Dbl realisation)
+{
+	for (auto const& kvp : realisation) {
+		int id_col, id_row;
+		// 1. RHS
+		if (kvp.first.first == "RIGHT") {
+			id_row = _solver->get_row_index(kvp.first.second);
+			_solver->chg_rhs(id_row, kvp.second);
+		}
+		// 2. MATRIX ELEMENT
+		else {
+			id_col = _solver->get_row_index(kvp.first.first);
+			id_row = _solver->get_row_index(kvp.first.second);
+			_solver->chg_coef(id_row, id_col, kvp.second);
+		}
+	}
 }
 
 /*!

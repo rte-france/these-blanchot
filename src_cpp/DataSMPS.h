@@ -33,3 +33,8 @@ void analyze_rhs_line(std::string const& line, std::ofstream& master_file,
 void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_path);
 
 void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks);
+
+void go_to_next_realisation(Str2Int const& blocks, Str2Int& real_counter);
+
+double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& sto_path,
+	Str2Int const& real_counter);

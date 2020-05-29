@@ -280,6 +280,16 @@ int SolverXPRESS::get_n_integer_vars() const
 	return n_int_vars;
 }
 
+int SolverXPRESS::get_row_index(std::string const& name) const
+{
+	return 0;
+}
+
+int SolverXPRESS::get_col_index(std::string const& name) const
+{
+	return 0;
+}
+
 void SolverXPRESS::free() {
 	XPRSdestroyprob(_xprs);
 }
@@ -324,6 +334,14 @@ void SolverXPRESS::chg_bounds(int nbds, const int* mindex, const char* qbtype, c
 
 void SolverXPRESS::chg_col_type(int nels, const int* mindex, const char* qctype) const {
 	XPRSchgcoltype(_xprs, nels, mindex, qctype);
+}
+
+void SolverXPRESS::chg_rhs(int id_row, double val)
+{
+}
+
+void SolverXPRESS::chg_coef(int id_row, int id_col, double val)
+{
 }
 
 void SolverXPRESS::get_basis(int* rstatus, int* cstatus) const {

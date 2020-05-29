@@ -70,6 +70,9 @@ public:
 
 	virtual int get_n_integer_vars() const = 0;
 
+	virtual int get_row_index(std::string const& name) const = 0;
+	virtual int get_col_index(std::string const& name) const = 0;
+
 	virtual void free() = 0;
 
 // Methods to tranform a problem
@@ -85,6 +88,9 @@ public:
 	virtual void chg_obj(int nels, const int* mindex, const double* obj) = 0;
 	virtual void chg_bounds(int nbds, const int* mindex, const char* qbtype, const double* bnd) = 0;
 	virtual void chg_col_type(int nels, const int* mindex, const char* qctype) const = 0;
+
+	virtual void chg_rhs(int id_row, double val) = 0;
+	virtual void chg_coef(int id_row, int id_col, double val) = 0;
 	
 // Methods to get a solution
 public:	
