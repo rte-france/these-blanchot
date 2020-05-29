@@ -54,17 +54,16 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				}
 				else if (options.DATA_FORMAT == "SMPS") {
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
-						_options.slave_weight(_data.nslaves, it->first), _options, realisation));
+						proba, _options, realisation));
+					if (i + 1 < _data.nslaves) {
+						go_to_next_realisation(blocks, real_counter);
+					}
 				}
 				_slaves.push_back(it->first);
 				i++;
-				if (i < _data.nslaves) {
-					go_to_next_realisation(blocks, real_counter);
-				}
 			}
 		}
 
-		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
 
 		if (_master->get_n_integer_vars() > 0) {

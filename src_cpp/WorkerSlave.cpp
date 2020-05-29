@@ -34,10 +34,11 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	}
 	_solver->chg_obj(mps_ncols, sequence.data(), o.data());
 	_solver->set_algorithm("DUAL");
+
 }
 
 /*!
-*  \brief Constructor of a Worker Slave
+*  \brief Constructor of a Worker Slave with SMPS data_format
 *
 *  \param variable_map : Map of linking each variable of the problem to its id
 *
