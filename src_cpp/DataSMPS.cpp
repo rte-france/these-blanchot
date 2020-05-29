@@ -65,9 +65,7 @@ void generate_base_of_instance(std::string const& cor_path, std::string const& i
 	while (getline(cor_file, line)) {
 		
 		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
-		if (line[0] == '*') {
-
-		}
+		if (line[0] == '*') {	}
 		else if (line[0] != ' ') {
 			ss << line;
 			ss >> current_part;
@@ -94,6 +92,34 @@ void generate_base_of_instance(std::string const& cor_path, std::string const& i
 	cor_file.close();
 	master_file.close();
 	slave_file.close();
+
+	// On parcourt le slave_init.mps ecrit pour generer la partie struct associee aux slaves
+	std::ifstream slave_file_read(inst_folder + "/slave_init.mps");
+	std::string colname;
+	written_vars.clear();
+	while (getline(slave_file_read, line)) {
+		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
+		if (line[0] != '*' || line[0] == ' ') {
+			ss << line;
+			ss >> colname;
+			ss.str("");
+			ss.clear();
+
+			// Si la colonne qu'on lit est une variable de premier niveau inconnue (not in written_vars)
+			// on l'ajoute a struct
+			if (first_stage_vars.find(colname) != first_stage_vars.end() 
+				&& written_vars.find(colname) == written_vars.end() )  {
+				struct_file
+					<< std::setw(25) << std::left << "slave"
+					<< std::setw(15) << std::left << colname
+					<< std::setw(10) << std::left << written_vars.size() << std::endl;
+			}
+			written_vars.insert(colname);
+		}
+
+	}
+	slave_file_read.close();
+
 	struct_file.close();
 }
 
@@ -184,6 +210,37 @@ void write_struct_master(std::string const& colname, std::ofstream& struct_file,
 	}
 }
 
+void write_struct_slave(std::string const& slave_path, StrSet const& first_stage_vars, std::ofstream & struct_file)
+{
+	// On parcourt le slave_init.mps ecrit pour generer la partie struct associee aux slaves
+	std::ifstream slave_file_read(slave_path);
+	std::string line, colname;
+	StrSet written_vars;
+	std::stringstream ss;
+	while (getline(slave_file_read, line)) {
+		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
+		if (line[0] != '*' || line[0] == ' ') {
+			ss << line;
+			ss >> colname;
+			ss.str("");
+			ss.clear();
+
+			// Si la colonne qu'on lit est une variable de premier niveau inconnue (not in written_vars)
+			// on l'ajoute a struct
+			if (first_stage_vars.find(colname) != first_stage_vars.end()
+				&& written_vars.find(colname) == written_vars.end()) {
+				struct_file
+					<< std::setw(25) << std::left << "slave"
+					<< std::setw(15) << std::left << colname
+					<< std::setw(10) << std::left << written_vars.size() << std::endl;
+			}
+			written_vars.insert(colname);
+		}
+
+	}
+	slave_file_read.close();
+}
+
 void analyze_rhs_line(std::string const& line, std::ofstream& master_file, 
 	std::ofstream& slave_file, std::vector<StrSet> const& rows)
 {
@@ -195,6 +252,55 @@ void analyze_rhs_line(std::string const& line, std::ofstream& master_file,
 		ss >> c_rhs;
 		write_mps_line(0, master_file, slave_file, c_type, c_rowname, c_rhs, rows);
 	}
+}
+
+void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_path)
+{
+	std::ifstream cor_file(sto_path);
+	std::string part_type = "";
+
+	std::string line, key1, key2, val;
+	std::string keyT;
+	std::stringstream ss;
+	while (getline(cor_file, line)){
+		ss << line;
+		if (line[0] != ' ') {
+			ss >> part_type;
+		}
+		else if (part_type == "INDEP") {
+			ss >> key1 >> key2;
+			keyT = key1 + "  " + key2;
+			if (blocks.find(keyT) == blocks.end()) {
+				blocks[keyT] = 0;
+			}
+			blocks[keyT] += 1;
+		}
+		else if (part_type == "BL") {
+			ss >> key1 >> keyT;
+			if (blocks.find(keyT) == blocks.end()) {
+				blocks[keyT] = 0;
+			}
+			blocks[keyT] += 1;
+		}
+		else {
+			std::cout << "UNKNOWN PART TYPE IN .STO FILE." << std::endl;
+			std::exit(0);
+		}
+		ss.str("");
+		ss.clear();
+	}
+	cor_file.close();
+
+	int nbr(1);
+	for (auto const& kvp : blocks) {
+		nbr *= kvp.second;
+	}
+	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
+}
+
+void build_input_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks)
+{
+
 }
 
 
