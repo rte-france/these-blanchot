@@ -274,7 +274,6 @@ void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_pat
 
 	int nbr(1);
 	for (auto const& kvp : blocks) {
-		std::cout << kvp.first << "   " << kvp.second << "   " << nbr << std::endl;
 		nbr *= kvp.second;
 	}
 	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
@@ -476,7 +475,6 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 	for (auto const& kvp : _rd_entries) {
 		nbr *= kvp.second.size();
 	}
-	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
 }
 
 double SMPSData::find_rand_realisation_lines(StrPair2Dbl& realisation, Str2Int const& real_counter) const
