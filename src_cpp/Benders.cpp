@@ -33,12 +33,20 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		// Either : RIGHT ROWNAME for a RHS
 		// Or : COLNAME ROWNAME for a matrix element
 		// and a value associated to this element
-		StrPair2Dbl realisation;
-		Str2Int real_counter;
+		
+		
+		//StrPair2Dbl realisation;
+		StrPairVector keys;
+		DblVector values;
+		
+		IntVector real_counter;
 		long int nbr_real = 1;
-		for (auto const& kvp : smps_data._rd_entries) {
+		/*for (auto const& kvp : smps_data._rd_entries) {
 			real_counter[kvp.first] = 0;
 			nbr_real *= kvp.second.size();
+		}*/
+		for (int i(0); i < smps_data.nbr_entries(); i++) {
+			real_counter.push_back(0);
 		}
 
 		double proba;
@@ -47,7 +55,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 			if (it != it_master) {
 
-				proba = smps_data.find_rand_realisation_lines(realisation, real_counter);
+				proba = smps_data.find_rand_realisation_lines(keys, values, real_counter);
 				if (_data.nslaves < nbr_real) {
 					proba = 1.0 / _data.nslaves;
 				}
@@ -59,7 +67,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				}
 				else if (options.DATA_FORMAT == "SMPS") {
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
-						proba, _options, realisation));
+						proba, _options, keys, values));
 					if (i + 1 < _data.nslaves) {
 						smps_data.go_to_next_realisation(real_counter);
 					}

@@ -5,32 +5,40 @@
 class RdRealisation {
 public:
 	double _proba;
-	StrPair2Dbl _rd_elements;
+	int _nbr_lines;
+	//StrPair2Dbl _rd_elements;
+	StrPairVector _keys;
+	DblVector _values;
 
 public:
 	RdRealisation(double proba);
 	RdRealisation(double proba, std::string const& key1, std::string const& key2, double val);
 
-	StrPair2Dbl const& get_elems() const;
+	//StrPair2Dbl const& get_elems() const;
 
 public:
 	void addElement(std::string const& key1, std::string const& key2, double val);
+	int get_size() const;
 };
 
+
 typedef std::vector<RdRealisation> RdRealVector;
+typedef std::vector<RdRealVector> RandEntries;
 typedef std::map<std::string, RdRealVector> Str2RdVector;
 
 class SMPSData {
 public:
-	Str2RdVector _rd_entries;
+	RandEntries _rd_entries;
 
 public:
 	SMPSData();
 	void read_sto_file(std::string const& sto_path);
-	double find_rand_realisation_lines(StrPair2Dbl& realisation, Str2Int const& real_counter) const;
-	double get_proba(std::string const& key, int id) const;
-	StrPair2Dbl const& get_lines(std::string const& key, int id) const;
-	void go_to_next_realisation(Str2Int& real_counter) const;
+	double find_rand_realisation_lines(StrPairVector& keys, DblVector& values, IntVector const& real_counter) const;
+
+	double get_proba(int num, int id) const;
+	//StrPair2Dbl const& get_lines(std::string const& key, int id) const;
+	void go_to_next_realisation(IntVector& real_counter) const;
+	int nbr_entries() const;
 };
 
 

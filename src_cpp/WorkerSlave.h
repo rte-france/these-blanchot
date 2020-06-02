@@ -21,10 +21,10 @@ public:
 	WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, 
 		double const & slave_weight, BendersOptions const & options);
 	WorkerSlave(Str2Int const& variable_map, std::string const& path_to_mps,
-		double const& slave_weight, BendersOptions const& options, StrPair2Dbl realisation);
+		double const& slave_weight, BendersOptions const& options, StrPairVector keys, DblVector values);
 	virtual ~WorkerSlave();
 
-	void set_realisation_to_prob(StrPair2Dbl realisation);
+	void set_realisation_to_prob(StrPairVector keys, DblVector values);
 
 public:
 	void write(int it);

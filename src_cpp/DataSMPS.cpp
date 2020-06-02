@@ -392,33 +392,50 @@ double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& 
 RdRealisation::RdRealisation(double proba)
 {
 	_proba = proba;
-	_rd_elements.clear();
+	//_rd_elements.clear();
+	_keys.clear();
+	_values.clear();
+	_nbr_lines = 0;
 }
 
 RdRealisation::RdRealisation(double proba, std::string const& key1, std::string const& key2, double val)
 {
 	_proba = proba;
-	_rd_elements.clear();
+	//_rd_elements.clear();
+	_keys.clear();
+	_values.clear();
+
 	StrPair paire(key1, key2);
-	_rd_elements[paire] = val;
+	//_rd_elements[paire] = val;
+	_keys.push_back(paire);
+	_values.push_back(val);
+	_nbr_lines = 1;
 }
 
-StrPair2Dbl const& RdRealisation::get_elems() const
+/*StrPair2Dbl const& RdRealisation::get_elems() const
 {
 	return _rd_elements;
-}
+}*/
 
 
 void RdRealisation::addElement(std::string const& key1, std::string const& key2, double val)
 {
 	StrPair paire(key1, key2);
-	if (_rd_elements.find(paire) == _rd_elements.end()) {
+	/*if (_rd_elements.find(paire) == _rd_elements.end()) {
 		_rd_elements[paire] = val;
 	}
 	else {
 		std::cout << "ERROR : KEY " << paire.first << "," << paire.second << " ALREADY EXIXSTS IN KEY MAP." << std::endl;
 		std::exit(0);
-	}
+	}*/
+	_nbr_lines += 1;
+	_keys.push_back(paire);
+	_values.push_back(val);
+}
+
+int RdRealisation::get_size() const
+{
+	return _nbr_lines;
 }
 
 SMPSData::SMPSData()
@@ -442,24 +459,31 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 		}
 		else if (part_type == "INDEP") {
 			ss >> key1 >> key2 >> val >> period >> proba;
-			keyT = key1 + " " + key2;
+
+			if (keyT != key1 + " " + key2) {
+				keyT = key1 + " " + key2;
+				_rd_entries.push_back(RdRealVector());
+			}
+			_rd_entries.back().push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));
+
+			/*keyT = key1 + " " + key2;
 			if (_rd_entries.find(keyT) == _rd_entries.end()) {
 				_rd_entries[keyT] = RdRealVector();
 			}
-			_rd_entries[keyT].push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));
+			_rd_entries[keyT].push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));*/
 		}
 
 		else if (part_type == "BLOCKS") {
 			if (key1 == "BL") {
-				ss >> key1 >> keyT >> period >> proba;
+				/*ss >> key1 >> key2 >> period >> proba;
 				if (_rd_entries.find(keyT) == _rd_entries.end()) {
 					_rd_entries[keyT] = RdRealVector();
 				}
-				_rd_entries[keyT].push_back(RdRealisation(std::stod(proba)));
+				_rd_entries[keyT].push_back(RdRealisation(std::stod(proba)));*/
 			}
 			else {
-				ss >> key1 >> key2 >> val;
-				_rd_entries[keyT][-1].addElement(key1, key2, std::stod(val));
+				/*ss >> key1 >> key2 >> val;
+				_rd_entries[keyT][-1].addElement(key1, key2, std::stod(val));*/
 			}
 		}
 		else {
@@ -473,45 +497,58 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 
 	int nbr(1);
 	for (auto const& kvp : _rd_entries) {
-		nbr *= kvp.second.size();
+		nbr *= kvp.size();
 	}
 }
 
-double SMPSData::find_rand_realisation_lines(StrPair2Dbl& realisation, Str2Int const& real_counter) const
+double SMPSData::find_rand_realisation_lines(StrPairVector& keys, DblVector& values,
+	IntVector const& real_counter) const
 {
 	double proba_tot = 1;
-	StrPair keys;
 	
+	for (int k(0); k < real_counter.size(); k++) {
+		proba_tot *= get_proba(k, real_counter[k]);
+		keys	= _rd_entries[k][real_counter[k]]._keys;
+		values	= _rd_entries[k][real_counter[k]]._values;
+	}
+
+	/*
+	StrPair keys;
 	for (auto const& kvp : real_counter) {
 		proba_tot *= get_proba(kvp.first, kvp.second);
 		for (auto const& keyVal : get_lines(kvp.first, kvp.second)) {
 			keys = std::make_pair(keyVal.first.first, keyVal.first.second);
 			realisation[keys] = keyVal.second;
 		}
-	}
+	}*/
 
 	return proba_tot;
 }
 
-double SMPSData::get_proba(std::string const& key, int id) const
+double SMPSData::get_proba(int num, int id) const
 {
-	return _rd_entries.at(key)[id]._proba;
+	return _rd_entries[num][id]._proba;
 }
 
-StrPair2Dbl const& SMPSData::get_lines(std::string const& key, int id) const
+/*StrPair2Dbl const& SMPSData::get_lines(int num, int id) const
 {
-	return _rd_entries.at(key)[id]._rd_elements;
-}
+	return _rd_entries[num][id]._rd_elements;
+}*/
 
-void SMPSData::go_to_next_realisation(Str2Int& real_counter) const
+void SMPSData::go_to_next_realisation(IntVector& real_counter) const
 {
 	int ind = 0;
-	auto it(_rd_entries.begin());
-	real_counter[it->first]++;
+	//auto it(_rd_entries.begin());
+	//real_counter[it->first]++;
 
-	while (real_counter[it->first] == it->second.size()) {
-		real_counter[it->first] = 0;
-		it++;
-		real_counter[it->first] += 1;
+	while (real_counter[ind] == _rd_entries[ind].size()) {
+		real_counter[ind] = 0;
+		ind++;
+		real_counter[ind] += 1;
 	}
+}
+
+int SMPSData::nbr_entries() const
+{
+	return _rd_entries.size();
 }

@@ -56,6 +56,8 @@ typedef std::list<mps_coupling> mps_coupling_list;
 typedef std::pair<std::string, std::string> StrPair;
 typedef std::map<StrPair, double> StrPair2Dbl;
 
+typedef std::vector<StrPair> StrPairVector;
+
 /*!
 * \class Predicate
 * \brief TO DO

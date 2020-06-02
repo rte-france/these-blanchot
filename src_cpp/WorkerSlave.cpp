@@ -46,10 +46,10 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 *
 */
 WorkerSlave::WorkerSlave(Str2Int const& variable_map, std::string const& path_to_mps,
-	double const& slave_weight, BendersOptions const& options, StrPair2Dbl realisation) {
+	double const& slave_weight, BendersOptions const& options, StrPairVector keys, DblVector values) {
 	init(variable_map, path_to_mps, options.SOLVER);
 
-	set_realisation_to_prob(realisation);
+	set_realisation_to_prob(keys, values);
 
 	_solver->set_output_log_level(options.XPRESS_TRACE);
 
@@ -74,24 +74,40 @@ WorkerSlave::~WorkerSlave() {
 
 }
 
-void WorkerSlave::set_realisation_to_prob(StrPair2Dbl realisation)
+void WorkerSlave::set_realisation_to_prob(StrPairVector keys, DblVector values)
 {
-	for (auto const& kvp : realisation) {
+	for (int k(0); k < keys.size(); k++) {
 		int id_col, id_row;
 		// 1. RHS
+		if (keys[k].first == "RIGHT" ||
+			keys[k].first == "RHS" ||
+			keys[k].first == "RHS1") {
+			id_row = _solver->get_row_index(keys[k].second);
+			_solver->chg_rhs(id_row, values[k]);
+		}
+		// 2. MATRIX ELEMENT
+		else {
+			id_col = _solver->get_row_index(keys[k].first);
+			id_row = _solver->get_row_index(keys[k].second);
+			_solver->chg_coef(id_row, id_col, values[k]);
+		}
+	}
+	/*for (auto const& kvp : realisation) {
+		int id_col, id_row;
+		 1. RHS
 		if (kvp.first.first == "RIGHT" || 
 			kvp.first.first == "RHS" || 
 			kvp.first.first == "RHS1" ) {
 			id_row = _solver->get_row_index(kvp.first.second);
 			_solver->chg_rhs(id_row, kvp.second);
 		}
-		// 2. MATRIX ELEMENT
+		 2. MATRIX ELEMENT
 		else {
 			id_col = _solver->get_row_index(kvp.first.first);
 			id_row = _solver->get_row_index(kvp.first.second);
 			_solver->chg_coef(id_row, id_col, kvp.second);
 		}
-	}
+	}*/
 }
 
 /*!
