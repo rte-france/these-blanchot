@@ -14,7 +14,7 @@ Benders::~Benders() {
 *  \param options : set of options fixed by the user 
 */
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, 
-	Str2Int const& blocks, std::string const& sto_path) : _options(options) {
+	SMPSData const& smps_data) : _options(options) {
 
 	if (!problem_list.empty()) {
 
@@ -28,30 +28,26 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		auto const it_master = problem_list.find(_options.MASTER_NAME);
 		Str2Int const & master_variable(it_master->second);
 		std::string slave_path;
+
 		// One realisation is a line in a MPS file, with two keys :
 		// Either : RIGHT ROWNAME for a RHS
 		// Or : COLNAME ROWNAME for a matrix element
 		// and a value associated to this element
 		StrPair2Dbl realisation;
 		Str2Int real_counter;
-		for (auto const& kvp : blocks) {
-			real_counter[kvp.first] = 0;
-		}
-		//std::ifstream sto_file(sto_path);
-		double proba;
-
 		long int nbr_real = 1;
-		for (auto const& kvp : blocks) {
-			nbr_real *= kvp.second;
+		for (auto const& kvp : smps_data._rd_entries) {
+			real_counter[kvp.first] = 0;
+			nbr_real *= kvp.second.size();
 		}
+
+		double proba;
 
 		for(int i(0); i < _data.nslaves; ++it) {
 
 			if (it != it_master) {
 
-				//sto_file.clear();
-				//sto_file.seekg(0, std::ios::beg);
-				proba = find_rand_realisation_lines(realisation, sto_path, real_counter);
+				proba = smps_data.find_rand_realisation_lines(realisation, real_counter);
 				if (_data.nslaves < nbr_real) {
 					proba = 1.0 / _data.nslaves;
 				}
@@ -65,7 +61,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
 						proba, _options, realisation));
 					if (i + 1 < _data.nslaves) {
-						go_to_next_realisation(blocks, real_counter);
+						smps_data.go_to_next_realisation(real_counter);
 					}
 				}
 				_slaves.push_back(it->first);

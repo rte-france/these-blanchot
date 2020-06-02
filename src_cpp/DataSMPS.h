@@ -11,6 +11,8 @@ public:
 	RdRealisation(double proba);
 	RdRealisation(double proba, std::string const& key1, std::string const& key2, double val);
 
+	StrPair2Dbl const& get_elems() const;
+
 public:
 	void addElement(std::string const& key1, std::string const& key2, double val);
 };
@@ -23,8 +25,12 @@ public:
 	Str2RdVector _rd_entries;
 
 public:
-	SMPSData(std::string sto_path);
-
+	SMPSData();
+	void read_sto_file(std::string const& sto_path);
+	double find_rand_realisation_lines(StrPair2Dbl& realisation, Str2Int const& real_counter) const;
+	double get_proba(std::string const& key, int id) const;
+	StrPair2Dbl const& get_lines(std::string const& key, int id) const;
+	void go_to_next_realisation(Str2Int& real_counter) const;
 };
 
 

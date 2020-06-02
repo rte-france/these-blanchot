@@ -404,6 +404,11 @@ RdRealisation::RdRealisation(double proba, std::string const& key1, std::string 
 	_rd_elements[paire] = val;
 }
 
+StrPair2Dbl const& RdRealisation::get_elems() const
+{
+	return _rd_elements;
+}
+
 
 void RdRealisation::addElement(std::string const& key1, std::string const& key2, double val)
 {
@@ -417,7 +422,11 @@ void RdRealisation::addElement(std::string const& key1, std::string const& key2,
 	}
 }
 
-SMPSData::SMPSData(std::string sto_path)
+SMPSData::SMPSData()
+{
+}
+
+void SMPSData::read_sto_file(std::string const& sto_path)
 {
 	std::ifstream cor_file(sto_path);
 	std::string part_type = "";
@@ -447,7 +456,7 @@ SMPSData::SMPSData(std::string sto_path)
 				if (_rd_entries.find(keyT) == _rd_entries.end()) {
 					_rd_entries[keyT] = RdRealVector();
 				}
-				_rd_entries[keyT].push_back( RdRealisation(std::stod(proba)) );
+				_rd_entries[keyT].push_back(RdRealisation(std::stod(proba)));
 			}
 			else {
 				ss >> key1 >> key2 >> val;
@@ -465,8 +474,46 @@ SMPSData::SMPSData(std::string sto_path)
 
 	int nbr(1);
 	for (auto const& kvp : _rd_entries) {
-		std::cout << kvp.first << "   " << kvp.second.size() << "   " << nbr << std::endl;
 		nbr *= kvp.second.size();
 	}
 	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
+}
+
+double SMPSData::find_rand_realisation_lines(StrPair2Dbl& realisation, Str2Int const& real_counter) const
+{
+	double proba_tot = 1;
+	StrPair keys;
+	
+	for (auto const& kvp : real_counter) {
+		proba_tot *= get_proba(kvp.first, kvp.second);
+		for (auto const& keyVal : get_lines(kvp.first, kvp.second)) {
+			keys = std::make_pair(keyVal.first.first, keyVal.first.second);
+			realisation[keys] = keyVal.second;
+		}
+	}
+
+	return proba_tot;
+}
+
+double SMPSData::get_proba(std::string const& key, int id) const
+{
+	return _rd_entries.at(key)[id]._proba;
+}
+
+StrPair2Dbl const& SMPSData::get_lines(std::string const& key, int id) const
+{
+	return _rd_entries.at(key)[id]._rd_elements;
+}
+
+void SMPSData::go_to_next_realisation(Str2Int& real_counter) const
+{
+	int ind = 0;
+	auto it(_rd_entries.begin());
+	real_counter[it->first]++;
+
+	while (real_counter[it->first] == it->second.size()) {
+		real_counter[it->first] = 0;
+		it++;
+		real_counter[it->first] += 1;
+	}
 }

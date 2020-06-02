@@ -12,7 +12,7 @@
 class Benders {
 public:
 	Benders(CouplingMap const & problem_list, BendersOptions const & options, 
-		Str2Int const& blocks, std::string const& sto_path);
+		SMPSData const& smps_data);
 	virtual ~Benders();
 
 	void free();

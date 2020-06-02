@@ -85,10 +85,10 @@ SCENARIO("Resolution instance LP") {
 		WHEN("Solving with benderssequential") {
 
 			CouplingMap input;
-			Str2Int blocks;
+			SMPSData data;
 
 			build_input(options, input);
-			Benders benders(input, options, blocks, "");
+			Benders benders(input, options, data);
 			benders.run(std::cout);
 
 			THEN("the optimal solution in found.") {
@@ -143,9 +143,10 @@ SCENARIO("Resolution instance MIP") {
 		WHEN("Solving with benderssequential") {
 
 			CouplingMap input;
-			Str2Int blocks;
+			SMPSData data;
+
 			build_input(options, input);
-			Benders benders(input, options, blocks, "");
+			Benders benders(input, options, data);
 			benders.run(std::cout);
 
 			THEN("the optimal solution in found.") {
@@ -199,9 +200,10 @@ SCENARIO("Resolution instance INFEASIBLE") {
 		WHEN("Solving with benderssequential") {
 
 			CouplingMap input;
-			Str2Int blocks;
+			SMPSData data;
+
 			build_input(options, input);
-			Benders benders(input, options, blocks, "");
+			Benders benders(input, options, data);
 			benders.run(std::cout);
 
 
@@ -254,9 +256,10 @@ SCENARIO("Resolution instance UNBOUDED") {
 		WHEN("Solving with benderssequential") {
 
 			CouplingMap input;
-			Str2Int blocks;
+			SMPSData data;
+
 			build_input(options, input);
-			Benders benders(input, options, blocks, "");
+			Benders benders(input, options, data);
 			benders.run(std::cout);
 
 
