@@ -39,6 +39,12 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		}
 		//std::ifstream sto_file(sto_path);
 		double proba;
+
+		long int nbr_real = 1;
+		for (auto const& kvp : blocks) {
+			nbr_real *= kvp.second;
+		}
+
 		for(int i(0); i < _data.nslaves; ++it) {
 
 			if (it != it_master) {
@@ -46,6 +52,9 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				//sto_file.clear();
 				//sto_file.seekg(0, std::ios::beg);
 				proba = find_rand_realisation_lines(realisation, sto_path, real_counter);
+				if (_data.nslaves < nbr_real) {
+					proba = 1.0 / _data.nslaves;
+				}
 
 				_problem_to_id[it->first] = i;
 				if (options.DATA_FORMAT == "DECOMPOSED") {

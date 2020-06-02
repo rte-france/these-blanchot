@@ -2,6 +2,32 @@
 #include "common.h"
 #include "BendersFunctions.h"
 
+class RdRealisation {
+public:
+	double _proba;
+	StrPair2Dbl _rd_elements;
+
+public:
+	RdRealisation(double proba);
+	RdRealisation(double proba, std::string const& key1, std::string const& key2, double val);
+
+public:
+	void addElement(std::string const& key1, std::string const& key2, double val);
+};
+
+typedef std::vector<RdRealisation> RdRealVector;
+typedef std::map<std::string, RdRealVector> Str2RdVector;
+
+class SMPSData {
+public:
+	Str2RdVector _rd_entries;
+
+public:
+	SMPSData(std::string sto_path);
+
+};
+
+
 void analyze_time_file(std::string const& time_path, std::string& col_stage, 
 	std::string& row_stage);
 

@@ -242,7 +242,9 @@ void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_pat
 	while (getline(cor_file, line)){
 		ss << line;
 		if (line[0] != ' ') {
-			ss >> part_type;
+			if (line[0] != '*') {
+				ss >> part_type;
+			}
 		}
 		else if (part_type == "INDEP") {
 			ss >> key1 >> key2;
@@ -272,6 +274,7 @@ void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_pat
 
 	int nbr(1);
 	for (auto const& kvp : blocks) {
+		std::cout << kvp.first << "   " << kvp.second << "   " << nbr << std::endl;
 		nbr *= kvp.second;
 	}
 	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
@@ -355,10 +358,12 @@ double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& 
 
 	while (getline(sto_file, line)) {
 		if (line[0] != ' ') {
-			ss << line;
-			ss >> part_type;
-			ss.str("");
-			ss.clear();
+			if (line[0] != '*') {
+				ss << line;
+				ss >> part_type;
+				ss.str("");
+				ss.clear();
+			}
 		}
 		else if (part_type == "INDEP") {
 			ss << line;
@@ -385,4 +390,83 @@ double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& 
 	return proba_tot;
 }
 
+RdRealisation::RdRealisation(double proba)
+{
+	_proba = proba;
+	_rd_elements.clear();
+}
 
+RdRealisation::RdRealisation(double proba, std::string const& key1, std::string const& key2, double val)
+{
+	_proba = proba;
+	_rd_elements.clear();
+	StrPair paire(key1, key2);
+	_rd_elements[paire] = val;
+}
+
+
+void RdRealisation::addElement(std::string const& key1, std::string const& key2, double val)
+{
+	StrPair paire(key1, key2);
+	if (_rd_elements.find(paire) == _rd_elements.end()) {
+		_rd_elements[paire] = val;
+	}
+	else {
+		std::cout << "ERROR : KEY " << paire.first << "," << paire.second << " ALREADY EXIXSTS IN KEY MAP." << std::endl;
+		std::exit(0);
+	}
+}
+
+SMPSData::SMPSData(std::string sto_path)
+{
+	std::ifstream cor_file(sto_path);
+	std::string part_type = "";
+
+	std::string line, key1, key2, val, period, proba;
+	std::string keyT;
+	std::stringstream ss;
+	while (getline(cor_file, line)) {
+		ss << line;
+		if (line[0] != ' ') {
+			if (line[0] != '*') {
+				ss >> part_type;
+			}
+		}
+		else if (part_type == "INDEP") {
+			ss >> key1 >> key2 >> val >> period >> proba;
+			keyT = key1 + " " + key2;
+			if (_rd_entries.find(keyT) == _rd_entries.end()) {
+				_rd_entries[keyT] = RdRealVector();
+			}
+			_rd_entries[keyT].push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));
+		}
+
+		else if (part_type == "BLOCKS") {
+			if (key1 == "BL") {
+				ss >> key1 >> keyT >> period >> proba;
+				if (_rd_entries.find(keyT) == _rd_entries.end()) {
+					_rd_entries[keyT] = RdRealVector();
+				}
+				_rd_entries[keyT].push_back( RdRealisation(std::stod(proba)) );
+			}
+			else {
+				ss >> key1 >> key2 >> val;
+				_rd_entries[keyT][-1].addElement(key1, key2, std::stod(val));
+			}
+		}
+		else {
+			std::cout << "UNKNOWN PART TYPE IN .STO FILE." << std::endl;
+			std::exit(0);
+		}
+		ss.str("");
+		ss.clear();
+	}
+	cor_file.close();
+
+	int nbr(1);
+	for (auto const& kvp : _rd_entries) {
+		std::cout << kvp.first << "   " << kvp.second.size() << "   " << nbr << std::endl;
+		nbr *= kvp.second.size();
+	}
+	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
+}

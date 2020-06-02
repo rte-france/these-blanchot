@@ -79,7 +79,9 @@ void WorkerSlave::set_realisation_to_prob(StrPair2Dbl realisation)
 	for (auto const& kvp : realisation) {
 		int id_col, id_row;
 		// 1. RHS
-		if (kvp.first.first == "RIGHT") {
+		if (kvp.first.first == "RIGHT" || 
+			kvp.first.first == "RHS" || 
+			kvp.first.first == "RHS1" ) {
 			id_row = _solver->get_row_index(kvp.first.second);
 			_solver->chg_rhs(id_row, kvp.second);
 		}
