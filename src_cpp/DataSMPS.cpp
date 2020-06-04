@@ -508,10 +508,11 @@ double SMPSData::find_rand_realisation_lines(StrPairVector& keys, DblVector& val
 	
 	for (int k(0); k < real_counter.size(); k++) {
 		proba_tot *= get_proba(k, real_counter[k]);
-		keys	= _rd_entries[k][real_counter[k]]._keys;
-		values	= _rd_entries[k][real_counter[k]]._values;
+		keys.insert(keys.end(), _rd_entries[k][real_counter[k]]._keys.begin(), _rd_entries[k][real_counter[k]]._keys.end());
+		//keys	= _rd_entries[k][real_counter[k]]._keys;
+		//values	= _rd_entries[k][real_counter[k]]._values;
+		values.insert(values.end(), _rd_entries[k][real_counter[k]]._values.begin(), _rd_entries[k][real_counter[k]]._values.end());
 	}
-
 	/*
 	StrPair keys;
 	for (auto const& kvp : real_counter) {
@@ -559,7 +560,7 @@ void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions co
 			real_counter[i] = ind;
 			std::cout << "  " << ind;
 		}
-		std::cout << std::endl; 
+		std::cout << "  -F" << std::endl; 
 	}
 }
 

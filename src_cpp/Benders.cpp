@@ -55,9 +55,9 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		}*/
 		for (int i(0); i < smps_data.nbr_entries(); i++) {
 			real_counter.push_back(0);
-			if (_options.SLAVE_NUMBER != -1) {
-				smps_data.go_to_next_realisation(real_counter, _options);
-			}
+		}
+		if (_options.SLAVE_NUMBER != -1) {
+			smps_data.go_to_next_realisation(real_counter, _options);
 		}
 
 		double proba;
