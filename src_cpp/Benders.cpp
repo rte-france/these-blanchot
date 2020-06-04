@@ -16,6 +16,14 @@ Benders::~Benders() {
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, 
 	SMPSData const& smps_data) : _options(options) {
 
+	// 1. On fixe la seed
+	if (_options.SEED != -1) {
+		std::srand(options.SEED);
+	}
+	else {
+		std::srand((unsigned)time(NULL));
+	}
+
 	if (!problem_list.empty()) {
 
 		_data.nslaves = _options.SLAVE_NUMBER;
@@ -47,6 +55,9 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		}*/
 		for (int i(0); i < smps_data.nbr_entries(); i++) {
 			real_counter.push_back(0);
+			if (_options.SLAVE_NUMBER != -1) {
+				smps_data.go_to_next_realisation(real_counter, _options);
+			}
 		}
 
 		double proba;
@@ -69,7 +80,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
 						proba, _options, keys, values));
 					if (i + 1 < _data.nslaves) {
-						smps_data.go_to_next_realisation(real_counter);
+						smps_data.go_to_next_realisation(real_counter, _options);
 					}
 				}
 				_slaves.push_back(it->first);

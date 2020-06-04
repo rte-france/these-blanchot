@@ -115,3 +115,5 @@ BENDERS_OPTIONS_MACRO(CORFILE_NAME, std::string, "instance.cor")
 // Name of .sto file if data format is SMPS
 BENDERS_OPTIONS_MACRO(STOFILE_NAME, std::string, "instance.sto")
 
+// Seed for std::rand
+BENDERS_OPTIONS_MACRO(SEED, int, -1)

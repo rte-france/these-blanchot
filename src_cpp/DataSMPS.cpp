@@ -535,16 +535,31 @@ double SMPSData::get_proba(int num, int id) const
 	return _rd_entries[num][id]._rd_elements;
 }*/
 
-void SMPSData::go_to_next_realisation(IntVector& real_counter) const
+void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions const& options) const
 {
+	double rd_val;
+	double cumul = 0.0;
 	int ind = 0;
-	//auto it(_rd_entries.begin());
-	//real_counter[it->first]++;
-
-	while (real_counter[ind] == _rd_entries[ind].size()) {
-		real_counter[ind] = 0;
-		ind++;
-		real_counter[ind] += 1;
+	if (options.SLAVE_NUMBER == -1) {
+		while (real_counter[ind] == _rd_entries[ind].size()) {
+			real_counter[ind] = 0;
+			ind++;
+			real_counter[ind] += 1;
+		}
+	}
+	else {
+		for (int i(0); i < real_counter.size(); i++) {
+			ind = 0;
+			cumul = _rd_entries[i][ind]._proba;
+			rd_val = (double)rand() / ((double)RAND_MAX);
+			while (cumul < rd_val) {
+				ind += 1;
+				cumul += _rd_entries[i][ind]._proba;
+			}
+			real_counter[i] = ind;
+			std::cout << "  " << ind;
+		}
+		std::cout << std::endl; 
 	}
 }
 
