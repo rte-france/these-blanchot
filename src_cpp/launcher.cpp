@@ -83,7 +83,7 @@ void sequential_launch(BendersOptions const & options) {
 	StrSet first_stage_vars;
 	Str2Int blocks;
 	SMPSData smps_data;
-	
+
 	if (options.DATA_FORMAT == "SMPS") {
 		std::string time_path = options.INPUTROOT + '/' + options.TIMEFILE_NAME;
 		std::string cor_path = options.INPUTROOT + '/' + options.CORFILE_NAME;

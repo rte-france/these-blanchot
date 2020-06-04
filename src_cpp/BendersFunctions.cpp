@@ -526,10 +526,9 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 		WorkerSlavePtr & ptr(kvp.second);
 		SlaveCutDataPtr slave_cut_data(new SlaveCutData);
 		SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
+
 		ptr->fix_to(data.x_cut);
-
 		ptr->solve(handler->get_int(LPSTATUS), options, data.nslaves, kvp.first);
-
 		slaves_worth_status = std::max(slaves_worth_status, handler->get_int(LPSTATUS));
 
 		ptr->get_value(handler->get_dbl(SLAVE_COST));

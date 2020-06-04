@@ -271,12 +271,6 @@ void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_pat
 		ss.clear();
 	}
 	cor_file.close();
-
-	int nbr(1);
-	for (auto const& kvp : blocks) {
-		nbr *= kvp.second;
-	}
-	std::cout << std::endl << "NBR DE REAL : " << nbr << std::endl;
 }
 
 void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks)
@@ -290,9 +284,13 @@ void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, 
 	std::string line;
 
 	// 1. Getting the number of subproblems
-	int n_sp = 1;
+	long unsigned int n_sp = 1;
 	for (auto const& kvp : blocks) {
 		n_sp *= kvp.second;
+	}
+	if (n_sp <= 0) {
+		n_sp = 100000;
+		std::cout << "Nombre de realisations total trop grand pour un long int : fixe a 100 000." << std::endl;
 	}
 	if (options.SLAVE_NUMBER > n_sp) {
 		std::cout << "Le nombre de slave doit etre inferieur a " << n_sp << std::endl;
@@ -444,13 +442,13 @@ SMPSData::SMPSData()
 
 void SMPSData::read_sto_file(std::string const& sto_path)
 {
-	std::ifstream cor_file(sto_path);
+	std::ifstream sto_file(sto_path);
 	std::string part_type = "";
 
 	std::string line, key1, key2, val, period, proba;
-	std::string keyT;
+	std::string keyT = "";
 	std::stringstream ss;
-	while (getline(cor_file, line)) {
+	while (getline(sto_file, line)) {
 		ss << line;
 		if (line[0] != ' ') {
 			if (line[0] != '*') {
@@ -459,13 +457,16 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 		}
 		else if (part_type == "INDEP") {
 			ss >> key1 >> key2 >> val >> period >> proba;
+			if (proba == "") {
+				proba = period;
+			}
 
 			if (keyT != key1 + " " + key2) {
 				keyT = key1 + " " + key2;
 				_rd_entries.push_back(RdRealVector());
 			}
-			_rd_entries.back().push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));
 
+			_rd_entries.back().push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));
 			/*keyT = key1 + " " + key2;
 			if (_rd_entries.find(keyT) == _rd_entries.end()) {
 				_rd_entries[keyT] = RdRealVector();
@@ -474,6 +475,8 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 		}
 
 		else if (part_type == "BLOCKS") {
+			std::cout << "BLOCKS NOT CODED" << std::endl;
+			std::exit(0);
 			if (key1 == "BL") {
 				/*ss >> key1 >> key2 >> period >> proba;
 				if (_rd_entries.find(keyT) == _rd_entries.end()) {
@@ -490,15 +493,11 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 			std::cout << "UNKNOWN PART TYPE IN .STO FILE." << std::endl;
 			std::exit(0);
 		}
+
 		ss.str("");
 		ss.clear();
 	}
-	cor_file.close();
-
-	int nbr(1);
-	for (auto const& kvp : _rd_entries) {
-		nbr *= kvp.size();
-	}
+	sto_file.close();
 }
 
 double SMPSData::find_rand_realisation_lines(StrPairVector& keys, DblVector& values,
@@ -558,9 +557,9 @@ void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions co
 				cumul += _rd_entries[i][ind]._proba;
 			}
 			real_counter[i] = ind;
-			std::cout << "  " << ind;
-		}
-		std::cout << "  -F" << std::endl; 
+			//std::cout << "  " << real_counter[i];
+		} 
+		//std::cout << std::endl;
 	}
 }
 

@@ -150,12 +150,14 @@ void Benders::run(std::ostream & stream) {
 	for (auto const & kvp : _problem_to_id) {
 		_all_cuts_storage[kvp.first] = SlaveCutStorage();
 	}
+	
 	init(_data, _options);
+
+	
 
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
 		master_loop(stream);
 	}
-
 
 	while (!_data.stop) {
 		if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
@@ -169,7 +171,6 @@ void Benders::run(std::ostream & stream) {
 			std::exit(0);
 		}
 	}
-
 	print_solution(stream, _data.x_cut, true, _data.global_prb_status, _options.PRINT_SOLUTION);
 
 	std::cout << "Computation time : " << timer.elapsed() << std::endl;
@@ -188,7 +189,6 @@ void Benders::classic_iteration(std::ostream& stream) {
 	++_data.it;
 	reset_iteration_data(_data, _options);
 	get_master_value(_master, _data, _options);
-	
 	_data.ub = 0;
 
 	compute_x_cut(_options, _data);
@@ -198,7 +198,6 @@ void Benders::classic_iteration(std::ostream& stream) {
 	update_in_out_stabilisation(_master, _data);
 
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
-
 	_data.timer_master = timer_master.elapsed();
 	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
