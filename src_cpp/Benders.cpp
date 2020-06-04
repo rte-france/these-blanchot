@@ -67,7 +67,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			if (it != it_master) {
 
 				proba = smps_data.find_rand_realisation_lines(keys, values, real_counter);
-				if (_data.nslaves < nbr_real) {
+				if (_options.SLAVE_NUMBER != -1) {
 					proba = 1.0 / _data.nslaves;
 				}
 
