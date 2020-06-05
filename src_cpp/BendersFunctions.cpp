@@ -689,7 +689,7 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
 	}
-	master->add_cut(s, data.x0, rhs);
+	master->add_cut(s, data.x_cut, rhs);
 }
 
 
@@ -819,7 +819,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		data.x_cut = data.x0;
 	}
 	else if (options.ALGORITHM == "IN-OUT") {
-		if (data.it == 1) {
+		if (data.it == 0) {
 			data.x_stab = data.x0;
 			data.x_cut = data.x0;
 		} else {
@@ -830,7 +830,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 	}
 	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
-		if (data.it == 1) {
+		if (data.it == 0) {
 			data.x_stab = data.x0;
 			data.x_cut = data.x0;
 			data.x_mem = data.x0;

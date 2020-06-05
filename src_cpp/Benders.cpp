@@ -267,6 +267,11 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 1. resolution of master problem
 		get_master_value(_master, _data, _options);
+
+		/*if (_data.it == 0) {
+			_data.x_cut = _data.x0;
+			_data.x_stab = _data.x0;
+		}*/
 		_data.has_cut = false;
 		
 		// 2. Choosing new order of subpoblems
@@ -277,7 +282,6 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 4. settin in-point to last separation point
 		_data.x_stab = _data.x_cut;
-
 
 		// 5. cutting loop
 		separation_loop(stream);
