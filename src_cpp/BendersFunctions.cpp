@@ -916,14 +916,11 @@ void compute_ub(WorkerMasterPtr& master, BendersData& data) {
 	obj.resize(n_cols, -1);
 	master->get_obj(obj, 0, n_cols - 1);
 
-	std::cout << "   UB " << data.ub << std::endl;
-
 	int col_id(0);
 	for (auto const& kvp : data.x_cut) {
 		col_id = master->_name_to_id[kvp.first];
 		data.ub += kvp.second * obj[col_id];
 	}
-	std::cout << "   UB " << data.ub << std::endl;
 }
 
 /*!
