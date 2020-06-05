@@ -9,7 +9,9 @@ int main(int argc, char** argv)
 	//options.print(std::cout);
 	usage(argc);
 	BendersOptions options(build_benders_options(argc, argv));
-	options.print(std::cout);
+	if (options.PRINT_OPTIONS) {
+		options.print(std::cout);
+	}
 	sequential_launch(options);
 
 	return 0;

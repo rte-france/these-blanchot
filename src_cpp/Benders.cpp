@@ -187,6 +187,7 @@ void Benders::run(std::ostream & stream) {
 void Benders::classic_iteration(std::ostream& stream) {
 	Timer timer_master;
 	++_data.it;
+
 	reset_iteration_data(_data, _options);
 	get_master_value(_master, _data, _options);
 	_data.ub = 0;
@@ -195,7 +196,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	build_cut();
 	compute_ub(_master, _data);
 	
-	update_in_out_stabilisation(_master, _data);
+	update_in_out_stabilisation(_master, _data, _options);
 
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
 	_data.timer_master = timer_master.elapsed();

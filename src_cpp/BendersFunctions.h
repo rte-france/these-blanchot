@@ -53,7 +53,7 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 
 // in-out stabilisation
 void compute_x_cut(BendersOptions const& options, BendersData& data);
-void update_in_out_stabilisation(WorkerMasterPtr & _master, BendersData& data);
+void update_in_out_stabilisation(WorkerMasterPtr & _master, BendersData& data, BendersOptions const& options);
 void compute_ub(WorkerMasterPtr& master, BendersData& data);
 
 void set_slaves_order(BendersData& data, BendersOptions const& options);

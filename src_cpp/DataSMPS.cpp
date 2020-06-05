@@ -456,7 +456,9 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 			}
 		}
 		else if (part_type == "INDEP") {
+			proba = "";
 			ss >> key1 >> key2 >> val >> period >> proba;
+			//std::cout << key1 << "  " << key2 << "   " << period << "   " << proba << std::endl;
 			if (proba == "") {
 				proba = period;
 			}
@@ -465,7 +467,7 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 				keyT = key1 + " " + key2;
 				_rd_entries.push_back(RdRealVector());
 			}
-
+			
 			_rd_entries.back().push_back(RdRealisation(std::stod(proba), key1, key2, std::stod(val)));
 			/*keyT = key1 + " " + key2;
 			if (_rd_entries.find(keyT) == _rd_entries.end()) {
@@ -561,6 +563,7 @@ void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions co
 		} 
 		//std::cout << std::endl;
 	}
+
 }
 
 int SMPSData::nbr_entries() const
