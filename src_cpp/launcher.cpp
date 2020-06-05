@@ -90,7 +90,13 @@ void sequential_launch(BendersOptions const & options) {
 		std::string sto_path = options.INPUTROOT + '/' + options.STOFILE_NAME;
 
 		analyze_time_file(time_path, col_stage, row_stage);
-		generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
+		
+		std::string master_name = "master.mps";
+		std::ifstream fichier(master_name.c_str());
+		if (fichier.fail()) {
+			std::cout << "coucou" << std::endl;
+			generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
+		}
 		generate_number_of_realisations(blocks, sto_path);
 		smps_data.read_sto_file(sto_path);
 		read_struct_SMPS(options, input, blocks);
