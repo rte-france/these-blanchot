@@ -25,7 +25,7 @@ void init(BendersData & data, BendersOptions const& options) {
 	data.slave_status = 0;
 
 	// in-out stab
-	data.stab_value = 0.5;
+	data.stab_value = options.STEP_SIZE;
 	
 	data.total_time.restart();
 
