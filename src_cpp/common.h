@@ -9,9 +9,6 @@
 #define PATH_SEPARATOR "/" 
 #endif 
 
-#define XPRESS
-#define CPLEX
-
 #include <tuple>
 #include <sstream>
 #include <fstream>
