@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <thread>
 #include "Timer.h"
+#include <cmath>
 
 struct Predicate;
 typedef std::map<std::string, double> Point;
