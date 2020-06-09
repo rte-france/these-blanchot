@@ -170,6 +170,7 @@ struct BendersData {
 	int n_slaves_no_cut;			/*< Counter of slaves solved in a particular first stage solution
 									which were not cut */
 	double espilon_s;				/*!< optimality gap on one subproblem */
+	double remaining_gap;			/*!< Value of the gap remaining after the resolution of some subproblems */
 	bool has_cut;					/*!< Bool saying if a subproblem has been cut at the last iteration */
 	IntVector indices;				/*!< Vector of indices of subproblems to perform sampling, the order of this 
 									vector will tell the subproblems to sample */

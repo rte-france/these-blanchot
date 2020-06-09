@@ -717,6 +717,10 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 
 	data.stay_in_x_cut = false;
 
+	if (data.n_slaves_no_cut == 0) {
+		data.remaining_gap = (options.GAP - data.epsilon_x);
+	}
+
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
@@ -739,12 +743,31 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			}
 
 			// Check local optimality
-			data.espilon_s = (options.GAP - data.epsilon_x) / data.nslaves;
+			//data.espilon_s = (options.GAP - data.epsilon_x) / data.nslaves;
+			data.espilon_s = std::min((options.GAP - data.epsilon_x) * 0.1, data.remaining_gap);
+			
 			if ( (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) ) {
 				optcounter += 1;
 			}
+			else {
+				if (data.n_slaves_no_cut + optcounter > 0) {
+					std::cout << "    " << std::scientific << 1e-6 - data.remaining_gap
+						<< "    " << data.espilon_s
+						<< "    " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I)
+						<< "    " << data.n_slaves_no_cut + optcounter << std::endl;
+				}
+			}
 			total_counter += 1;
 			data.n_slaves_solved += 1;
+
+			if ( ( (data.n_slaves_no_cut + optcounter) % 100 == 0 && data.n_slaves_no_cut + optcounter > 0) ) {
+				std::cout << "    " << std::scientific << 1e-6 - data.remaining_gap
+					<< "    " << data.espilon_s
+					<< "    " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I)
+					<< "    " << data.n_slaves_no_cut + optcounter << std::endl;
+			}
+
+			data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
 		}
 	}
 
