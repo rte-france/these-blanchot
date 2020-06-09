@@ -91,6 +91,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 					}
 				}
 				_slaves.push_back(it->first);
+				keys.clear();
+				values.clear();
 				i++;
 			}
 		}
