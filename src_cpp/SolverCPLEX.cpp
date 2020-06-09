@@ -19,7 +19,6 @@ SolverCPLEX::SolverCPLEX(std::string const& name) {
 	_env = CPXopenCPLEX(&status);
 	_prb = CPXcreateprob(_env, &status, name.c_str());
 	_NumberOfProblems += 1;
-	std::cout << "CACA       " << _NumberOfProblems << std::endl;
 }
 
 SolverCPLEX::SolverCPLEX(std::string const& name, SolverAbstract::Ptr fictif)
@@ -30,7 +29,6 @@ SolverCPLEX::SolverCPLEX(std::string const& name, SolverAbstract::Ptr fictif)
 	{
 		_prb = CPXcloneprob(_env, c->_prb, &status);
 		_NumberOfProblems += 1;
-		//std::cout << "COUCOU     " << _NumberOfProblems << std::endl;
 	}
 	else {
 		std::cout << "ECHEC CAST" << std::endl;
