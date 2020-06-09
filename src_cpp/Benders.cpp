@@ -62,6 +62,13 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 		double proba;
 
+		// On cree un SP fictif (lecture mps) et on le copie ensuite
+		WorkerPtr slave_fictif;
+		if (options.DATA_FORMAT == "SMPS") {
+			slave_fictif = WorkerPtr(new Worker());
+			slave_fictif->init(it->second, _options.get_slave_path("slave_init"), _options.SOLVER);
+		}
+
 		for(int i(0); i < _data.nslaves; ++it) {
 
 			if (it != it_master) {
@@ -78,7 +85,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				}
 				else if (options.DATA_FORMAT == "SMPS") {
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
-						proba, _options, keys, values));
+						proba, _options, keys, values, slave_fictif));
 					if (i + 1 < _data.nslaves) {
 						smps_data.go_to_next_realisation(real_counter, _options);
 					}

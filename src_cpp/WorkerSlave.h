@@ -21,7 +21,8 @@ public:
 	WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, 
 		double const & slave_weight, BendersOptions const & options);
 	WorkerSlave(Str2Int const& variable_map, std::string const& path_to_mps,
-		double const& slave_weight, BendersOptions const& options, StrPairVector keys, DblVector values);
+		double const& slave_weight, BendersOptions const& options, StrPairVector keys, 
+		DblVector values, WorkerPtr fictif);
 	virtual ~WorkerSlave();
 
 	void set_realisation_to_prob(StrPairVector keys, DblVector values);

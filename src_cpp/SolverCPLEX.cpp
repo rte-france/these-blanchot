@@ -19,6 +19,23 @@ SolverCPLEX::SolverCPLEX(std::string const& name) {
 	_env = CPXopenCPLEX(&status);
 	_prb = CPXcreateprob(_env, &status, name.c_str());
 	_NumberOfProblems += 1;
+	std::cout << "CACA       " << _NumberOfProblems << std::endl;
+}
+
+SolverCPLEX::SolverCPLEX(std::string const& name, SolverAbstract::Ptr fictif)
+{
+	int status(0);
+	_env = CPXopenCPLEX(&status);
+	if (SolverCPLEX* c = dynamic_cast<SolverCPLEX*>(fictif.get()))
+	{
+		_prb = CPXcloneprob(_env, c->_prb, &status);
+		_NumberOfProblems += 1;
+		//std::cout << "COUCOU     " << _NumberOfProblems << std::endl;
+	}
+	else {
+		std::cout << "ECHEC CAST" << std::endl;
+		std::exit(0);
+	}
 }
 
 SolverCPLEX::~SolverCPLEX() {
@@ -101,6 +118,10 @@ void SolverCPLEX::read_prob(const char* prob_name, const char* flags)
 		std::exit(0);
 	}
 	int status = CPXreadcopyprob(_env, _prb, (name+point+ cpxflags).c_str(), flags);
+}
+
+void SolverCPLEX::copy_prob(Ptr fictif_solv)
+{
 }
 
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {

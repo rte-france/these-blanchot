@@ -44,10 +44,14 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 *
 *  \param problem_name : Name of the problem
 *
+*  \param fictif : problem to copy
+*
 */
 WorkerSlave::WorkerSlave(Str2Int const& variable_map, std::string const& path_to_mps,
-	double const& slave_weight, BendersOptions const& options, StrPairVector keys, DblVector values) {
-	init(variable_map, path_to_mps, options.SOLVER);
+	double const& slave_weight, BendersOptions const& options, StrPairVector keys, 
+	DblVector values, WorkerPtr fictif) {
+
+	init(variable_map, path_to_mps, options.SOLVER, fictif);
 
 	set_realisation_to_prob(keys, values);
 

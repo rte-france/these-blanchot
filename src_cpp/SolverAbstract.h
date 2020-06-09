@@ -53,6 +53,7 @@ public:
 	virtual void write_prob(const char* name, const char* flags) const = 0;
 	virtual void write_errored_prob(int status, BendersOptions const& options, std::string const& path_to_mps) const = 0;
 	virtual void read_prob(const char* prob_name, const char* flags) = 0;
+	virtual void copy_prob(Ptr fictif_solv) = 0;
 	virtual void solve(int& lp_status, std::string const& path_to_mps) = 0;
 	virtual void solve_integer(int& lp_status, std::string const& path_to_mps) = 0;
 	virtual void get_obj(double* obj, int first, int last) const = 0;

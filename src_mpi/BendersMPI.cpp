@@ -245,7 +245,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 
 			if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
 				compute_ub(_master, _data);
-				update_in_out_stabilisation(_master, _data);
+				update_in_out_stabilisation(_master, _data, _options);
 				update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x_cut);
 			}
 			

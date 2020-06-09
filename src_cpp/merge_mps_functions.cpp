@@ -10,7 +10,7 @@
 WorkerMerge::WorkerMerge(BendersOptions const& options)
 {
 	// Initialisation du solver adapte
-	declare_solver(options.SOLVER);
+	declare_solver(options.SOLVER, NULL);
 
 	// Affichage du solver
 	add_stream(std::cout);
@@ -34,7 +34,7 @@ WorkerMerge::WorkerMerge(BendersOptions const& options)
 WorkerMerge::WorkerMerge(BendersOptions const& options, CouplingMap const& input, std::string const& name)
 {
 	// Initialisation du solver adapte
-	declare_solver(options.SOLVER);
+	declare_solver(options.SOLVER, NULL);
 
 	// Affichage du solver
 	add_stream(std::cout);

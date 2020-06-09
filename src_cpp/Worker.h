@@ -27,8 +27,10 @@ public:
 
 public:
 	Worker();
-	void declare_solver(std::string const & solver_name);
+	void declare_solver(std::string const & solver_name, WorkerPtr fictif);
 	void init(Str2Int const & variable_map, std::string const & path_to_mps, std::string const& solver_name);
+	void init(Str2Int const& variable_map, std::string const& path_to_mps, 
+		std::string const& solver_name, WorkerPtr fictif);
 	void add_stream(std::ostream& stream);
 	virtual ~Worker();
 

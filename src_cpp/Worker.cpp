@@ -16,7 +16,7 @@ Worker::Worker() {
 *
 *  \param solver_name : name of the solver to use
 */
-void Worker::declare_solver(std::string const & solver_name)
+void Worker::declare_solver(std::string const & solver_name, WorkerPtr fictif)
 {
 	// Declaration du solver
 	if (solver_name == "") {
@@ -25,7 +25,12 @@ void Worker::declare_solver(std::string const & solver_name)
 	}
 #ifdef CPLEX
 	else if (solver_name == "CPLEX") {
-		_solver = std::make_shared< SolverCPLEX>(_path_to_mps);
+		if (fictif != NULL) {
+			_solver = std::make_shared< SolverCPLEX>(_path_to_mps, fictif->_solver);
+		}
+		else {
+			_solver = std::make_shared< SolverCPLEX>(_path_to_mps);
+		}
 	}
 #endif
 #ifdef XPRESS
@@ -73,7 +78,7 @@ void Worker::get_value(double & lb) {
 void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps, std::string const& solver_name) {
 	
 	// Creation du solver adapte
-	declare_solver(solver_name);
+	declare_solver(solver_name, NULL);
 
 	_path_to_mps = path_to_mps;
 	add_stream(std::cout);
@@ -83,6 +88,33 @@ void Worker::init(Str2Int const & variable_map, std::string const & path_to_mps,
 	//std::ifstream file(_path_to_mapping.c_str());
 	_name_to_id = variable_map;
 	for(auto const & kvp : variable_map) {
+		_id_to_name[kvp.second] = kvp.first;
+	}
+	_is_master = false;
+}
+
+/*!
+*  \brief Initialization of a problem
+*
+*  \param variable_map : map linking each problem name to its variables and their ids
+*
+*  \param problem_name : name of the problem
+*
+*  \param fictif : slave problem to copy
+*/
+void Worker::init(Str2Int const& variable_map, std::string const& path_to_mps, 
+	std::string const& solver_name, WorkerPtr fictif) {
+
+	// Creation du solver adapte
+	declare_solver(solver_name, fictif);
+
+	add_stream(std::cout);
+	_solver->init("");
+	//_solver->read_prob(path_to_mps.c_str(), "MPS");
+
+	//std::ifstream file(_path_to_mapping.c_str());
+	_name_to_id = variable_map;
+	for (auto const& kvp : variable_map) {
 		_id_to_name[kvp.second] = kvp.first;
 	}
 	_is_master = false;
