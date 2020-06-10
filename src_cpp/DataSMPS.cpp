@@ -566,6 +566,36 @@ void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions co
 
 }
 
+void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions const& options, 
+	std::mt19937& gen, std::uniform_real_distribution<double>& dis) const
+{
+	double rd_val;
+	double cumul = 0.0;
+	int ind = 0;
+	if (options.SLAVE_NUMBER == -1) {
+		while (real_counter[ind] == _rd_entries[ind].size()) {
+			real_counter[ind] = 0;
+			ind++;
+			real_counter[ind] += 1;
+		}
+	}
+	else {
+		for (int i(0); i < real_counter.size(); i++) {
+			ind = 0;
+			cumul = _rd_entries[i][ind]._proba;
+			rd_val = dis(gen);
+			while (cumul < rd_val) {
+				ind += 1;
+				cumul += _rd_entries[i][ind]._proba;
+			}
+			real_counter[i] = ind;
+			std::cout << "  " << real_counter[i];
+		}
+		std::cout << std::endl;
+	}
+
+}
+
 int SMPSData::nbr_entries() const
 {
 	return _rd_entries.size();

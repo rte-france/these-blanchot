@@ -749,6 +749,14 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			if ( (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) ) {
 				optcounter += 1;
 			}
+			else {
+				if (data.n_slaves_no_cut + optcounter > 100 && data.remaining_gap > 0) {
+					std::cout << "    " << std::scientific << data.remaining_gap
+						<< "    " << data.espilon_s
+						<< "    " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I)
+						<< "    " << data.n_slaves_no_cut + optcounter << std::endl;
+				}
+			}
 
 			total_counter += 1;
 			data.n_slaves_solved += 1;

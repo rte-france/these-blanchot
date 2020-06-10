@@ -38,6 +38,8 @@ public:
 	double get_proba(int num, int id) const;
 	//StrPair2Dbl const& get_lines(std::string const& key, int id) const;
 	void go_to_next_realisation(IntVector& real_counter, BendersOptions const& options) const;
+	void go_to_next_realisation(IntVector& real_counter, BendersOptions const& options, 
+		std::mt19937& gen, std::uniform_real_distribution<double>& dis) const;
 	int nbr_entries() const;
 };
 

@@ -28,6 +28,7 @@
 #include <thread>
 #include "Timer.h"
 #include <cmath>
+#include <random>
 
 struct Predicate;
 typedef std::map<std::string, double> Point;

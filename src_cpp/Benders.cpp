@@ -17,12 +17,19 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 	SMPSData const& smps_data) : _options(options) {
 
 	// 1. On fixe la seed
+	std::mt19937 rdgen;
 	if (_options.SEED != -1) {
 		std::srand(options.SEED);
+		rdgen.seed(options.SEED);
 	}
 	else {
+		unsigned seedTime = std::chrono::system_clock::now().time_since_epoch().count();
+		rdgen.seed(seedTime);
 		std::srand((unsigned)time(NULL));
 	}
+	std::uniform_real_distribution<double> dis(0.0, 1.0);
+
+
 
 	if (!problem_list.empty()) {
 
@@ -57,7 +64,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			real_counter.push_back(0);
 		}
 		if (_options.SLAVE_NUMBER != -1) {
-			smps_data.go_to_next_realisation(real_counter, _options);
+			smps_data.go_to_next_realisation(real_counter, _options, rdgen, dis);
 		}
 
 		double proba;
@@ -87,7 +94,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
 						proba, _options, keys, values, slave_fictif));
 					if (i + 1 < _data.nslaves) {
-						smps_data.go_to_next_realisation(real_counter, _options);
+						smps_data.go_to_next_realisation(real_counter, _options, rdgen, dis);
 					}
 				}
 				_slaves.push_back(it->first);
@@ -107,6 +114,9 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 	}
+
+	std::cout << "EXIT HERE " << std::endl;
+	std::exit(0);
 }
 
 
