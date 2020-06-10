@@ -114,9 +114,6 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 	}
-
-	std::cout << "EXIT HERE " << std::endl;
-	std::exit(0);
 }
 
 
