@@ -124,6 +124,7 @@ void SolverCPLEX::copy_prob(Ptr fictif_solv)
 
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 
+	//CPXsetintparam(_env, CPX_PARAM_NUMERICALEMPHASIS, 1);
 	int status = CPXlpopt(_env, _prb);
 	
 	//std::cout << "STATUS " << status << std::endl;
