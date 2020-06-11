@@ -63,3 +63,5 @@ bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions c
 void compute_epsilon_x(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data);
 
 void del_last_rows(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data);
+
+void numerical_emphasis(WorkerMasterPtr& master, BendersOptions const& options);

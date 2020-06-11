@@ -169,7 +169,8 @@ void Benders::run(std::ostream & stream) {
 	
 	init(_data, _options);
 
-	
+	// NUMERICAL EMPHASIS
+	numerical_emphasis(_master, _options);
 
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
 		master_loop(stream);
@@ -205,6 +206,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	++_data.it;
 
 	reset_iteration_data(_data, _options);
+
 	get_master_value(_master, _data, _options);
 	_data.ub = 0;
 
@@ -399,7 +401,7 @@ void Benders::separation_loop(std::ostream& stream)
 		if (_data.has_cut == false) {
 			_data.misprices += 1;
 			_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
-			std::cout << "MISPRICE : " << _data.step_size << std::endl;
+			std::cout << "       MISPRICE : " << _data.step_size << std::endl;
 		}
 	}
 }

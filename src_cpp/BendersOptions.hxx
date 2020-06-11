@@ -117,3 +117,6 @@ BENDERS_OPTIONS_MACRO(STOFILE_NAME, std::string, "instance.sto")
 
 // Seed for std::rand
 BENDERS_OPTIONS_MACRO(SEED, int, -1)
+
+// Set to 1 to activate numerical emphasis of solver, better precision but a little bit slower
+BENDERS_OPTIONS_MACRO(NUMERICAL_EMPHASIS, bool, 0)

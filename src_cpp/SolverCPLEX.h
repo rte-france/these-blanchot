@@ -91,5 +91,7 @@ public:
 	virtual void presolve(int presolve);
 	virtual void optimality_gap(double gap);
 	virtual void set_simplex_iter(int iter);
+
+	virtual void numerical_emphasis(int val);
 };
 #endif
