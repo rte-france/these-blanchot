@@ -442,7 +442,8 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
 			(data.global_prb_status != 0) ||
 			(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT) ||
-			(data.n_slaves_no_cut == data.nslaves && data.lb + options.GAP >= data.ub)
+			(data.n_slaves_no_cut == data.nslaves && data.lb + options.GAP >= data.ub) ||
+			(data.early_termination)
 			);
 	}
 	else {
@@ -771,6 +772,8 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
 		}
 	}
+
+	data.final_gap = data.remaining_gap;
 
 	// 
 	if (optcounter == total_counter) {

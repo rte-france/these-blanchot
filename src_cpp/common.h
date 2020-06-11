@@ -189,7 +189,8 @@ struct BendersData {
 	Point x_mem;
 
 	int nul_simplex_cnt;
-
+	bool early_termination;
+	double final_gap;
 
 };
 
