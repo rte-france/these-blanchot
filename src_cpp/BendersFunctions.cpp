@@ -46,6 +46,7 @@ void init(BendersData & data, BendersOptions const& options) {
 	data.last_value = std::vector<double>(data.nslaves, 1e20);
 	data.nocutmaster = 0;
 	data.misprices = 0;
+	data.nul_simplex_cnt = 0;
 }
 
 /*!

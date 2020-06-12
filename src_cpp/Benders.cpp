@@ -424,7 +424,8 @@ void Benders::optimality_loop(std::ostream& stream)
 
 		if (_data.maxsimplexiter == 0) {
 			_data.nul_simplex_cnt += _options.BATCH_SIZE;
-			if (_data.nul_simplex_cnt >= _data.nslaves) {
+
+			if (_data.nul_simplex_cnt > _data.nslaves) {
 				SlaveCutPackage slave_cut_package;
 				AllCutPackage all_package;
 				get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
