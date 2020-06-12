@@ -15,6 +15,9 @@ typedef std::map<std::string, WorkerSlavePtr> SlavesMapPtr;
 
 
 class WorkerSlave : public Worker {
+public :
+	double _proba;
+
 public:
 
 	WorkerSlave();
@@ -31,6 +34,10 @@ public:
 	void write(int it);
 	void fix_to(Point const & x0);
 	void get_subgradient(Point & s);
+
+public :
+	// Surcharge avec multiplication par _proba
+	void get_value(double& lb);
 };
 
 

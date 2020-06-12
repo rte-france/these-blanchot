@@ -265,7 +265,8 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 
 			for (int i(0); i < nslaves; ++i) {
 				mclind[i + 1] = _id_alpha_i[i];
-				matval[i + 1] = -1;
+				matval[i + 1] = -(1.0/nslaves);
+				//std::cout << matval[i + 1] << std::endl;
 			}
 			_solver->add_rows(1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 			

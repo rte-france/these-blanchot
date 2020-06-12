@@ -517,7 +517,8 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptio
 *
 *  \param options : set of parameters
 */
-int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, BendersOptions const & options, BendersData & data) {
+int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, 
+	BendersOptions const & options, BendersData & data) {
 	
 	// Store the status of a non  optimal slave, 0 if all opitmals
 	int slaves_worth_status = 0;
@@ -557,7 +558,8 @@ int get_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves
 *  \param options : set of parameters
 */
 int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map_slaves, 
-	StrVector const & slaves, BendersOptions const & options, BendersData const& data, Str2Int & problem_to_id) {
+	StrVector const & slaves, BendersOptions const & options, BendersData const& data, 
+	Str2Int & problem_to_id) {
 	
 	// Store the status of a non  optimal slave, 0 if all opitmals
 	int slaves_worth_status = 0;
@@ -625,7 +627,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
-			data.ub += handler->get_dbl(SLAVE_COST);
+			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
 			SlaveCutTrimmer cut(handler, data.x_cut);
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
@@ -634,16 +636,19 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				if ( 1==1 || has_cut_master(master, data, options, problem_to_id[itmap.first], 
 					handler->get_dbl(SLAVE_COST), handler->get_subgradient()) ) 
 				{
-					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
+					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), 
+						data.x_cut, handler->get_dbl(SLAVE_COST));
 					all_cuts_storage[itmap.first].insert(cut);
 				}
 				else {
 					data.nocutmaster	+= 1;
 					data.misprices		+= 1;
-					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
+					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), 
+						data.x_cut, handler->get_dbl(SLAVE_COST));
 					all_cuts_storage[itmap.first].insert(cut);
 					//std::cout << "  NO CUT " << data.nocutmaster << std::endl;
-					//std::cout << "         " << itmap.first << "  " << data.alpha_i[problem_to_id[itmap.first]] << std::endl;
+					//std::cout << "         " << itmap.first << "  " << data.alpha_i[problem_to_id[itmap.first]] 
+					//<< std::endl;
 				}
 			}
 
@@ -669,20 +674,23 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 *
 *  \param options : set of parameters
 */
-void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options) {
+void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr & master, 
+	Str2Int & problem_to_id, AllCutStorage & all_cuts_storage, BendersData & data, 
+	BendersOptions const & options) {
 	Point s;
 	double rhs(0);
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			data.ub += handler->get_dbl(SLAVE_COST);
+			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
 			rhs += handler->get_dbl(SLAVE_COST);
 			for (auto const & var : data.x_cut) {
 				s[var.first] += handler->get_subgradient()[var.first];
 			}
 			SlaveCutTrimmer cut(handler, data.x_cut);
-			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
+			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == 
+				all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
 			all_cuts_storage.find(itmap.first)->second.insert(cut);
@@ -726,11 +734,12 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 		for (auto const & kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
 			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
-			master->add_cut_slave(problem_to_id[kvp.first], handler->get_subgradient(), data.x_cut, handler->get_dbl(SLAVE_COST));
+			master->add_cut_slave(problem_to_id[kvp.first], handler->get_subgradient(), 
+				data.x_cut, handler->get_dbl(SLAVE_COST));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 			
-			data.ub += handler->get_dbl(SLAVE_COST);
+			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
 			data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
 
 			// Check if the cut has really cut or not
@@ -751,12 +760,12 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 				optcounter += 1;
 			}
 			else {
-				if (data.n_slaves_no_cut + optcounter > 2000 && data.remaining_gap > 0) {
+				/*if (data.n_slaves_no_cut + optcounter > 2000 && data.remaining_gap > 0) {
 					std::cout << "    " << std::scientific << data.remaining_gap
 						<< "    " << data.espilon_s
 						<< "    " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I)
 						<< "    " << data.n_slaves_no_cut + optcounter << std::endl;
-				}
+				}*/
 			}
 
 			total_counter += 1;

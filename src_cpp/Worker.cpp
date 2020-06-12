@@ -65,6 +65,7 @@ void Worker::get_value(double & lb) {
 	}
 	else {
 		_solver->get_lp_value(lb);
+
 	}
 }	
 

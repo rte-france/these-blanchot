@@ -2,7 +2,7 @@
 #include "launcher.h"
 
 WorkerSlave::WorkerSlave() {
-
+	_proba = 1.0;
 }
 
 
@@ -19,7 +19,7 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	init(variable_map, path_to_mps, options.SOLVER);
 	_solver->set_output_log_level(options.XPRESS_TRACE);
 
-	int mps_ncols;
+	/*int mps_ncols;
 	mps_ncols = _solver->get_ncols();
 
 	DblVector o(mps_ncols, 0);
@@ -32,7 +32,8 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	for (auto & c : o) {
 		c *= slave_weight;
 	}
-	_solver->chg_obj(mps_ncols, sequence.data(), o.data());
+	_solver->chg_obj(mps_ncols, sequence.data(), o.data());*/
+	_proba = slave_weight;
 	_solver->set_algorithm("DUAL");
 
 }
@@ -66,7 +67,7 @@ WorkerSlave::WorkerSlave(Str2Int const& variable_map, std::string const& path_to
 
 	_solver->set_output_log_level(options.XPRESS_TRACE);
 
-	int mps_ncols;
+	/*int mps_ncols;
 	mps_ncols = _solver->get_ncols();
 
 	DblVector o(mps_ncols, 0);
@@ -79,7 +80,8 @@ WorkerSlave::WorkerSlave(Str2Int const& variable_map, std::string const& path_to
 	for (auto& c : o) {
 		c *= slave_weight;
 	}
-	_solver->chg_obj(mps_ncols, sequence.data(), o.data());
+	_solver->chg_obj(mps_ncols, sequence.data(), o.data());*/
+	_proba = slave_weight;
 	_solver->set_algorithm("DUAL");
 }
 
@@ -173,5 +175,13 @@ void WorkerSlave::get_subgradient(Point & s) {
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
+}
+
+void WorkerSlave::get_value(double& lb)
+{
+	//std::cout << "coucou" << std::endl;
+	_solver->get_lp_value(lb);
+	//lb *= _proba;
+	//std::cout << lb << std::endl;
 }
 

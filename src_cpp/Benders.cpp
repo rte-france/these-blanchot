@@ -440,7 +440,7 @@ void Benders::optimality_loop(std::ostream& stream)
 		}
 
 	} while (_data.stay_in_x_cut);
-
+	
 	_data.ub /= float(_data.n_slaves_solved) / float(_data.nslaves);
 	_data.ub += _data.invest_separation_cost;
 }
