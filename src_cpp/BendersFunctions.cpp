@@ -773,7 +773,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 		}
 	}
 
-	data.final_gap = data.remaining_gap;
+	data.final_gap = (options.GAP - data.epsilon_x) - data.remaining_gap;
 
 	// 
 	if (optcounter == total_counter) {

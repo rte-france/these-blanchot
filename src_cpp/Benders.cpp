@@ -435,6 +435,9 @@ void Benders::optimality_loop(std::ostream& stream)
 				std::cout << "    EARLY TERMINATION, UNABLE TO PROGRESS : FINAL GAP = " << _data.final_gap << std::endl;
 			}
 		}
+		else {
+			_data.nul_simplex_cnt = 0;
+		}
 
 	} while (_data.stay_in_x_cut);
 
