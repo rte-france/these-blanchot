@@ -422,7 +422,7 @@ void Benders::optimality_loop(std::ostream& stream)
 
 		++_data.it;
 
-		if (_data.maxsimplexiter == 0) {
+		/*if (_data.maxsimplexiter == 0) {
 			_data.nul_simplex_cnt += _options.BATCH_SIZE;
 
 			if (_data.nul_simplex_cnt > 100000 * _data.nslaves) {
@@ -438,7 +438,7 @@ void Benders::optimality_loop(std::ostream& stream)
 		}
 		else {
 			_data.nul_simplex_cnt = 0;
-		}
+		}*/
 
 	} while (_data.stay_in_x_cut);
 	
