@@ -92,8 +92,9 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 	for (auto const & kvp : _name_to_id) {
 		rowrhs.front() += (s.find(kvp.first)->second * x0.find(kvp.first)->second);
 		mclind[kvp.second] = kvp.second;
-		matval[kvp.second] = s.find(kvp.first)->second;
+		matval[kvp.second] = (1.0/_id_alpha_i.size() ) * s.find(kvp.first)->second;
 	}
+	rowrhs.front() *= (1.0 / _id_alpha_i.size());
 
 	mclind.back() = _id_alpha;
 	matval.back() = -1;

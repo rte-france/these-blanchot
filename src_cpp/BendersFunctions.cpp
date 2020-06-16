@@ -726,9 +726,17 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 	int total_counter = 0;
 
 	data.stay_in_x_cut = false;
+	double gap = 0.0;
+	if (options.GAP_TYPE == "RELATIVE") {
+		gap = data.lb * options.GAP;
+	}
+	else {
+		gap = options.GAP;
+	}
 
 	if (data.n_slaves_no_cut == 0) {
-		data.remaining_gap = (options.GAP - data.epsilon_x);
+		
+		data.remaining_gap = ( gap - data.epsilon_x);
 	}
 
 	for (int i(0); i < all_package.size(); i++) {
@@ -755,7 +763,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 
 			// Check local optimality
 			//data.espilon_s = (options.GAP - data.epsilon_x) / data.nslaves;
-			data.espilon_s = std::min((options.GAP - data.epsilon_x) , data.remaining_gap);
+			data.espilon_s = std::min( ( gap - data.epsilon_x) , data.remaining_gap);
 			
 			if ( (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) ) {
 				optcounter += 1;
@@ -783,7 +791,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 		}
 	}
 
-	data.final_gap = (options.GAP - data.epsilon_x) - data.remaining_gap;
+	data.final_gap = ( gap - data.epsilon_x) - data.remaining_gap;
 
 	// 
 	if (optcounter == total_counter) {

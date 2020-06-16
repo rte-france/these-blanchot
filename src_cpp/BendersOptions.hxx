@@ -7,6 +7,9 @@ BENDERS_OPTIONS_MACRO(MAX_ITERATIONS, int, -1)
 //Level of precision accepted 
 BENDERS_OPTIONS_MACRO(GAP, double, 1e-6)
 
+//Level of precision accepted 
+BENDERS_OPTIONS_MACRO(GAP_TYPE, std::string, "ABSOLUTE")
+
 //True if cuts need to be aggregated, false otherwise 
 BENDERS_OPTIONS_MACRO(AGGREGATION, bool, false)
 
