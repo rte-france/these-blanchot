@@ -807,12 +807,19 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 	ids.clear();
 	s.clear();
 
+	double local_ub			= 0;
+	double local_epigraph	= 0;
+
 	for (int i(0); i < all_package.size(); i++) {
+
+		local_ub		= 0;
+		local_epigraph	= 0;
+
 		for (auto const& kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
 			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
 
-			//handler->get_dbl(ALPHA_I) += data.alpha_i[problem_to_id[kvp.first]];
+			handler->get_dbl(ALPHA_I) += data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 
 			ids.push_back(problem_to_id[kvp.first]);
@@ -834,19 +841,30 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 				data.nocutmaster += 1;
 			}
 
-			// Check local optimality
-			data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
-
-			if ((handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s)) {
-				optcounter += 1;
-			}
-
+			local_ub		+= handler->get_dbl(SLAVE_COST);
+			local_epigraph	+= handler->get_dbl(ALPHA_I);
+			
 			total_counter += 1;
 			data.n_slaves_solved += 1;
 
-			data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
 		}
+
+		/*std::cout << "coucou " << std::scientific << std::setprecision(8) 
+			<< "    "  << local_ub 
+			<< "    " << local_epigraph 
+			<< "    "  << local_ub - local_epigraph << std::endl;*/
+
+		// Check local optimality
+		data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
+
+		if (local_ub - local_epigraph  < data.espilon_s) {
+			optcounter += total_counter;
+		}
+
+		data.remaining_gap -= std::max(local_ub - local_epigraph, 0.0);
 	}
+
+
 
 	master->add_agregated_cut_slaves(ids, s, data.x_cut, rhs);
 	udpate_number_nocut(options, data, optcounter, total_counter);
