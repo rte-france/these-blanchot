@@ -210,6 +210,57 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	_solver->add_rows(nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
+void WorkerMaster::add_agregated_cut_slaves(IntVector const& ids, Point const& s, Point const& x0, double const& rhs)
+{
+	// cut is -rhs >= alpha  + s^(x-x0)
+	int nrows(1);
+	int ncoeffs((int)ids.size() + (int)_name_to_id.size());
+	std::vector<char> rowtype(1, 'L');
+	std::vector<double> rowrhs(1, 0);
+	std::vector<double> matval(ncoeffs, 0);
+	std::vector<int> mstart(nrows + 1, 0);
+	std::vector<int> mclind(ncoeffs);
+
+	rowrhs.front() -= rhs;
+
+	for (auto const& kvp : _name_to_id) {
+		if (s.find(kvp.first) != s.end()) {
+			rowrhs.front() += s.find(kvp.first)->second * x0.find(kvp.first)->second;
+			mclind[kvp.second] = kvp.second;
+			matval[kvp.second] = s.find(kvp.first)->second;
+		}
+		else {
+			//std::cout << kvp.first << "   " << x0.find(kvp.first)->second << "   " << 0.0 << std::endl;
+			rowrhs.front() += 0.0;
+			mclind[kvp.second] = kvp.second;
+			matval[kvp.second] = 0.0;
+		}
+	}
+
+	for (int i(0); i < (int)ids.size(); i++) {
+		mclind[i + _name_to_id.size()] = _id_alpha_i[ids[i]];
+		matval[i + _name_to_id.size()] = -1;
+	}
+	mstart.back() = (int)matval.size();
+
+	/*for (auto const& val : matval) {
+		std::cout << val << "  ";
+	}
+	std::cout << std::endl << std::endl;
+
+	for (auto const& val : mstart) {
+		std::cout << val << "  ";
+	}
+	std::cout << std::endl << std::endl;
+
+	for (auto const& val : mclind) {
+		std::cout << val << "  ";
+	}
+	std::cout << std::endl << std::endl;*/
+
+	_solver->add_rows(nrows, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
+}
+
 
 /*!
 *  \brief Constructor of a Master Problem

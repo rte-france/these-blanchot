@@ -47,6 +47,10 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 	BendersOptions const & options);
 void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, 
 	Str2Int & problem_to_id, BendersOptions & options, BendersData & data);
+
+void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& all_package,
+	Str2Int& problem_to_id, BendersOptions& options, BendersData& data);
+
 void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, 
 	Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, 
 	BendersData & data, BendersOptions & options);
@@ -65,3 +69,6 @@ void compute_epsilon_x(WorkerMasterPtr& master, BendersOptions const& options, B
 void del_last_rows(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data);
 
 void numerical_emphasis(WorkerMasterPtr& master, BendersOptions const& options);
+
+double compute_gap(BendersOptions const& options, BendersData& data);
+void udpate_number_nocut(BendersOptions const& options, BendersData& data, int n_nocut, int n_slaves_solved);

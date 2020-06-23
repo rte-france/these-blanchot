@@ -176,7 +176,8 @@ void reset_iteration_data(BendersData& data, BendersOptions const& options)
 *
 * \param log_level : level of log precision (from 1 to 3)
 */
-void print_log(std::ostream&stream, BendersData const & data, int const log_level, BendersOptions const & options) {
+void print_log(std::ostream&stream, BendersData const & data, int const log_level, 
+	BendersOptions const & options) {
 	if (options.ALGORITHM == "BASE") {
 		print_log_base(stream, data, log_level);
 	}
@@ -315,7 +316,8 @@ void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, 
 *
 *  \param islaves : problem id
 */
-void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, std::string const & name, int const islaves) {
+void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, 
+	std::string const & name, int const islaves) {
 	stream << "Slave" << ";";
 	stream << name << ";";
 	stream << islaves << ";";
@@ -604,7 +606,8 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 /*!
 *  \brief Add cut to Master Problem and store the cut in a set
 *
-*  Method to add cut from a slave to the Master Problem and store this cut in a map linking each slave to its set of cuts.
+*  Method to add cut from a slave to the Master Problem and store this cut in a map 
+*  linking each slave to its set of cuts.
 *
 *  \param all_package : vector storing all cuts information for each slave problem
 *
@@ -621,8 +624,9 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 *  \param options : set of parameters
 *
 */
-void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, Str2Int & problem_to_id, 
-	AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions const & options, SlaveCutId & slave_cut_id) {
+void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master, 
+	Str2Int & problem_to_id, AllCutStorage & all_cuts_storage, BendersData & data, 
+	BendersOptions const & options, SlaveCutId & slave_cut_id) {
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
@@ -630,7 +634,8 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
 			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
 			SlaveCutTrimmer cut(handler, data.x_cut);
-			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == all_cuts_storage[itmap.first].end())) {
+			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == 
+				all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
 			else {
@@ -647,9 +652,6 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), 
 						data.x_cut, handler->get_dbl(SLAVE_COST));
 					all_cuts_storage[itmap.first].insert(cut);
-					//std::cout << "  NO CUT " << data.nocutmaster << std::endl;
-					//std::cout << "         " << itmap.first << "  " << data.alpha_i[problem_to_id[itmap.first]] 
-					//<< std::endl;
 				}
 			}
 
@@ -661,7 +663,8 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 /*!
 *  \brief Add aggregated cut to Master Problem and store it in a set
 *
-*  Method to add aggregated cut from slaves to Master Problem and store it in a map linking each slave to its set of non-aggregated cut
+*  Method to add aggregated cut from slaves to Master Problem and store it in a map 
+*  linking each slave to its set of non-aggregated cut
 *
 *  \param all_package : vector storing all cuts information for each slave problem
 *
@@ -718,7 +721,8 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 *
 *  \param data : set of benders data
 */
-void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, BendersOptions & options, BendersData & data) {
+void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package, 
+	Str2Int & problem_to_id, BendersOptions & options, BendersData & data) {
 	int nboundslaves(0);
 	
 	// Counter of number of subproblems which were not really cut this ite
@@ -726,18 +730,7 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 	int total_counter = 0;
 
 	data.stay_in_x_cut = false;
-	double gap = 0.0;
-	if (options.GAP_TYPE == "RELATIVE") {
-		gap = data.lb * options.GAP;
-	}
-	else {
-		gap = options.GAP;
-	}
-
-	if (data.n_slaves_no_cut == 0) {
-		
-		data.remaining_gap = ( gap - data.epsilon_x);
-	}
+	double gap = compute_gap(options, data);
 
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
@@ -762,47 +755,101 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			}
 
 			// Check local optimality
-			//data.espilon_s = (options.GAP - data.epsilon_x) / data.nslaves;
 			data.espilon_s = std::min( ( gap - data.epsilon_x) , data.remaining_gap);
 			
 			if ( (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) ) {
 				optcounter += 1;
 			}
+
+			total_counter += 1;
+			data.n_slaves_solved += 1;
+
+			data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) 
+				- handler->get_dbl(ALPHA_I), 0.0);
+		}
+	}
+
+	data.final_gap = ( gap - data.epsilon_x) - data.remaining_gap;
+	udpate_number_nocut(options, data, optcounter, total_counter);
+}
+
+
+/*!
+*  \brief Add an aggregation of the random cuts in master problem
+*
+*	Add the random cuts in master problem
+*
+*  \param master : pointer to master problem
+*
+*  \param all_package : storage of every slave information
+*
+*  \param problem_to_id : map linking each problem to its id
+*
+*  \param options : set of benders options
+*
+*  \param data : set of benders data
+*/
+void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& all_package, 
+	Str2Int& problem_to_id, BendersOptions& options, BendersData& data)
+{
+	int nboundslaves(0);
+
+	// Counter of number of subproblems which were not really cut this ite
+	int optcounter = 0;
+	int total_counter = 0;
+
+	data.stay_in_x_cut = false;
+	double gap = compute_gap(options, data);
+
+	Point s;
+	double rhs(0);
+	IntVector ids;
+	ids.clear();
+	s.clear();
+
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto const& kvp : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
+			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
+
+			//handler->get_dbl(ALPHA_I) += data.alpha_i[problem_to_id[kvp.first]];
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
+
+			ids.push_back(problem_to_id[kvp.first]);
+			rhs += handler->get_dbl(SLAVE_COST);
+			for (auto const& var : data.x_cut) {
+				s[var.first] += handler->get_subgradient()[var.first];
+			}
+
+			data.ub += (1.0 / data.nslaves) * handler->get_dbl(SLAVE_COST);
+			data.last_value[problem_to_id[kvp.first]] = handler->get_dbl(SLAVE_COST);
+
+			// Check if the cut has really cut or not
+			if (has_cut_master(master, data, options, problem_to_id[kvp.first],
+				handler->get_dbl(SLAVE_COST), handler->get_subgradient())) {
+				data.has_cut = true;
+			}
 			else {
-				/*if (data.n_slaves_no_cut + optcounter > 2000 && data.remaining_gap > 0) {
-					std::cout << "    " << std::scientific << data.remaining_gap
-						<< "    " << data.espilon_s
-						<< "    " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I)
-						<< "    " << data.n_slaves_no_cut + optcounter << std::endl;
-				}*/
+				data.misprices += 1;
+				data.nocutmaster += 1;
+			}
+
+			// Check local optimality
+			data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
+
+			if ((handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s)) {
+				optcounter += 1;
 			}
 
 			total_counter += 1;
 			data.n_slaves_solved += 1;
 
-			/*if ( ( (data.n_slaves_no_cut + optcounter) % 300 == 0 && data.n_slaves_no_cut + optcounter > 0) ) {
-				std::cout << "    " << std::scientific << (options.GAP - data.epsilon_x) - data.remaining_gap
-					<< "    " << data.espilon_s
-					<< "    " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I)
-					<< "    " << data.n_slaves_no_cut + optcounter << std::endl;
-			}*/
-
 			data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
 		}
 	}
 
-	data.final_gap = ( gap - data.epsilon_x) - data.remaining_gap;
-
-	// 
-	if (optcounter == total_counter) {
-		data.n_slaves_no_cut += optcounter;
-		if (data.n_slaves_no_cut < data.nslaves) {
-			data.stay_in_x_cut = true;
-		}
-	}
-	else {
-		data.n_slaves_no_cut = 0;
-	}
+	master->add_agregated_cut_slaves(ids, s, data.x_cut, rhs);
+	udpate_number_nocut(options, data, optcounter, total_counter);
 }
 
 
@@ -825,7 +872,9 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 *
 *  \param data : set of benders data
 */
-void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, BendersData & data, BendersOptions & options) {
+void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package, 
+	Str2Int & problem_to_id, SlaveCutId & slave_cut_id, AllCutStorage & all_cuts_storage, 
+	BendersData & data, BendersOptions & options) {
 	check_status(all_package, data);
 	if (options.ALGORITHM == "BASE" || options.ALGORITHM == "IN-OUT") {
 		if (options.AGGREGATION) {
@@ -836,7 +885,12 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 		}
 	}
 	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
-		add_random_cuts(master, all_package, problem_to_id, options, data);
+		if (options.AGGREGATION) {
+			add_aggregated_random_cuts(master, all_package, problem_to_id, options, data);
+		}
+		else {
+			add_random_cuts(master, all_package, problem_to_id, options, data);
+		}
 	}
 
 	/*if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
@@ -948,7 +1002,8 @@ void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data, Be
 /*!
 *  \brief Compute the value of the separation point
 *
-*  Compute the actual value of the separation point by taking the sum of the valu of all the subproblem and adding the first stage variables value
+*  Compute the actual value of the separation point by taking the sum of the valu 
+*  of all the subproblem and adding the first stage variables value
 *
 *  \param master : pointer to master problem
 *
@@ -1000,9 +1055,6 @@ void set_slaves_order(BendersData& data, BendersOptions const& options) {
 					} 
 				});
 		}
-		//for (auto const& v : data.indices) {
-		//	std::cout << "  " << v << "  " << data.last_value[v] << "  " << data.alpha_i[v] << "   " << (data.last_value[v] - data.alpha_i[v]) / data.last_value[v] << std::endl;
-		//}
 	}
 	else {
 		std::cout << "SORTING METHOD UNKNOWN. Please check README.txt to see available methods." << std::endl;
@@ -1026,7 +1078,8 @@ void compute_separation_point_cost(WorkerMasterPtr& master, BendersData& data, B
 	}
 }
 
-bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options, int id, double val, Point subgrad)
+bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options, 
+	int id, double val, Point subgrad)
 {
 	if (data.alpha == options.THETA_LB) {
 		return true;
@@ -1063,4 +1116,35 @@ void del_last_rows(WorkerMasterPtr& master, BendersOptions const& options, Bende
 void numerical_emphasis(WorkerMasterPtr& master, BendersOptions const& options)
 {
 	master->_solver->numerical_emphasis(options.NUMERICAL_EMPHASIS);
+}
+
+double compute_gap(BendersOptions const& options, BendersData& data)
+{
+	double gap = 0.0;
+	if (options.GAP_TYPE == "RELATIVE") {
+		gap = data.lb * options.GAP;
+	}
+	else {
+		gap = options.GAP;
+	}
+
+	if (data.n_slaves_no_cut == 0) {
+		data.remaining_gap = (gap - data.epsilon_x);
+	}
+
+	return gap;
+}
+
+void udpate_number_nocut(BendersOptions const& options, BendersData& data, 
+	int n_nocut, int n_slaves_solved)
+{
+	if (n_nocut == n_slaves_solved) {
+		data.n_slaves_no_cut += n_nocut;
+		if (data.n_slaves_no_cut < data.nslaves) {
+			data.stay_in_x_cut = true;
+		}
+	}
+	else {
+		data.n_slaves_no_cut = 0;
+	}
 }

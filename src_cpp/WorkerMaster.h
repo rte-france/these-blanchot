@@ -30,6 +30,7 @@ public:
 	void add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs);
 	void add_dynamic_cut(Point const & s, double const & sx0, double const & rhs);
 	void add_cut_slave(int i, Point const & s, Point const & x0, double const & rhs);
+	void add_agregated_cut_slaves(IntVector const & ids, Point const& s, Point const& x0, double const& rhs);
 	void delete_constraint(int const nrows);
 	void fix_alpha(double const & bestUB);
 

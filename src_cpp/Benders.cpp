@@ -371,6 +371,10 @@ void Benders::master_loop(std::ostream& stream) {
 
 		if (_data.stop) {
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
+			if (_data.early_termination) {
+				std::cout << "    EARLY TERMINATION, UNABLE TO PROGRESS : FINAL GAP = " 
+					<< std::scientific << std::setprecision(8) << _data.final_gap << std::endl;
+			}
 		}
 
 	}
@@ -422,10 +426,13 @@ void Benders::optimality_loop(std::ostream& stream)
 
 		++_data.it;
 
-		/*if (_data.maxsimplexiter == 0) {
+		if (_data.maxsimplexiter == 0) {
 			_data.nul_simplex_cnt += _options.BATCH_SIZE;
 
-			if (_data.nul_simplex_cnt > 100000 * _data.nslaves) {
+			if (_data.nul_simplex_cnt > _data.nslaves) {
+
+				_data.ub = _data.invest_separation_cost;
+
 				SlaveCutPackage slave_cut_package;
 				AllCutPackage all_package;
 				get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
@@ -433,12 +440,12 @@ void Benders::optimality_loop(std::ostream& stream)
 				build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
 
 				_data.early_termination = true;
-				std::cout << "    EARLY TERMINATION, UNABLE TO PROGRESS : FINAL GAP = " << _data.final_gap << std::endl;
+				_data.final_gap = _data.ub - _data.lb;
 			}
 		}
 		else {
 			_data.nul_simplex_cnt = 0;
-		}*/
+		}
 
 	} while (_data.stay_in_x_cut);
 	
