@@ -947,7 +947,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 	}
 	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
-		if (data.it == 0) {
+		if (data.it == 0 ) {
 			data.x_stab = data.x0;
 			data.x_cut = data.x0;
 			data.x_mem = data.x0;
@@ -959,7 +959,10 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 					data.x_mem[kvp.first] = (1.0 - options.BETA) * ( data.x0[kvp.first] - data.x_cut[kvp.first] )+
 						options.BETA * data.x_mem[kvp.first];
 
-					data.x_cut[kvp.first] += data.step_size * data.x_mem[kvp.first];
+					data.x_cut[kvp.first] = std::max(
+						data.x_cut[kvp.first] + data.step_size * data.x_mem[kvp.first],
+						0.0
+					);
 				}
 			}
 			else if (options.MEMORY_TYPE == "SOLUTION") {
@@ -985,6 +988,10 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 		//data.x_stab = data.x0;
 		//data.x_cut = data.x0;
+
+		/*for (auto const& kvp : data.x0) {
+			std::cout << kvp.first << "   " << kvp.second << "   " << data.x_cut[kvp.first] << std::endl;
+		}*/
 	}
 	else {
 		std::cout << "ALGORITHME " << options.ALGORITHM << " NON RECONNU" << std::endl;
