@@ -192,9 +192,17 @@ struct BendersData {
 	bool early_termination;
 	double final_gap;
 
+
+	// Matrice et RHS du master
+	std::map<std::string, Point> A;
+	Point rhs;
+	std::map<std::string, std::string> rowtype;
+
 };
 
 double norm_point(Point const & x0, Point const & x1);
 int norm_int(IntVector const & x0, IntVector const & x1);
 
 std::ostream & operator<<(std::ostream & stream, std::vector<IntVector> const & rhs);
+
+double scalar_product(Point const& x, Point const& y);

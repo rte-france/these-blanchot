@@ -387,6 +387,65 @@ double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& 
 	return proba_tot;
 }
 
+void read_master_cstr(BendersData& data, BendersOptions const& options)
+{
+	std::string master_path = "master.mps";
+	std::ifstream master_file(master_path);
+
+	std::string part_type = "";
+	std::string line, key1, key2, period, value, proba;
+	std::stringstream ss;
+
+	while (getline(master_file, line)) {
+		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
+		if (line[0] == '*') {}
+		else if (line[0] != ' ') {
+			ss << line;
+			ss >> part_type;
+			ss.str("");
+			ss.clear();
+		}
+		else if (part_type == "ROWS") {
+			ss << line;
+			ss >> key1 >> key2;
+			ss.str("");
+			ss.clear();
+
+			data.rhs[key2]		= 0;
+			data.rowtype[key2]	= key1;
+			data.A[key2]		= Point();
+		}
+		else if (part_type == "COLUMNS"){
+			ss << line;
+			ss >> key1 >> key2 >> value;
+			ss.str("");
+			ss.clear();
+
+			data.A[key2][key1] = std::stod(value);
+		}
+		else if (part_type == "RHS") {
+			ss << line;
+			ss >> key1 >> key2 >> value;
+			ss.str("");
+			ss.clear();
+
+			data.rhs[key2] = std::stod(value);
+		}
+	}
+
+	master_file.close();
+
+	for (auto const& kvp1 : data.A) {
+		std::cout << kvp1.first << "  ";
+		for (auto const& kvp2 : kvp1.second) {
+			std::cout << kvp2.first << "   " << kvp2.second << "   ";
+		}
+		std::cout << "  " << data.rowtype[kvp1.first] << "  " << data.rhs[kvp1.first];
+		std::cout << std::endl;
+	}
+
+}
+
 RdRealisation::RdRealisation(double proba)
 {
 	_proba = proba;

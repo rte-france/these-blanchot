@@ -95,8 +95,10 @@ void SolverCPLEX::write_errored_prob(int status, BendersOptions const& options, 
 			buffer << ".mps";
 			std::cout << "status is : " << optim_status << std::endl;
 			std::cout << "written in " << buffer.str() << std::endl;
-			write_prob(buffer.str().c_str(), "");
+			write_prob(buffer.str().c_str(), "MPS");
 		}
+
+		std::exit(1);
 	}
 }
 

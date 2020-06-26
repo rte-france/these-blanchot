@@ -78,3 +78,5 @@ void go_to_next_realisation(Str2Int const& blocks, Str2Int& real_counter);
 
 double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& sto_path,
 	Str2Int const& real_counter);
+
+void read_master_cstr(BendersData & data, BendersOptions const& options);

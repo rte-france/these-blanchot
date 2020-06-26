@@ -955,15 +955,85 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		else {
 			data.x_stab = data.x_cut;
 			if (options.MEMORY_TYPE == "DIRECTION") {
+				
+				// Sanity check
+				Point left;
+				Point right;
+				// 1. computing the points for the left and right hand 
+				// sides of the inequality
+				for (auto const& kvp : data.x0) {
+					left[kvp.first] = data.x_mem[kvp.first]
+						- kvp.second + data.x_cut[kvp.first];
+					left[kvp.first] *= data.step_size;
+
+					right[kvp.first] = data.step_size * kvp.second
+						+ (1 - data.step_size) * data.x_cut[kvp.first];
+
+				}
+
+
+				double beta_val = 1.0;
+				double left_val, right_val, cur_beta_val;
+				// 2. Chacking the values for beta
+				//std::cout << "TEST CONTRAINTES" << std::endl;
+				for (auto const& kvp : data.rowtype) {
+
+					//std::cout << kvp.first << "  " << kvp.second << std::endl;
+
+					if (kvp.first != "OBJ") {
+						left_val = data.step_size * scalar_product(data.A[kvp.first], left);
+						right_val = data.rhs[kvp.first] - scalar_product(data.A[kvp.first], right);
+
+						if (kvp.second == "L" && left_val > right_val) {
+							cur_beta_val = std::max(right_val / left_val, 0.0);
+							/*std::cout << "    "
+								<< kvp.first << "   " 
+								<< kvp.second << "   "
+								<< left_val << "   "
+								<< right_val << "   " <<
+								cur_beta_val << std::endl;*/
+
+							beta_val = std::min(beta_val, cur_beta_val);
+						}
+						else if (kvp.second == "G" && left_val < right_val) {
+							cur_beta_val = std::max(right_val / left_val, 0.0);
+							
+							/*std::cout << "    " 
+								<< kvp.first << "   "
+								<< kvp.second << "   "
+								<< left_val << "   "
+								<< right_val << "   " <<
+								cur_beta_val << std::endl;
+								*/
+							beta_val = std::min(beta_val, cur_beta_val);
+						}
+						else {
+							/*std::cout << "NO PROB" << std::endl;
+							std::cout << "    "
+								<< kvp.first << "   "
+								<< kvp.second << "   "
+								<< left_val << "   "
+								<< right_val << "   " << std::endl;*/
+						}
+
+
+					}
+				}
+
+				beta_val = std::min(beta_val, options.BETA);
+				//std::cout << "BETA FINAL " << beta_val << std::endl;
+				
 				for (auto const& kvp : data.x_mem) {
-					data.x_mem[kvp.first] = (1.0 - options.BETA) * ( data.x0[kvp.first] - data.x_cut[kvp.first] )+
-						options.BETA * data.x_mem[kvp.first];
+					data.x_mem[kvp.first] = (1.0 - beta_val) *
+						( data.x0[kvp.first] - data.x_cut[kvp.first] ) +
+						beta_val * data.x_mem[kvp.first];
 
 					data.x_cut[kvp.first] = std::max(
 						data.x_cut[kvp.first] + data.step_size * data.x_mem[kvp.first],
 						0.0
 					);
 				}
+
 			}
 			else if (options.MEMORY_TYPE == "SOLUTION") {
 				for (auto const& kvp : data.x_mem) {
@@ -990,7 +1060,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		//data.x_cut = data.x0;
 
 		/*for (auto const& kvp : data.x0) {
-			std::cout << kvp.first << "   " << kvp.second << "   " << data.x_cut[kvp.first] << std::endl;
+			std::cout << std::setprecision(12) << kvp.first << "   " << kvp.second << "   " << data.x_cut[kvp.first] << std::endl;
 		}*/
 	}
 	else {

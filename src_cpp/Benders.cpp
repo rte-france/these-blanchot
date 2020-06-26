@@ -114,6 +114,9 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 	}
+
+	// Ajout de la matrice du maitre et du RHS dans les donnees en dur
+	read_master_cstr(_data, _options);
 }
 
 

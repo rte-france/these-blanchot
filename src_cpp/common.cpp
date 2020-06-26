@@ -54,3 +54,15 @@ std::ostream & operator<<(std::ostream & stream, std::vector<IntVector> const & 
 	}
 	return stream;
 }
+
+double scalar_product(Point const& x, Point const& y)
+{
+	double result = 0;
+	for (auto const& kvp : x) {
+		if(y.find(kvp.first) != y.end()){
+			result += kvp.second * y.at(kvp.first);
+		}
+	}
+
+	return result;
+}
