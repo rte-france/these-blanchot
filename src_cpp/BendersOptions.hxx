@@ -123,3 +123,6 @@ BENDERS_OPTIONS_MACRO(SEED, int, -1)
 
 // Set to 1 to activate numerical emphasis of solver, better precision but a little bit slower
 BENDERS_OPTIONS_MACRO(NUMERICAL_EMPHASIS, bool, 0)
+
+// To write the deterministic reformulation
+BENDERS_OPTIONS_MACRO(WRITE_DETERMINISTIC_PRB, bool, 0)

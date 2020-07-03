@@ -212,7 +212,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 
 	get_master_value(_master, _data, _options);
 	_data.ub = 0;
-
+	_data.timer_master = timer_master.elapsed();
 	compute_x_cut(_options, _data);
 	build_cut();
 	compute_ub(_master, _data);
@@ -220,7 +220,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	update_in_out_stabilisation(_master, _data, _options);
 
 	update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0);
-	_data.timer_master = timer_master.elapsed();
+	
 	print_log(stream, _data, _options.LOG_LEVEL, _options);
 	_data.stop = stopping_criterion(_data, _options);
 }
@@ -290,16 +290,11 @@ void Benders::master_loop(std::ostream& stream) {
 		}
 
 		// 1. resolution of master problem
+		Timer timer_master;
 		get_master_value(_master, _data, _options);
+		_data.timer_master = timer_master.elapsed();
 
-		/*if (_data.it == 0) {
-			_data.x_cut = _data.x0;
-			_data.x_stab = _data.x0;
-		}*/
 		_data.has_cut = false;
-		
-		// 2. Choosing new order of subpoblems
-		//set_slaves_order(_data, _options);
 
 		// 3. reset misprice information
 		_data.misprices = 0;
@@ -319,21 +314,7 @@ void Benders::master_loop(std::ostream& stream) {
 				last_ub = _data.ub;
 				lbk_1 = _data.lb;
 			}
-			else {
-				//lbk_2 = lbk_1;
-				//lbk_1 = _data.lb;
-			}
-
-			bool print = 0;
-			if (print) {
-				std::cout << "     " << _data.step_size
-					<< "   " << lbk_2
-					<< "   " << lbk_1
-					<< "   " << _data.lb
-					<< "   " << _data.lb - lbk_1
-					<< "   " << lbk_1 - lbk_2
-					<< std::endl;
-			}
+			
 
 			// 1. si on ralentit
 
@@ -345,13 +326,6 @@ void Benders::master_loop(std::ostream& stream) {
 				baisse += 1;
 				_data.step_size = std::max(0.1, _data.step_size * (1.0 - 0.03));
 			}
-
-			/*if (_data.ub < last_ub) {
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
-			}
-			else {
-				_data.step_size = std::max(0.01, _data.step_size * (1.0 - 0.3 * (float(_data.n_slaves_solved) / float(_data.nslaves))));
-			}*/
 
 			last_grad = std::max(0.0, last_ub - _data.ub);
 

@@ -284,21 +284,30 @@ void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, 
 	std::string line;
 
 	// 1. Getting the number of subproblems
-	long unsigned int n_sp = 1;
+	long int n_sp = 1;
 	for (auto const& kvp : blocks) {
 		n_sp *= kvp.second;
 	}
+
 	if (n_sp <= 0) {
 		n_sp = 100000;
 		std::cout << "Nombre de realisations total trop grand pour un long int : fixe a 100 000." << std::endl;
 	}
+
 	if (options.SLAVE_NUMBER > n_sp) {
+		std::cout << options.SLAVE_NUMBER << "  " << n_sp << std::endl;
+		std::cout << "test " << (options.SLAVE_NUMBER > n_sp) << std::endl;
 		std::cout << "Le nombre de slave doit etre inferieur a " << n_sp << std::endl;
 		std::exit(0);
 	}
 	else if(options.SLAVE_NUMBER >= 0){
 		n_sp = options.SLAVE_NUMBER;
 	}
+	else if (options.SLAVE_NUMBER == -1) {
+		std::cout << "COUCOU LE -1" << std::endl;
+	}
+
+	std::cout << n_sp << std::endl;
 
 	std::string c_sp_name;
 	while (std::getline(summary, line))
@@ -435,15 +444,6 @@ void read_master_cstr(BendersData& data, BendersOptions const& options)
 
 	master_file.close();
 
-	for (auto const& kvp1 : data.A) {
-		std::cout << kvp1.first << "  ";
-		for (auto const& kvp2 : kvp1.second) {
-			std::cout << kvp2.first << "   " << kvp2.second << "   ";
-		}
-		std::cout << "  " << data.rowtype[kvp1.first] << "  " << data.rhs[kvp1.first];
-		std::cout << std::endl;
-	}
-
 }
 
 RdRealisation::RdRealisation(double proba)
@@ -551,6 +551,7 @@ void SMPSData::read_sto_file(std::string const& sto_path)
 			}
 		}
 		else {
+			std::cout << line;
 			std::cout << "UNKNOWN PART TYPE IN .STO FILE." << std::endl;
 			std::exit(0);
 		}
