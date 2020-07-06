@@ -446,6 +446,273 @@ void read_master_cstr(BendersData& data, BendersOptions const& options)
 
 }
 
+void write_deterministic_reformulation(BendersOptions const& options, std::string const& col_stage,
+	std::string const& row_stage, std::string const& corpath, SMPSData & smps_data)
+{
+
+	// 1. On fixe la seed
+	std::mt19937 rdgen;
+	if (options.SEED != -1) {
+		std::srand(options.SEED);
+		rdgen.seed(options.SEED);
+	}
+	else {
+		unsigned seedTime = std::chrono::system_clock::now().time_since_epoch().count();
+		rdgen.seed(seedTime);
+		std::srand((unsigned)time(NULL));
+	}
+	std::uniform_real_distribution<double> dis(0.0, 1.0);
+
+	// Lines of realisations
+	StrPairVector keys;
+	DblVector values;
+	IntVector real_counter;
+	for (int i(0); i < smps_data.nbr_entries(); i++) {
+		real_counter.push_back(0);
+	}
+
+	std::ifstream corfile(corpath);
+	std::string name = "NSP" + std::to_string(options.SLAVE_NUMBER) + "_s" 
+		+ std::to_string(options.SEED) + ".mps";
+	std::ofstream RDfile(name);
+
+	std::string line, key1, key2, key3, value, proba;
+	std::string part_type = "";
+	std::string cur_col = "";
+	std::string period_row = "";
+	std::string period_col = "";
+
+	std::stringstream ss;
+
+	// Vector part ROWS
+	StrVector second_stage_rows;
+	StrVector second_stage_types;
+
+	// Vector part COLUMNS
+	StrVector second_stage_cols;
+	StrVector second_stage_ctr;
+	StrVector second_stage_values;
+	std::string colname, rowname ;
+	double colval;
+
+	// Vector part BOUNDS
+	StrVector bnd_type;
+	StrVector bnd_col;
+	StrVector bnd_val;
+
+	// Vector part RHS
+	StrVector rhs_row;
+	DblVector rhs_val;
+	double rhs_value;
+
+	second_stage_rows.clear();
+
+	while (getline(corfile, line)) {
+		if (line[0] == '*') {
+			RDfile << line << std::endl;
+		}
+		else if (line[0] != ' ') {
+			
+			if (part_type == "ROWS") {
+				for (int k(1); k <= options.SLAVE_NUMBER; k++) {
+					for (int i(0); i < second_stage_rows.size(); i++) {
+						RDfile << std::setw(5) << second_stage_types[i] << "    " << second_stage_rows[i]
+							<< "_" << k << std::endl;
+					}
+				}
+			}
+			else if (part_type == "COLUMNS") {
+				for (int k(1); k <= options.SLAVE_NUMBER; k++) {
+					for (int i(0); i < second_stage_cols.size(); i++) {
+						colname = second_stage_cols[i] + "_" + std::to_string(k);
+						rowname = second_stage_ctr[i];
+						colval = std::stod(second_stage_values[i]);
+
+						if (second_stage_ctr[i] != "OBJ") {
+							rowname += "_" + std::to_string(k);
+						}
+						else {
+							colval /= options.SLAVE_NUMBER;
+						}
+
+						RDfile << "    " << std::left << std::setw(20) << colname <<
+							"    " << rowname << "       " <<
+							colval << std::endl;
+					}
+				}
+			}
+			else if (part_type == "RHS") {
+				for (int k(1); k <= options.SLAVE_NUMBER; k++) {
+
+					smps_data.go_to_next_realisation(real_counter, options, rdgen, dis);
+					proba = smps_data.find_rand_realisation_lines(keys, values, real_counter);
+
+					/*for (int j(0); j < keys.size(); j++) {
+						std::cout << keys[j].first << "   " << keys[j].second << "  " << values[j] << std::endl;
+					}
+
+					std::cout << std::endl;*/
+
+					for (int i(0); i < rhs_val.size(); i++) {
+
+						rhs_value = rhs_val[i];
+						for (int j(0); j < keys.size(); j++) {
+							if (keys[j].second == rhs_row[i]) {
+								rhs_value = values[j];
+							}
+						}
+
+						RDfile << "    RHS"
+							<< "    " << rhs_row[i] << "_" << k
+							<< "    " << rhs_value
+							<< std::endl;
+					}
+
+					keys.clear();
+					values.clear();
+				}
+			}
+			else if (part_type == "BOUNDS") {
+				for (int k(1); k <= options.SLAVE_NUMBER; k++) {
+					for (int i(0); i < bnd_type.size(); i++) {
+						RDfile << "    " << std::left << bnd_type[i]
+							<< "    " << "BND"
+							<< "    " << bnd_col[i] << "_" << k
+							<< "    " << bnd_val[i] << std::endl;
+					}
+				}
+			}
+
+
+			ss << line;
+			ss >> part_type;
+			ss.str("");
+			ss.clear();
+
+			RDfile << line << std::endl;
+			period_row = "first";
+			period_col = "first";
+		}
+		else if (part_type == "ROWS") {
+			ss << line;
+			ss >> key1 >> key2;
+			ss.str("");
+			ss.clear();
+
+			if (key2 == row_stage) {
+				period_row = "second";
+			}
+
+			if (period_row == "second") {
+				/*for (int k(1); k <= options.SLAVE_NUMBER; k++) {
+					RDfile << std::setw(5) << key1 << "    " << key2 << "_" << k << std::endl;
+				}*/
+
+				second_stage_types.push_back(key1);
+				second_stage_rows.push_back(key2);
+			}
+			else {
+				RDfile << std::setw(5) << key1 << "    " << key2 << std::endl;
+			}
+
+		}
+		else if (part_type == "COLUMNS") {
+			ss << line;
+			ss >> key1;
+			
+			while (ss >> key2) {
+				ss >> value;
+
+				if (key1 == col_stage) {
+					period_col = "second";
+				}
+
+				if (key1 != cur_col) {
+					period_row = "first";
+				}
+
+				if (period_col == "first") {
+
+					if (std::find(second_stage_rows.begin(), second_stage_rows.end(), key2) != second_stage_rows.end()) {
+						for (int k(1); k <= options.SLAVE_NUMBER; k++) {
+							RDfile << "    " << std::left << std::setw(20) << key1 << "     " << key2 << "_" << k << "      " << value << std::endl;
+						}
+					}
+					else {
+						RDfile << "    " << key1
+							<< "    " << key2 <<
+							"     " << value << std::endl;
+					}
+				}
+				else {
+					second_stage_cols.push_back(key1);
+					second_stage_ctr.push_back(key2);
+					second_stage_values.push_back(value);
+				}
+			}
+
+			ss.str("");
+			ss.clear();
+
+		}
+		else if (part_type == "RHS") {
+			ss << line;
+			ss >> key1;
+			
+
+			while (ss >> key2) {
+				ss >> value;
+
+				if (key2 == row_stage) {
+					period_row = "second";
+				}
+
+				if (period_row == "first") {
+					RDfile << "    " << key1
+						<< "    " << key2 << 
+						"     " << value << std::endl;
+				}
+				else {
+					rhs_row.push_back(key2);
+					rhs_val.push_back(std::stod(value));
+				}
+			}
+
+			ss.str("");
+			ss.clear();
+
+		}
+		else if (part_type == "BOUNDS") {
+			ss << line;
+			ss >> key1 >> key2 >> key3 >> value;
+			ss.str("");
+			ss.clear();
+
+			if (key3 == col_stage) {
+				period_col = "second";
+			}
+
+			if (period_col == "first") {
+				RDfile << line << std::endl;
+			}
+			else {
+				bnd_type.push_back(key1);
+				bnd_col.push_back(key3);
+				bnd_val.push_back(value);
+			}
+
+		}
+		else {
+
+		}
+	}
+
+	RDfile.close();
+	corfile.close();
+
+	std::exit(1);
+}
+
 RdRealisation::RdRealisation(double proba)
 {
 	_proba = proba;

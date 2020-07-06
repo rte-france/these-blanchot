@@ -97,9 +97,15 @@ void sequential_launch(BendersOptions const & options) {
 			std::cout << "coucou" << std::endl;
 			generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
 		}
+
+
 		generate_number_of_realisations(blocks, sto_path);
 		smps_data.read_sto_file(sto_path);
 		read_struct_SMPS(options, input, blocks);
+
+		if (options.WRITE_DETERMINISTIC_PRB) {
+			write_deterministic_reformulation(options, col_stage, row_stage, cor_path, smps_data);
+		}
 	}
 	else if (options.DATA_FORMAT == "DECOMPOSED") {
 		build_input(options, input);

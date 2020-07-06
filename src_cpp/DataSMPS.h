@@ -80,3 +80,6 @@ double find_rand_realisation_lines(StrPair2Dbl& realisation, std::string const& 
 	Str2Int const& real_counter);
 
 void read_master_cstr(BendersData & data, BendersOptions const& options);
+
+void write_deterministic_reformulation(BendersOptions const& options, std::string const& col_stage, 
+	std::string const& row_stage, std::string const& corpath, SMPSData & smps_data);
