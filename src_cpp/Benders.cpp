@@ -138,7 +138,7 @@ void Benders::free() {
 void Benders::build_cut() {
 	SlaveCutPackage slave_cut_package;
 	AllCutPackage all_package;
-	Timer timer_slaves;
+	_data.timer_slave.restart();
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
 		_data.slave_status = get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
 	}
@@ -149,7 +149,7 @@ void Benders::build_cut() {
 		std::cout << "ALGORHTME NON RECONNU" << std::endl;
 		std::exit(0);
 	}
-	_data.timer_slaves = timer_slaves.elapsed();
+	_data.time_slaves = _data.timer_slave.elapsed();
 	all_package.push_back(slave_cut_package);
 	build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
 }
@@ -174,6 +174,10 @@ void Benders::run(std::ostream & stream) {
 
 	// NUMERICAL EMPHASIS
 	numerical_emphasis(_master, _options);
+
+	_data.timer_iter.restart();
+	_data.timer_other.restart();
+	_data.time_total = 0.0;
 
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
 		master_loop(stream);
@@ -205,14 +209,14 @@ void Benders::run(std::ostream & stream) {
 * \param stream : stream to print the output
 */
 void Benders::classic_iteration(std::ostream& stream) {
-	Timer timer_master;
+	_data.timer_master.restart();
 	++_data.it;
 
 	reset_iteration_data(_data, _options);
 
 	get_master_value(_master, _data, _options);
 	_data.ub = 0;
-	_data.timer_master = timer_master.elapsed();
+	_data.time_master = _data.timer_master.elapsed();
 	compute_x_cut(_options, _data);
 	build_cut();
 	compute_ub(_master, _data);
@@ -234,7 +238,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 */
 
 void Benders::enhanced_multicut_iteration(std::ostream& stream) {
-	Timer timer_master;
+	_data.timer_master.restart();
 	++_data.it;
 
 	reset_iteration_data(_data, _options);
@@ -251,7 +255,7 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 
 	build_cut();
 
-	_data.timer_master = timer_master.elapsed();
+	_data.time_master = _data.timer_master.elapsed();
 	
 	if (_data.n_slaves_no_cut == _data.nslaves) {
 		compute_ub(_master, _data);
@@ -290,9 +294,9 @@ void Benders::master_loop(std::ostream& stream) {
 		}
 
 		// 1. resolution of master problem
-		Timer timer_master;
+		_data.timer_master.restart();
 		get_master_value(_master, _data, _options);
-		_data.timer_master = timer_master.elapsed();
+		_data.time_master = _data.timer_master.elapsed();
 
 		_data.has_cut = false;
 
@@ -397,9 +401,18 @@ void Benders::optimality_loop(std::ostream& stream)
 
 		build_cut();
 
+		_data.time_iter = _data.timer_iter.elapsed();
+		_data.time_other = _data.time_iter - (_data.time_master + _data.time_slaves);
+		_data.time_total += _data.time_iter;
+
 		if (_data.it % _options.LOG_NUMBER_ITE == 0 || _data.stop) {
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
 		}
+
+		_data.time_master	= 0.0;
+
+		_data.timer_iter.restart();
+		_data.timer_other.restart();
 
 		++_data.it;
 

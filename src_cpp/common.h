@@ -134,8 +134,17 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 * \brief Structure used to manage every benders data
 */
 struct BendersData {
-	double timer_slaves;			/*!< Time spent in the slave resolution at each iteration */
-	double timer_master;			/*!< Time spent in the master resolution at each iteration */
+	double time_slaves;			/*!< Time spent in the slave resolution at each iteration */
+	double time_master;			/*!< Time spent in the master resolution at each iteration */
+	double time_iter;
+	double time_other;
+	double time_total;
+
+	Timer timer_master;
+	Timer timer_slave;
+	Timer timer_iter;
+	Timer timer_other;
+
 	double lb;						/*!< Lower bound of Benders resolution */
 	double ub;						/*!< Upper bound computed at the current iteration */
 	double best_ub;					/*!< Best upper bound found */

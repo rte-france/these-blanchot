@@ -149,10 +149,12 @@ void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
 
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
+		stream << std::setw(15) << "TOTALTIME";
 		stream << std::setw(15) << "TIMEMASTER";
 		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "TIMEOTHER";
 		stream << std::setw(15) << "NBR_NOCUT";
-		stream << std::setw(15) << "STAB_VAL";
+		stream << std::setw(15) << "STEP_SIZE";
 	}
 	stream << std::endl;
 }
@@ -162,6 +164,7 @@ void reset_iteration_data(BendersData& data, BendersOptions const& options)
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
+
 }
 
 
@@ -223,8 +226,8 @@ void print_log_base(std::ostream&stream, BendersData const & data, int const log
 
 	if (log_level > 2) {
 		stream << std::setw(15) << data.deletedcut;
-		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
-		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.time_master;
+		stream << std::setw(15) << std::setprecision(2) << data.time_slaves;
 	}
 	stream << std::endl;
 }
@@ -263,8 +266,8 @@ void print_log_inout(std::ostream& stream, BendersData const& data, int const lo
 
 	if (log_level > 2) {
 		stream << std::setw(15) << data.deletedcut;
-		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
-		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.time_master;
+		stream << std::setw(15) << std::setprecision(2) << data.time_slaves;
 		stream << std::setw(15) << std::setprecision(2) << data.stab_value;
 		stream << std::setw(15) << std::setprecision(2) << data.nocutmaster;
 	}
@@ -296,9 +299,12 @@ void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, 
 	}
 
 	if (log_level > 2) {
+		
 		stream << std::setw(15) << data.deletedcut;
-		stream << std::setw(15) << std::setprecision(2) << data.timer_master - data.timer_slaves;
-		stream << std::setw(15) << std::setprecision(2) << data.timer_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.time_total;
+		stream << std::setw(15) << std::setprecision(2) << data.time_master;
+		stream << std::setw(15) << std::setprecision(2) << data.time_slaves;
+		stream << std::setw(15) << std::setprecision(2) << data.time_other;
 		stream << std::setw(15) << data.n_slaves_no_cut;
 		stream << std::setw(15) << data.step_size;
 	}
