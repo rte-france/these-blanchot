@@ -528,7 +528,7 @@ void write_deterministic_reformulation(BendersOptions const& options, std::strin
 						rowname = second_stage_ctr[i];
 						colval = std::stod(second_stage_values[i]);
 
-						if (second_stage_ctr[i] != "OBJ") {
+						if (second_stage_ctr[i] != "OBJ" && second_stage_ctr[i] != "OBJ00000") {
 							rowname += "_" + std::to_string(k);
 						}
 						else {
