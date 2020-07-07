@@ -670,7 +670,7 @@ void write_deterministic_reformulation(BendersOptions const& options, std::strin
 				}
 
 				if (period_row == "first") {
-					RDfile << "    " << key1
+					RDfile << "    " << "RHS"
 						<< "    " << key2 << 
 						"     " << value << std::endl;
 				}
