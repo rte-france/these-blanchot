@@ -53,7 +53,7 @@ BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 BENDERS_OPTIONS_MACRO(SOLVER, std::string, "CPLEX")
 
 //Bool to say if non optimal problem should be written in a file before exit
-BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB,bool, true)
+BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB, bool, true)
 
 // Algorithm used to solve the problem (BASE, IN-OUT, ENHANCED_MULTICUT)
 BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "BASE")
@@ -126,3 +126,6 @@ BENDERS_OPTIONS_MACRO(NUMERICAL_EMPHASIS, bool, 0)
 
 // To write the deterministic reformulation
 BENDERS_OPTIONS_MACRO(WRITE_DETERMINISTIC_PRB, bool, 0)
+
+// TO SET THE INITIAL ORDER OF SUBPROBLEMS
+BENDERS_OPTIONS_MACRO(N_MELANGES, int, 0);

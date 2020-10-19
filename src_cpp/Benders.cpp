@@ -19,6 +19,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 	// 1. On fixe la seed
 	std::mt19937 rdgen;
 	if (_options.SEED != -1) {
+		std::cout << "SEED : " << _options.SEED << std::endl;
 		std::srand(options.SEED);
 		rdgen.seed(options.SEED);
 	}
@@ -286,6 +287,12 @@ void Benders::master_loop(std::ostream& stream) {
 
 	_data.early_termination = false;
 
+	
+	for (int melange = 0; melange < _options.N_MELANGES; melange++) {
+		std::cout << "SHUFFLE " << std::endl;
+		std::random_shuffle(_data.indices.begin(), _data.indices.end());
+	}
+
 	while (!_data.stop) {
 
 		if (_data.it > 1) {
@@ -297,6 +304,7 @@ void Benders::master_loop(std::ostream& stream) {
 		_data.timer_master.restart();
 		get_master_value(_master, _data, _options);
 		_data.time_master = _data.timer_master.elapsed();
+		_data.last_time_master = _data.time_master;
 
 		_data.has_cut = false;
 
@@ -398,6 +406,12 @@ void Benders::optimality_loop(std::ostream& stream)
 	do {
 
 		reset_iteration_data(_data, _options);
+
+		if (_data.it > 0) {
+			_data.batch_size = std::min(
+				_data.nslaves - _data.n_slaves_no_cut,
+				_options.BATCH_SIZE);
+		}
 
 		build_cut();
 

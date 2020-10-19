@@ -136,6 +136,7 @@ inline std::ostream & operator<<(std::ostream & stream, Point const & rhs) {
 struct BendersData {
 	double time_slaves;			/*!< Time spent in the slave resolution at each iteration */
 	double time_master;			/*!< Time spent in the master resolution at each iteration */
+	double last_time_master;
 	double time_iter;
 	double time_other;
 	double time_total;

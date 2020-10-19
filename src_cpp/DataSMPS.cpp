@@ -868,6 +868,7 @@ void SMPSData::go_to_next_realisation(IntVector& real_counter, BendersOptions co
 	double cumul = 0.0;
 	int ind = 0;
 	if (options.SLAVE_NUMBER == -1) {
+		real_counter[ind] += 1;
 		while (real_counter[ind] == _rd_entries[ind].size()) {
 			real_counter[ind] = 0;
 			ind++;

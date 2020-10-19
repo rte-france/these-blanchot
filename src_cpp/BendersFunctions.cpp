@@ -7,7 +7,7 @@
 *  \param data : Benders data
 */
 void init(BendersData & data, BendersOptions const& options) {
-	std::srand(time(NULL));
+	//std::srand(time(NULL));
 	data.lb = -1e20;
 	data.ub = +1e20;
 	data.best_ub = +1e20;
@@ -307,6 +307,7 @@ void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, 
 		stream << std::setw(15) << std::setprecision(2) << data.time_other;
 		stream << std::setw(15) << data.n_slaves_no_cut;
 		stream << std::setw(15) << data.step_size;
+		stream << std::setw(15) << data.batch_size;
 	}
 	stream << std::endl;
 }
@@ -456,10 +457,17 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 			);
 	}
 	else {
+		bool gap_ok = false;
+		if (options.GAP_TYPE == "ABSOLUTE") {
+			gap_ok = (data.lb + options.GAP >= data.best_ub);
+		}
+		else {
+			gap_ok = ( (data.ub - data.lb) <= options.GAP * data.ub);
+		}
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
 			(data.global_prb_status != 0) ||
-			(data.lb + options.GAP >= data.best_ub) ||
+			gap_ok ||
 			(options.TIME_LIMIT > 0 && data.total_time.elapsed() > options.TIME_LIMIT)
 			);
 	}
@@ -575,6 +583,7 @@ int get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & map
 	// Computing the maximum number of problems we can solve
 	//std::cout << " /!\ EN MPI, IL FAUT CALCULER LE NOMBRE DE SLAVES SUR LA MACHINE " << std::endl;
 	int local_nslaves = map_slaves.size();
+
 	int n_slaves_to_solve = std::min(data.batch_size, local_nslaves - data.n_slaves_no_cut);
 
 	int counter = 0;
@@ -815,6 +824,8 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 	double local_ub			= 0;
 	double local_epigraph	= 0;
 
+	//std::cout << "GAP INIT " << data.remaining_gap << std::endl;
+
 	for (int i(0); i < all_package.size(); i++) {
 
 		local_ub		= 0;
@@ -846,9 +857,22 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 				data.nocutmaster += 1;
 			}
 
+
 			local_ub		+= handler->get_dbl(SLAVE_COST);
 			local_epigraph	+= handler->get_dbl(ALPHA_I);
-			
+
+			data.espilon_s = data.remaining_gap;
+
+			/*if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
+				optcounter += 1;
+			}*/
+
+
+			/*data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
+			if (data.remaining_gap > 0) {
+				std::cout << data.remaining_gap << "      " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) << std::endl;
+			}*/
+
 			total_counter += 1;
 			data.n_slaves_solved += 1;
 
@@ -860,9 +884,15 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 			<< "    "  << local_ub - local_epigraph << std::endl;*/
 
 		// Check local optimality
-		data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
+		//std::cout << data.espilon_s << "    " << data.remaining_gap << std::endl;
+		//data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
+		data.espilon_s = data.remaining_gap;
+		//std::cout << data.espilon_s <<  std::endl;
 
-		if (local_ub - local_epigraph  < data.espilon_s) {
+		/*std::cout << "   " << local_ub << "      " << local_epigraph << "    " << local_ub - local_epigraph
+			<< "     " << data.espilon_s << "    " << data.epsilon_x << std::endl;*/
+
+		if (std::max(local_ub - local_epigraph, 0.0) < data.espilon_s) {
 			optcounter += total_counter;
 		}
 
