@@ -555,7 +555,10 @@ void write_deterministic_reformulation(BendersOptions const& options, std::strin
 
 					std::cout << std::endl;*/
 
+					//std::cout << "TAILLE " << rhs_val.size() << std::endl;
+
 					for (int i(0); i < rhs_val.size(); i++) {
+						//std::cout << rhs_val[i] << std::endl;
 
 						rhs_value = rhs_val[i];
 						for (int j(0); j < keys.size(); j++) {
@@ -635,9 +638,11 @@ void write_deterministic_reformulation(BendersOptions const& options, std::strin
 
 				if (period_col == "first") {
 
-					if (std::find(second_stage_rows.begin(), second_stage_rows.end(), key2) != second_stage_rows.end()) {
+					if (std::find(second_stage_rows.begin(), second_stage_rows.end(), key2) 
+						!= second_stage_rows.end()) {
 						for (int k(1); k <= options.SLAVE_NUMBER; k++) {
-							RDfile << "    " << std::left << std::setw(20) << key1 << "     " << key2 << "_" << k << "      " << value << std::endl;
+							RDfile << "    " << std::left << std::setw(20) << key1 
+								<< "     " << key2 << "_" << k << "      " << value << std::endl;
 						}
 					}
 					else {
@@ -665,7 +670,12 @@ void write_deterministic_reformulation(BendersOptions const& options, std::strin
 			while (ss >> key2) {
 				ss >> value;
 
-				if (key2 == row_stage) {
+				/*if (key2 == row_stage) {
+					period_row = "second";
+				}*/
+
+				if (std::find(second_stage_rows.begin(), second_stage_rows.end(), key2)
+					!= second_stage_rows.end()) {
 					period_row = "second";
 				}
 

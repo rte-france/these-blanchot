@@ -52,18 +52,10 @@ WorkerSlave::WorkerSlave(Str2Int const& variable_map, std::string const& path_to
 	double const& slave_weight, BendersOptions const& options, StrPairVector keys, 
 	DblVector values, WorkerPtr fictif) {
 
-	Timer creation;
-
 	init(variable_map, path_to_mps, options.SOLVER, fictif);
 
-	double tps_creation = creation.elapsed();
-
-	Timer set_real;
 	set_realisation_to_prob(keys, values);
-	double tps_setreal = set_real.elapsed();
 
-
-	//std::cout << "   " << std::scientific << tps_creation << "   " << tps_setreal << std::endl;
 
 	_solver->set_output_log_level(options.XPRESS_TRACE);
 

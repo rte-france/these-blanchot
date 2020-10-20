@@ -289,7 +289,7 @@ void Benders::master_loop(std::ostream& stream) {
 
 	
 	for (int melange = 0; melange < _options.N_MELANGES; melange++) {
-		std::cout << "SHUFFLE " << std::endl;
+		//std::cout << "SHUFFLE " << std::endl;
 		std::random_shuffle(_data.indices.begin(), _data.indices.end());
 	}
 
