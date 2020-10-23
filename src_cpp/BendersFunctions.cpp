@@ -658,14 +658,14 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 				{
 					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), 
 						data.x_cut, handler->get_dbl(SLAVE_COST));
-					all_cuts_storage[itmap.first].insert(cut);
+					//all_cuts_storage[itmap.first].insert(cut);
 				}
 				else {
 					data.nocutmaster	+= 1;
 					data.misprices		+= 1;
 					master->add_cut_slave(problem_to_id[itmap.first], handler->get_subgradient(), 
 						data.x_cut, handler->get_dbl(SLAVE_COST));
-					all_cuts_storage[itmap.first].insert(cut);
+					//all_cuts_storage[itmap.first].insert(cut);
 				}
 			}
 
@@ -711,11 +711,21 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 				all_cuts_storage[itmap.first].end())) {
 				data.deletedcut++;
 			}
-			all_cuts_storage.find(itmap.first)->second.insert(cut);
+			//all_cuts_storage.find(itmap.first)->second.insert(cut);
 
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 		}
 	}
+
+	//std::cout << all_cuts_storage.size() << std::endl;
+	//for (auto const& itmap : all_package[0]) {
+		//std::cout << all_cuts_storage[itmap.first].size() << std::endl;
+		//break;
+		//all_cuts_storage[itmap.first].clear();
+		//std::cout << all_cuts_storage[itmap.first].size() << std::endl;
+	//}
+	
+	//std::cout << all_package[0].size() << std::endl;
 	master->add_cut(s, data.x_cut, rhs);
 }
 
@@ -755,8 +765,8 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 			
-			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
-			data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
+			//data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
+			//data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
 
 			// Check if the cut has really cut or not
 			if (has_cut_master(master, data, options, problem_to_id[kvp.first],
@@ -844,8 +854,8 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 				s[var.first] += handler->get_subgradient()[var.first];
 			}
 
-			data.ub += (1.0 / data.nslaves) * handler->get_dbl(SLAVE_COST);
-			data.last_value[problem_to_id[kvp.first]] = handler->get_dbl(SLAVE_COST);
+			//data.ub += (1.0 / data.nslaves) * handler->get_dbl(SLAVE_COST);
+			//data.last_value[problem_to_id[kvp.first]] = handler->get_dbl(SLAVE_COST);
 
 			// Check if the cut has really cut or not
 			if (has_cut_master(master, data, options, problem_to_id[kvp.first],

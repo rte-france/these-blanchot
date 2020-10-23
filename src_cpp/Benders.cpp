@@ -141,7 +141,8 @@ void Benders::build_cut() {
 	AllCutPackage all_package;
 	_data.timer_slave.restart();
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
-		_data.slave_status = get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, _data, _problem_to_id);
+		_data.slave_status = get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, 
+			_data, _problem_to_id);
 	}
 	else if(_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT"){
 		_data.slave_status = get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
