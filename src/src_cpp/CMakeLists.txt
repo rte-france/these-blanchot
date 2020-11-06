@@ -20,3 +20,7 @@ endif ()
 #add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_enzo_test")
 #add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_test")
 add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/exe")
+
+
+# New library solvers
+add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_solvers")
