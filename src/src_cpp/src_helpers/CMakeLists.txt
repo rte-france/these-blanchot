@@ -18,22 +18,17 @@ add_library (helpers STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/ortools_utils.cc
 	)
 
-if (NOT ORTOOLS_RECENT)
-	target_add_definitions (helpers
-		PRIVATE
-			ORTOOLS_PRE_V71
-	)
-endif ()
-
-message("${CMAKE_CURRENT_SOURCE_DIR}")
+message(${CMAKE_CURRENT_SOURCE_DIR})
+message($ENV{CPLEX_STUDIO_DIR129})
 
 target_include_directories (helpers
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}
-		${ORTOOLS_INCLUDE_DIRS}
+		$ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex
 )
 
 target_link_libraries (helpers 
 	PUBLIC
-		ortools
+		debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
+		optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
 )

@@ -25,7 +25,7 @@ add_library (sequentialcore STATIC
 target_include_directories (sequentialcore
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}
-		${ORTOOLS_INCLUDE_DIRS}
+		$ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex
 )
 
 target_link_libraries (sequentialcore
