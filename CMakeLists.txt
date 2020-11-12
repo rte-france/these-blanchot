@@ -1,18 +1,18 @@
-# ===========================================================================
+# =================================================================================================
 # CMake configuration
-# ===========================================================================
+# =================================================================================================
 
 CMAKE_MINIMUM_REQUIRED (VERSION 3.14)
 
-# ===========================================================================
+# =================================================================================================
 # Project configuration
-# ===========================================================================
+# =================================================================================================
 
 PROJECT (antaresXpansion VERSION 1.1.0)
 
-# ===========================================================================
+# =================================================================================================
 # Default parameters
-# ===========================================================================
+# =================================================================================================
 
 #Please enable this option if ortools v7.1 or later is used
 #option (ORTOOLS_RECENT "ORTools is v7.1 or later" ON)
@@ -25,15 +25,54 @@ ENDIF ()
 
 set (BOOST_MIN_VERSION "1.65.1")
 
-# ===========================================================================
+# =================================================================================================
+# Solvers choice and path directory to solvers libraries and include flies
+# =================================================================================================
+option (CPLEX 	"Add CPLEX solver"  ON)
+option (XPRESS 	"Add XPRESS solver" OFF)
+
+#--------------------------------------------------------------------------------------------------
+##### CPLEX PART
+message("CPLEX is ${CPLEX}")
+if(CPLEX)
+	# Folder including file cplex.h
+	set ( CPLEX_INCLUDE_FILES	$ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex )
+	set ( CPLEX_DEBUG_LIB  		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib )
+	set ( CPLEX_OPT_LIB 		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib )
+	message("CPLEX include directory is ${CPLEX_INCLUDE_FILES}")
+	message("CPLEX debug library is $(CPLEX_DEBUG_LIB)")
+	message("CPLEX optim library is $(CPLEX_OPT_LIB)")
+
+	#Ajout des variables de solveurs utilisables dans le code source c++
+	add_definitions( -DCPLEX=true )
+endif(CPLEX)
+#--------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------
+##### XPRESS PART
+message("XPRESS is ${XPRESS}")
+if(XPRESS)
+	set ( XPRESS_INCLUDE_FILES	$ENV{XPRESSDIR}/include )
+	set ( XPRESS_DEBUG_LIB  	xprs )
+	set ( XPRESS_OPT_LIB 		xprs )
+	message("XPRESS include directory is ${XPRESS_INCLUDE_FILES}")
+	message("XPRESS debug library is $(XPRESS_DEBUG_LIB)")
+	message("XPRESS optim library is $(XPRESS_OPT_LIB)")
+
+	#Ajout des variables de solveurs utilisables dans le code source c++
+	add_definitions( -DXPRESS=true )
+endif(XPRESS)
+#--------------------------------------------------------------------------------------------------
+
+# =================================================================================================
 # CMAKE ADDITIONAL MODULES
-# ===========================================================================
+# =================================================================================================
 
 LIST (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# ===========================================================================
+# =================================================================================================
 # Compiler options
-# ===========================================================================
+# =================================================================================================
 
 set (EXECUTABLE_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 set (LIBRARY_OUTPUT_PATH	${CMAKE_BINARY_DIR})
@@ -85,9 +124,9 @@ if (${PROJECT_NAME}_WITH_COVERAGE)
 	SetUpCoverage ()
 endif ()
 
-# ===========================================================================
+# =================================================================================================
 # External dependencies
-# ===========================================================================
+# =================================================================================================
 
 # optional conan setup
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)

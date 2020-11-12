@@ -10,22 +10,64 @@
 # Targets
 # ===========================================================================
 
-# --------------------------------------------------------------------------
-# unit tests
-# --------------------------------------------------------------------------
-
-add_library (solvers STATIC
-	${CMAKE_CURRENT_SOURCE_DIR}/solver.cpp
+# ---------------------------------------------------------------------------
+# Conditionnal settings of solver source files
+# ---------------------------------------------------------------------------
+list(APPEND Solver_sources
+	${CMAKE_CURRENT_LIST_DIR}/SolverAbstract.h
+	${CMAKE_CURRENT_LIST_DIR}/solver.cpp
+)
+# CPLEX
+IF( CPLEX )
+	list(APPEND Solver_sources
+		${CMAKE_CURRENT_LIST_DIR}/SolverCplex.h
+		${CMAKE_CURRENT_LIST_DIR}/SolverCplex.cpp
 	)
+ENDIF( CPLEX )
+
+# XPRESS
+IF( XPRESS )
+	list(APPEND Solver_sources
+		${CMAKE_CURRENT_LIST_DIR}/SolverXprs.h
+		${CMAKE_CURRENT_LIST_DIR}/SolverXprs.cpp
+	)
+ENDIF( XPRESS )
+
+
+# ---------------------------------------------------------------------------
+# Solver library creation and conditionnal link to internal solvers libraries
+# ---------------------------------------------------------------------------
+add_library (solvers STATIC
+	${Solver_sources}
+)
 
 target_include_directories (solvers
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}
-		$ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex
 )
 
-target_link_libraries (solvers
-	PUBLIC
-		debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
-		optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
-)
+# CPLEX
+if(CPLEX)
+	target_include_directories (solvers
+		PUBLIC
+			${CPLEX_INCLUDE_FILES}
+	)
+	target_link_libraries (solvers
+		PUBLIC
+			debug		${CPLEX_DEBUG_LIB}
+			optimized	${CPLEX_OPT_LIB}
+	)
+endif()
+
+# XPRESS
+if(XPRESS)
+	target_include_directories (solvers
+		PUBLIC
+			${XPRESS_INCLUDE_FILES}
+	)
+	target_link_libraries (solvers
+		PUBLIC
+			debug		${XPRESS_DEBUG_LIB}
+			optimized	${XPRESS_OPT_LIB}
+	)
+endif()

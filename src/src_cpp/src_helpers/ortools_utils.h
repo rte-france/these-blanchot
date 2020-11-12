@@ -21,7 +21,6 @@
 #endif
 #endif
 
-
 /**
  * @brief reads problem from an mps file
  *
