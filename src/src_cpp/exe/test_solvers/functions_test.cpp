@@ -7,9 +7,14 @@ void declaration_solver(SolverAbstract::Ptr& solver, const std::string solver_na
 		std::exit(0);
 	}
 #ifdef CPLEX
-	if (solver_name == "CPLEX") {
+	else if (solver_name == "CPLEX") {
 		solver = std::make_shared< SolverCplex>("");
 		solver = std::make_shared< SolverCplex>();
+	}
+#endif
+#ifdef XPRESS
+	else if (solver_name == "XPRESS") {
+		solver = std::make_shared< SolverXpress>();
 	}
 #endif
 	else {
@@ -53,12 +58,12 @@ void print_action_message(const std::string& message) {
 /*================================================================================================
 			Use case functions
 ================================================================================================*/
-void print_rows(int n_elems, const std::vector<double>& matval, std::vector<int>& mstart,
+void print_rows(int n_elems, const std::vector<double> &matval, std::vector<int> &mstart,
 	const std::vector<int>& mind, const std::vector<double>& rhs, const std::vector<char>& rtypes) {
 
 	int c_size(0);
 	int offset(0);
-	mstart.push_back(n_elems);
+	
 	for (int j(1); j < mstart.size(); j++) {
 		c_size = mstart[j] - mstart[j - 1];
 		for (int i(offset); i < offset + c_size; i++) {
@@ -114,16 +119,18 @@ void get_and_print_rows(SolverAbstract::Ptr solver) {
 	int n_cstr = solver->get_nrows();
 
 	std::vector<double> matval(n_elems);
-	std::vector<int>	mstart(n_cstr);
+	std::vector<int>	mstart(n_cstr + 1);
 	std::vector<int>	mind(n_elems);
-	solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_elems, 0, n_cstr - 1);
 
+	int n_returned(0);
+	solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_returned, 0, n_cstr - 1);
+	
 	std::vector<double> rhs(n_cstr);
 	std::vector<char> rtypes(n_cstr);
 	if(n_cstr > 0){
 		solver->get_rhs(rhs.data(), 0, n_cstr - 1);
 		solver->get_row_type(rtypes.data(), 0, n_cstr - 1);
-	}	
+	}
 
 	// Print result
 	print_rows(n_elems, matval, mstart, mind, rhs, rtypes);
@@ -136,7 +143,7 @@ void print_rows_caracteristics(SolverAbstract::Ptr solver){
 	int n_cstr = solver->get_nrows();
 
 	std::vector<double> matval(n_elems);
-	std::vector<int>	mstart(n_cstr);
+	std::vector<int>	mstart(n_cstr + 1);
 	std::vector<int>	mind(n_elems);
 	solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_elems, 0, n_cstr - 1);
 
@@ -226,7 +233,7 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	int n_cstr = solver->get_nrows();
 
 	std::vector<double> matval(n_elems);
-	std::vector<int>	mstart(n_cstr);
+	std::vector<int>	mstart(n_cstr + 1);
 	std::vector<int>	mind(n_elems);
 	solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_elems, 0, n_cstr - 1);
 	
@@ -332,8 +339,11 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	get_and_print_obj(solver);
 	get_and_print_rows(solver);
 
+	std::vector<double> lbs(1, 0.0);
+	std::vector<double> ubs(1, 1e20);
+
 	solver->add_cols(1, 1, std::vector<double>(1, 3.0).data(), std::vector<int>(1, 0).data(),
-		std::vector<int>(1, 0).data(), std::vector<double>(1, 5.0).data(), NULL, NULL);
+		std::vector<int>(1, 0).data(), std::vector<double>(1, 5.0).data(), lbs.data(), ubs.data());
 	
 	print_action_message("Problem after adding one column");
 	std::cout << "     New number of columns: " << solver->get_ncols() << std::endl;
@@ -402,7 +412,7 @@ void solve_problem(const std::string solver_name, const std::string prob_name){
 		int n_cstr = solver->get_nrows();
 		std::vector<double> primals(n_vars);
 		std::vector<double> slacks(n_cstr);
-		solver->get_LP_sol(primals.data(), slacks.data(), NULL, NULL);
+		solver->get_MIP_sol(primals.data(), slacks.data());
 		print_small_message("Printing solution");
 		for (int i(0); i < n_vars; i++) {
 			std::cout << "     x[" << i << "] " << primals[i] << std::endl;

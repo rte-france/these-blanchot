@@ -29,7 +29,7 @@ set (BOOST_MIN_VERSION "1.65.1")
 # Solvers choice and path directory to solvers libraries and include flies
 # =================================================================================================
 option (CPLEX 	"Add CPLEX solver"  ON)
-option (XPRESS 	"Add XPRESS solver" OFF)
+option (XPRESS 	"Add XPRESS solver" ON)
 
 #--------------------------------------------------------------------------------------------------
 ##### CPLEX PART
@@ -40,8 +40,8 @@ if(CPLEX)
 	set ( CPLEX_DEBUG_LIB  		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib )
 	set ( CPLEX_OPT_LIB 		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib )
 	message("CPLEX include directory is ${CPLEX_INCLUDE_FILES}")
-	message("CPLEX debug library is $(CPLEX_DEBUG_LIB)")
-	message("CPLEX optim library is $(CPLEX_OPT_LIB)")
+	message("CPLEX debug library is ${CPLEX_DEBUG_LIB}")
+	message("CPLEX optim library is ${CPLEX_OPT_LIB}")
 
 	#Ajout des variables de solveurs utilisables dans le code source c++
 	add_definitions( -DCPLEX=true )
@@ -53,11 +53,11 @@ endif(CPLEX)
 message("XPRESS is ${XPRESS}")
 if(XPRESS)
 	set ( XPRESS_INCLUDE_FILES	$ENV{XPRESSDIR}/include )
-	set ( XPRESS_DEBUG_LIB  	xprs )
-	set ( XPRESS_OPT_LIB 		xprs )
+	set ( XPRESS_DEBUG_LIB  	$ENV{XPRESSDIR}/lib/xprs.lib )
+	set ( XPRESS_OPT_LIB 		$ENV{XPRESSDIR}/lib/xprs.lib )
 	message("XPRESS include directory is ${XPRESS_INCLUDE_FILES}")
-	message("XPRESS debug library is $(XPRESS_DEBUG_LIB)")
-	message("XPRESS optim library is $(XPRESS_OPT_LIB)")
+	message("XPRESS debug library is ${XPRESS_DEBUG_LIB}")
+	message("XPRESS optim library is ${XPRESS_OPT_LIB}")
 
 	#Ajout des variables de solveurs utilisables dans le code source c++
 	add_definitions( -DXPRESS=true )

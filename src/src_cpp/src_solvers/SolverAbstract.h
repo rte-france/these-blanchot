@@ -50,6 +50,14 @@ public:
     */
 	SolverAbstract() {};
 
+   /**
+    * @brief Copy constructor, copy the problem "toCopy" in memory and name it "name" if possible
+	*
+	* @param name 	: Name to give to new problem
+	* @param fictif : Pointer to an AbstractSolver object, containing a solver object to copy
+    */
+    SolverAbstract(const std::string& name, const SolverAbstract::Ptr toCopy) {};
+
     /**
     * @brief destructor of SolverAbstract class : does nothing
     */
@@ -158,8 +166,8 @@ public:
     /**
     * @brief get coefficients of rows from index first to last
     * 
-    * @param mstart     : Integer array which will be lled with the indices indicating the 
-                        starting offsets in the mrwind and dmatval arrays for each requested row. 
+    * @param mstart     : Integer array which will be filled with the indices indicating the 
+                        starting offsets in the mrwind and dmatval arrays for each requested row.
     * @param mclind     : array containing the column indices of the elements contained in dmatval
     * @param dmatval    : array containing non zero elements of the rows 
     * @param size       : maximum number of elements to be retrieved

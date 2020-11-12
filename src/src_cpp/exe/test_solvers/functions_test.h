@@ -6,6 +6,11 @@
 #ifdef CPLEX
 	#include "SolverCplex.h"
 #endif
+#ifdef XPRESS
+	#include "SolverXpress.h"
+#endif
+
+#include <typeinfo>
 
 void declaration_solver(SolverAbstract::Ptr& solver, const std::string solver_name);
 

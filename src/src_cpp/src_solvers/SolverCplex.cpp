@@ -134,6 +134,9 @@ void SolverCplex::get_rows(int* mstart, int* mclind, double* dmatval, int size, 
     std::vector<int> surplus(1);
 	int status = CPXgetrows(_env, _prb, nels, mstart, mclind, dmatval, size, surplus.data(), first, last);
     zero_status_check(status, "get rows");
+
+	// As other solvers adds the last element in mstart
+	mstart[get_nrows()] = get_nelems();
 }
 
 void SolverCplex::get_row_type(char* qrtype, int first, int last) const{

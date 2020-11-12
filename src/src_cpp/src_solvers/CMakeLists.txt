@@ -27,8 +27,8 @@ ENDIF( CPLEX )
 # XPRESS
 IF( XPRESS )
 	list(APPEND Solver_sources
-		${CMAKE_CURRENT_LIST_DIR}/SolverXprs.h
-		${CMAKE_CURRENT_LIST_DIR}/SolverXprs.cpp
+		${CMAKE_CURRENT_LIST_DIR}/SolverXpress.h
+		${CMAKE_CURRENT_LIST_DIR}/SolverXpress.cpp
 	)
 ENDIF( XPRESS )
 

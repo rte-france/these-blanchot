@@ -7,15 +7,17 @@ int main(int argc, char *argv[]){
     std::cout << "   2. Path to MPS to read" << std::endl;
     std::cout << std::endl;
 
-    std::string solver_name = argv[1];
-
-    SolverAbstract::Ptr solver;
-    test_read_prob(argv[1], argv[2]);
-
-    test_modify_prob(argv[1], argv[2]);
-
-    solve_problem(argv[1], argv[2]);
+    std::string solver_name     = argv[1];
+    std::string instance_path   = argv[2];
     
-    solve_with_and_without_solver_output(argv[1], argv[2]);
+    
+    SolverAbstract::Ptr solver;
+    test_read_prob(solver_name, instance_path);
+
+    test_modify_prob(solver_name, instance_path);
+
+    solve_problem(solver_name, instance_path);
+    
+    solve_with_and_without_solver_output(solver_name, instance_path);
     return 0;
 }
