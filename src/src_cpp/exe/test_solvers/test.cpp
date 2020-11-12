@@ -1,4 +1,4 @@
-#include "solver.cpp"
+#include "functions_test.h"
 
 int main(int argc, char *argv[]){
 

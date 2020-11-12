@@ -15,7 +15,6 @@
 # ---------------------------------------------------------------------------
 list(APPEND Solver_sources
 	${CMAKE_CURRENT_LIST_DIR}/SolverAbstract.h
-	${CMAKE_CURRENT_LIST_DIR}/solver.cpp
 )
 # CPLEX
 IF( CPLEX )
