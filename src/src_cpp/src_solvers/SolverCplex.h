@@ -112,8 +112,8 @@ public:
 -----------------------------    Methods to solve the problem    ---------------------------------
 *************************************************************************************************/    
 public:
-    virtual void solve(int& lp_status, std::string const& path_to_mps);
-	virtual void solve_integer(int& lp_status, std::string const& path_to_mps);
+    virtual void solve_lp(int& lp_status);
+	virtual void solve_mip(int& lp_status);
 	
 /*************************************************************************************************
 -------------------------    Methods to get solutions information    -----------------------------

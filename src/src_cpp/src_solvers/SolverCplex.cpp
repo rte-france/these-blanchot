@@ -270,7 +270,7 @@ void SolverCplex::chg_coef(int id_row, int id_col, double val){
 /*************************************************************************************************
 -----------------------------    Methods to solve the problem    ---------------------------------
 *************************************************************************************************/    
-void SolverCplex::solve(int& lp_status, std::string const& path_to_mps){
+void SolverCplex::solve_lp(int& lp_status){
     
     int status = CPXlpopt(_env, _prb);
 	zero_status_check(status, "solve prb as lp");
@@ -291,7 +291,7 @@ void SolverCplex::solve(int& lp_status, std::string const& path_to_mps){
 		lp_status = INForUNBOUND;
 	}
 	else if(cpx_status == CPX_STAT_OPTIMAL_INFEAS) {
-        std::cout << "Code optimal_infeasible treated as optimal" << std::endl;
+        std::cout << "WARNING: Code optimal_infeasible treated as optimal" << std::endl;
 		lp_status = OPTIMAL;
 	}
 	else if (cpx_status == CPX_STAT_ABORT_IT_LIM) {
@@ -304,10 +304,10 @@ void SolverCplex::solve(int& lp_status, std::string const& path_to_mps){
 	}
 }
 
-void SolverCplex::solve_integer(int& lp_status, std::string const& path_to_mps){
+void SolverCplex::solve_mip(int& lp_status){
     
     if (get_n_integer_vars() == 0) {
-		solve(lp_status, path_to_mps);
+		solve_lp(lp_status);
 	}
 	else {
 		int status = CPXmipopt(_env, _prb);
@@ -342,61 +342,95 @@ void SolverCplex::solve_integer(int& lp_status, std::string const& path_to_mps){
 -------------------------    Methods to get solutions information    -----------------------------
 *************************************************************************************************/
 void SolverCplex::get_basis(int* rstatus, int* cstatus) const{
-
+	CPXgetbase(_env, _prb, cstatus, rstatus);
 }
 
-void SolverCplex::get_mip_value(double& lb) const{
-
+void SolverCplex::get_mip_value(double& val) const{
+	CPXgetobjval(_env, _prb, &val);
 }
 
-void SolverCplex::get_lp_value(double& lb) const{
-
+void SolverCplex::get_lp_value(double& val) const{
+	CPXgetobjval(_env, _prb, &val);
 }
 
 void SolverCplex::get_simplex_ite(int& result) const{
-
+	result = CPXgetitcnt(_env, _prb);
 }
 
 void SolverCplex::get_LP_sol(double* primals, double* slacks, double* duals, 
                     double* reduced_costs){
-
+	CPXsolution(_env, _prb, NULL, NULL, primals, duals, slacks, reduced_costs);
 }
 
 void SolverCplex::get_MIP_sol(double* primals, double* slacks){
-
+	CPXsolution(_env, _prb, NULL, NULL, primals, NULL, slacks, NULL);
 }
 
 /*************************************************************************************************
 ------------------------    Methods to set algorithm or logs levels    ---------------------------
 *************************************************************************************************/
 void SolverCplex::set_output_log_level(int loglevel){
-
+	if (loglevel == 1 || loglevel == 3) {
+		int status = CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_ON);
+		zero_status_check(status, "set solver log level");
+	}
+	else {
+		int status = CPXsetintparam(_env, CPXPARAM_ScreenOutput, CPX_OFF);
+		zero_status_check(status, "set solver log level");
+	}
 }
 
 void SolverCplex::set_algorithm(std::string const& algo){
-
+	int status(0);
+	if (algo == "BARRIER") {
+		status = CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_BARRIER);
+		zero_status_check(status, "set barrier algorithm");
+	}
+	else if (algo == "BARRIER_WO_CROSSOVER") {
+		status = CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_BARRIER);
+		zero_status_check(status, "set barrier algorithm");
+		status = CPXsetintparam(_env, CPXPARAM_Barrier_Crossover, CPX_ALG_NONE);
+		zero_status_check(status, "set crossover param to 0 in barrier");
+	}
+	else if (algo == "DUAL") {
+		status = CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_DUAL);
+		zero_status_check(status, "set dual simplex algorithm");
+	}
+	else {
+		std::cout << "Error: invalid algorithm " << algo << std::endl;
+		std::exit(0);
+	}
 }
 
 void SolverCplex::set_threads(int n_threads){
-
+	int status = CPXsetintparam(_env, CPXPARAM_Threads, n_threads);
+	zero_status_check(status, "set threads number");
 }
 
 void SolverCplex::scaling(int scale){
-
+	int status = CPXsetintparam(_env, CPXPARAM_Read_Scale, scale);
+	zero_status_check(status, "set scaling value");
 }
 
 void SolverCplex::presolve(int presolve){
-
+	int status = CPXsetintparam(_env, CPXPARAM_Preprocessing_Presolve, presolve);
+	zero_status_check(status, "set presolve value");
 }
 
 void SolverCplex::optimality_gap(double gap){
-
+	int status = CPXsetdblparam(_env, CPXPARAM_Simplex_Tolerances_Optimality, gap);
+	zero_status_check(status, "set optimality tol for simplex");
+	
+	status = CPXsetdblparam(_env, CPXPARAM_Barrier_ConvergeTol, gap);
+	zero_status_check(status, "set optimality gap for barrier");
 }
 
 void SolverCplex::set_simplex_iter(int iter){
-
+	int status = CPXsetintparam(_env, CPXPARAM_Simplex_Limits_Iterations, iter);
+	zero_status_check(status, "set maximum number of simplex iterations");
 }
 
 void SolverCplex::numerical_emphasis(int val){
-
+	int status = CPXsetintparam(_env, CPX_PARAM_NUMERICALEMPHASIS, val);
+	zero_status_check(status, "set numerical emphasis value");
 }

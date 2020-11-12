@@ -375,17 +375,15 @@ public:
     * @brief Solves a problem as LP
     *
     * @param lp_status      : status of the problem after resolution
-    * @param path_to_mps    : path to the file to write the problem as MPS if an error occures
     */
-    virtual void solve(int& lp_status, std::string const& path_to_mps) = 0;
+    virtual void solve_lp(int& lp_status) = 0;
 
     /**
     * @brief Solves a problem as MIP
     *
     * @param lp_status      : status of the problem after resolution
-    * @param path_to_mps    : path to the file to write the problem as MPS if an error occures
     */
-	virtual void solve_integer(int& lp_status, std::string const& path_to_mps) = 0;
+	virtual void solve_mip(int& lp_status) = 0;
 	
 
 	

@@ -21,8 +21,15 @@ void declaration_solver(SolverAbstract::Ptr &solver, const std::string solver_na
 		std::cout << "SOLVER NON RECONU" << std::endl;
 		std::exit(0);
 	}
-
 	std::cout << "Declaration solver: OK" << std::endl;
+}
+
+void print_big_message(const std::string& message) {
+	std::cout << "======================================================================"
+		<< std::endl;
+	std::cout << "              " << message << std::endl;
+	std::cout << "======================================================================"
+		<< std::endl;
 }
 
 void print_rows(int n_elems, const std::vector<double>& matval, std::vector<int>& mstart,
@@ -67,11 +74,13 @@ void get_and_print_rows(SolverAbstract::Ptr solver) {
 	std::vector<int>	mind(n_elems);
 	solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_elems, 0, n_cstr - 1);
 
+	std::cout << "CSTR " << n_cstr << std::endl;
 	std::vector<double> rhs(n_cstr);
-	solver->get_rhs(rhs.data(), 0, n_cstr - 1);
-
 	std::vector<char> rtypes(n_cstr);
-	solver->get_row_type(rtypes.data(), 0, n_cstr - 1);
+	if(n_cstr > 0){
+		solver->get_rhs(rhs.data(), 0, n_cstr - 1);
+		solver->get_row_type(rtypes.data(), 0, n_cstr - 1);
+	}	
 
 	// Print result
 	std::cout << "N ELEMS: " << n_elems << std::endl;
@@ -238,6 +247,15 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	std::cout << idcol << " " << row << " " << val << std::endl;
 	solver->chg_coef(row, idcol, val/10.0);
 	get_and_print_rows(solver);
+
+
+
+	// 6. Add a column, and set its coef in obj to 3 and in first row
+	solver->add_cols(1, 1, std::vector<double>(1, 3.0).data(), std::vector<int>(1, 0).data(),
+		std::vector<int>(1, 0).data(), std::vector<double>(1, 5.0).data(), NULL, NULL);
+	std::cout << "New number of columns: " << solver->get_ncols() << std::endl;
+	get_and_print_obj(solver);
+	get_and_print_rows(solver);
 }
 
 void solve_problem(const std::string solver_name, const std::string prob_name){
@@ -247,4 +265,110 @@ void solve_problem(const std::string solver_name, const std::string prob_name){
     const std::string flags = "MPS";
     solver->read_prob(prob_name.c_str(), flags.c_str());
     
+	int n_int = solver->get_n_integer_vars();
+	int slv_status(0);
+	if(n_int == 0){
+		std::cout << "LP problem to solve." << std::endl << std::endl;
+		solver->solve_lp(slv_status);
+
+		std::cout << "Optimization status: " << slv_status << "-" 
+			<< solver->SOLVER_STRING_STATUS[slv_status] << std::endl << std::endl;
+		double lp_val(0);
+		solver->get_lp_value(lp_val);
+		std::cout << "Objective value: " << lp_val << std::endl;
+
+		int simplex_ite(0);
+		solver->get_simplex_ite(simplex_ite);
+		std::cout << "Simplex iterations: " << simplex_ite << std::endl;
+
+		int n_vars = solver->get_ncols();
+		int n_cstr = solver->get_nrows();
+		std::vector<double> primals(n_vars);
+		std::vector<double> reduced_costs(n_vars);
+		std::vector<double> duals(n_cstr);
+		std::vector<double> slacks(n_cstr);
+		solver->get_LP_sol(primals.data(), slacks.data(), duals.data(), reduced_costs.data());
+		std::cout << "Printing solution" << std::endl;
+		for (int i(0); i < n_vars; i++) {
+			std::cout << "x[" << i << "] " << primals[i] 
+				<< "  " << reduced_costs[i] << std::endl;
+		}
+		for (int i(0); i < n_cstr; i++) {
+			std::cout << "C[" << i << "] " << duals[i]
+				<< "  " << slacks[i] << std::endl;
+		}
+
+	}else if(n_int > 0){
+		std::cout << "MIP problem to solve." << std::endl << std::endl;
+
+		std::cout << std::endl << "Solving problem as MIP" << std::endl;
+		solver->solve_mip(slv_status);
+
+		std::cout << "Optimization status: " << slv_status << "-"
+			<< solver->SOLVER_STRING_STATUS[slv_status] << std::endl << std::endl;
+
+		double mip_val(0);
+		solver->get_mip_value(mip_val);
+		std::cout << "Objective value: " << mip_val << std::endl;
+
+		int n_vars = solver->get_ncols();
+		int n_cstr = solver->get_nrows();
+		std::vector<double> primals(n_vars);
+		std::vector<double> slacks(n_cstr);
+		solver->get_LP_sol(primals.data(), slacks.data(), NULL, NULL);
+		std::cout << "Printing solution" << std::endl;
+		for (int i(0); i < n_vars; i++) {
+			std::cout << "x[" << i << "] " << primals[i] << std::endl;
+		}
+		for (int i(0); i < n_cstr; i++) {
+			std::cout << "C[" << i << "] " << slacks[i] << std::endl;
+		}
+
+	}else{
+		std::cout << "ERROR : Negatif integer number of vars." << std::endl;
+		std::exit(0);
+	}
+}
+
+void solve_with_and_without_solver_output(const std::string solver_name, 
+	const std::string prob_name) {
+
+	/*==================================================================================
+							Solving with solver output
+	==================================================================================*/
+	print_big_message("Solving with solver output");
+	// 1. Solver declaraion
+	SolverAbstract::Ptr solver;
+	declaration_solver(solver, solver_name);
+	
+	// 2. Reading problem
+    const std::string flags = "MPS";
+    solver->read_prob(prob_name.c_str(), flags.c_str());
+
+	// 3. Solving prob with output
+	solver->set_output_log_level(3);
+	int slv_status(0);
+	solver->solve_mip(slv_status);
+	std::cout << "Optimization status: " << slv_status << "-"
+			<< solver->SOLVER_STRING_STATUS[slv_status] << std::endl << std::endl; 
+
+	solver->free();
+
+	/*==================================================================================
+				        	Solving without solver output
+	==================================================================================*/
+	print_big_message("Solving without solver output");
+	// 1. Solver declaraion
+	declaration_solver(solver, solver_name);
+
+	// 2. Reading problem
+	solver->read_prob(prob_name.c_str(), flags.c_str());
+
+	// 3. Solving prob with output
+	solver->set_output_log_level(0);
+	std::cout << "Solving..." << std::endl;
+	solver->solve_mip(slv_status);
+	std::cout << "Optimization status: " << slv_status << "-"
+		<< solver->SOLVER_STRING_STATUS[slv_status] << std::endl << std::endl;
+	solver->free();
 }
