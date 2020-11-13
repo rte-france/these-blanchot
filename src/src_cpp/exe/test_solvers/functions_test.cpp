@@ -339,11 +339,26 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	get_and_print_obj(solver);
 	get_and_print_rows(solver);
 
-	std::vector<double> lbs(1, 0.0);
-	std::vector<double> ubs(1, 1e20);
+	int newcol = 1;
+	double newobj = 3.0;
+	int nnz = 2;
+	// Offset of col i
+	std::vector<int> nmstart(newcol);
+	nmstart[0] = 0;
+	// Row indices
+	std::vector<int> nmind(nnz);
+	nmstart[0] = 0;
+	nmstart[1] = 1;
+	// Values
+	std::vector<double> nmatval(nnz);
+	nmatval[0] = 8.32;
+	nmatval[1] = 21.78;
+	// LBs & UBs
+	std::vector<double> lbs(newcol, 0.0);
+	std::vector<double> ubs(newcol, 1e20);
 
-	solver->add_cols(1, 1, std::vector<double>(1, 3.0).data(), std::vector<int>(1, 0).data(),
-		std::vector<int>(1, 0).data(), std::vector<double>(1, 5.0).data(), lbs.data(), ubs.data());
+	solver->add_cols(newcol, nnz, std::vector<double>(newcol, newobj).data(),nmstart.data(),
+		nmind.data(), nmatval.data(), lbs.data(), ubs.data());
 	
 	print_action_message("Problem after adding one column");
 	std::cout << "     New number of columns: " << solver->get_ncols() << std::endl;
