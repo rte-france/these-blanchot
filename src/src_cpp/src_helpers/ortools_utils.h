@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "ortools/linear_solver/linear_solver.h"
+#include "cplex.h"
 
 
 #if ( (!defined(ORTOOLS_LP_SOLVER_TYPE)) || (!defined(ORTOOLS_MIP_SOLVER_TYPE)) )
@@ -20,7 +20,6 @@
 #define ORTOOLS_MIP_SOLVER_TYPE operations_research::MPSolver::CBC_MIXED_INTEGER_PROGRAMMING
 #endif
 #endif
-
 
 /**
  * @brief reads problem from an mps file
