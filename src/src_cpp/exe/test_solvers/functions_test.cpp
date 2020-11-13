@@ -339,8 +339,28 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	get_and_print_obj(solver);
 	get_and_print_rows(solver);
 
+	double nobjT[1];
+	nobjT[0] = 3;
+	int mstartT[] = { 0 };
+	int mrwindT[] = { 1, 2};
+	double matvalT[] = { 2.0, 1.0};
+	double bdlT[1];
+	double bduT[1];
+	bdlT[0] = XPRS_MINUSINFINITY; 
+	bduT[0] = 12.0;
+	solver->add_cols(1, 2, nobjT, mstartT, mrwindT, matvalT, bdlT, bduT);
+
+	std::cout << "add cls example xpress ok" << std::endl;
+
+	print_action_message("Problem after adding one column XPRESS example");
+	std::cout << "     New number of columns: " << solver->get_ncols() << std::endl;
+
+	get_and_print_obj(solver);
+	get_and_print_rows(solver);
+
+
+
 	int newcol = 1;
-	double newobj = 3.0;
 	int nnz = 2;
 	// Offset of col i
 	std::vector<int> nmstart(newcol);
@@ -355,9 +375,11 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	nmatval[1] = 21.78;
 	// LBs & UBs
 	std::vector<double> lbs(newcol, 0.0);
-	std::vector<double> ubs(newcol, 1e20);
+	std::vector<double> ubs(newcol, 6.0);
 
-	solver->add_cols(newcol, nnz, std::vector<double>(newcol, newobj).data(),nmstart.data(),
+	std::vector<double> newobj(newcol, 3.0);
+
+	solver->add_cols(newcol, nnz, newobj.data(),nmstart.data(),
 		nmind.data(), nmatval.data(), lbs.data(), ubs.data());
 	
 	print_action_message("Problem after adding one column");
