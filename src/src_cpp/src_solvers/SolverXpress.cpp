@@ -6,14 +6,18 @@
 int SolverXpress::_NumberOfProblems = 0;
 
 SolverXpress::SolverXpress() {
+	int status = 0;
 	if (_NumberOfProblems == 0) {
-		int status = XPRSinit("");
+		status = XPRSinit(NULL);
 		zero_status_check(status, "intialize XPRESS environment");
 	}
+
 	_NumberOfProblems += 1;
 	_xprs = NULL;
-	int status =XPRScreateprob(&_xprs);
+	status = XPRScreateprob(&_xprs);
 	zero_status_check(status, "create XPRESS problem");
+
+	std::cout << "yo create" << std::endl;
 }
 
 SolverXpress::SolverXpress(const std::string& name, const SolverAbstract::Ptr fictif) {
@@ -29,6 +33,7 @@ SolverXpress::~SolverXpress() {
 	if (_NumberOfProblems == 0) {
 		int status = XPRSfree();
 		zero_status_check(status, "free XPRESS environment");
+		std::cout << "Closing XPRESS environment." << std::endl;
 	}
 }
 
@@ -49,7 +54,11 @@ void SolverXpress::free() {
 -------------------------------    Reading & Writing problems    -------------------------------
 *************************************************************************************************/
 void SolverXpress::write_prob(const char* name, const char* flags) const{
-	int status = XPRSwriteprob(_xprs, name, flags);
+	std::string nFlags = "";
+	if (std::string(flags) == "LP") {
+		nFlags = "-l";
+	}
+	int status = XPRSwriteprob(_xprs, name, nFlags.c_str());
 	zero_status_check(status, "write problem");
 }
 
@@ -59,7 +68,17 @@ void SolverXpress::read_prob(const char* prob_name, const char* flags){
 		xprs_flags = "l";
 	}
 
-	int status = XPRSreadprob(_xprs, prob_name, xprs_flags.c_str());
+	// To delete obj from rows when reading prob
+	int keeprows(0);
+	int status = XPRSgetintcontrol(_xprs, XPRS_KEEPNROWS, &keeprows);
+	zero_status_check(status, "get XPRS_KEEPNROWS");
+
+	if (keeprows != -1) {
+		status = XPRSsetintcontrol(_xprs, XPRS_KEEPNROWS, -1);
+		zero_status_check(status, "set XPRS_KEEPNROWS to -1");
+	}
+
+	status = XPRSreadprob(_xprs, prob_name, xprs_flags.c_str());
 	zero_status_check(status, "read problem");
 }
 
@@ -82,27 +101,15 @@ int SolverXpress::get_nrows() const {
 	int rows(0);
 	int status = XPRSgetintattrib(_xprs, XPRS_ROWS, &rows);
 	zero_status_check(status, "get number of rows");
-	// Substracting one because XPRESS counts the objective
-	return rows - 1;
+	return rows;
 }
 
 int SolverXpress::get_nelems() const{
-
-	// XPRESS counts the nonzeros elements in the objective function
-	// We need to substrct them from the NELEMS value of XPRESS
-	int size = get_ncols();
-	std::vector<double> obj(size);
-	get_obj(obj.data(), 0, size - 1);
-	int obj_size = 0;
-	for (auto const& val : obj) {
-		if (val > 1e-9 || val < -1e-9) { obj_size += 1; }
-	}
-
 	int elems(0);
 	int status = XPRSgetintattrib(_xprs, XPRS_ELEMS, &elems);
 	zero_status_check(status, "get number of non zero elements");
 
-	return elems - obj_size;
+	return elems;
 }
 
 int SolverXpress::get_n_integer_vars() const{
@@ -120,17 +127,17 @@ void SolverXpress::get_obj(double* obj, int first, int last) const{
 void SolverXpress::get_rows(int* mstart, int* mclind, double* dmatval, int size, int* nels, 
                     int first, int last) const{
 	// Need to add 1 to indices to avoid objective a index 0
-	int status = XPRSgetrows(_xprs, mstart, mclind, dmatval, size, nels, first + 1, last + 1);
+	int status = XPRSgetrows(_xprs, mstart, mclind, dmatval, size, nels, first, last);
 	zero_status_check(status, "get rows");
 }
 
 void SolverXpress::get_row_type(char* qrtype, int first, int last) const{
-	int status = XPRSgetrowtype(_xprs, qrtype, first + 1, last + 1);
+	int status = XPRSgetrowtype(_xprs, qrtype, first, last);
 	zero_status_check(status, "get rows types");
 }
 
 void SolverXpress::get_rhs(double* rhs, int first, int last) const{
-	int status = XPRSgetrhs(_xprs, rhs, first + 1 , last  +1 );
+	int status = XPRSgetrhs(_xprs, rhs, first, last);
 	zero_status_check(status, "get RHS");
 }
 
@@ -223,13 +230,13 @@ void SolverXpress::chg_col_type(int nels, const int* mindex, const char* qctype)
 }
 
 void SolverXpress::chg_rhs(int id_row, double val){
-	int status = XPRSchgrhs(_xprs, 1, std::vector<int>(1,id_row + 1 ).data(), 
+	int status = XPRSchgrhs(_xprs, 1, std::vector<int>(1,id_row).data(), 
 		std::vector<double>(1,val).data() );
 	zero_status_check(status, "change rhs");
 }
 
 void SolverXpress::chg_coef(int id_row, int id_col, double val){
-	int status = XPRSchgcoef(_xprs, id_row + 1 , id_col, val);
+	int status = XPRSchgcoef(_xprs, id_row, id_col, val);
 	zero_status_check(status, "change matrix coefficient");
 }
 	
@@ -321,6 +328,9 @@ void SolverXpress::get_MIP_sol(double* primals, double* slacks){
 ------------------------    Methods to set algorithm or logs levels    ---------------------------
 *************************************************************************************************/
 void SolverXpress::set_output_log_level(int loglevel){
+	int status = XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
+	zero_status_check(status, "set message stream to solver stream");
+
 	if (loglevel == 1 || loglevel == 3) {
 		int status = XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
 		zero_status_check(status, "set log level");
@@ -383,4 +393,51 @@ void SolverXpress::numerical_emphasis(int val){
 	//int status = 
 	//zero_status_check(status, "set numerical emphasis");
 	std::cout << "NUMERICAL EMPHASIS NOT FOUND FOR XPRESS" << std::endl;
+}
+
+void XPRS_CC optimizermsg(XPRSprob prob, void* strPtr, const char* sMsg, int nLen,
+	int nMsglvl) {
+	std::list<std::ostream* >* ptr = NULL;
+	if (strPtr != NULL)ptr = (std::list<std::ostream* >*)strPtr;
+	switch (nMsglvl) {
+
+		/* Print Optimizer error messages and warnings */
+	case 4: /* error */
+	case 3: /* warning */
+	case 2: /* dialogue */
+	case 1: /* information */
+		if (ptr != NULL) {
+			for (auto const& stream : *ptr)
+				* stream << sMsg << std::endl;
+		}
+		else {
+			std::cout << sMsg << std::endl;
+		}
+		break;
+		/* Exit and flush buffers */
+	default:
+		fflush(NULL);
+		break;
+	}
+}
+
+void errormsg(XPRSprob & _xprs, const char* sSubName, int nLineNo, int nErrCode) {
+	int nErrNo; /* Optimizer error number */
+				/* Print error message */
+	printf("The subroutine %s has failed on line %d\n", sSubName, nLineNo);
+
+	/* Append the error code if it exists */
+	if (nErrCode != -1)
+		printf("with error code %d.\n\n", nErrCode);
+
+	/* Append Optimizer error number, if available */
+	if (nErrCode == 32) {
+		XPRSgetintattrib(_xprs, XPRS_ERRORCODE, &nErrNo);
+		printf("The Optimizer eror number is: %d\n\n", nErrNo);
+	}
+
+	/* Free memory close files and exit */
+	XPRSdestroyprob(_xprs);
+	XPRSfree();
+	exit(nErrCode);
 }

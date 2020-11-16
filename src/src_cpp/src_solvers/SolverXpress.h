@@ -132,3 +132,23 @@ public:
 	virtual void set_simplex_iter(int iter);
 	virtual void numerical_emphasis(int val);
 };
+
+/************************************************************************************\
+* Name:         optimizermsg                                                         *
+* Purpose:      Display Optimizer error messages and warnings.                       *
+* Arguments:    const char *sMsg    Message string                                   *
+*               int nLen            Message length                                   *
+*               int nMsgLvl         Message type                                     *
+* Return Value: None.                                                                *
+\************************************************************************************/
+void errormsg(XPRSprob& xprs, const char* sSubName, int nLineNo, int nErrCode);
+
+/************************************************************************************\
+* Name:         errormsg                                                             *
+* Purpose:      Display error information about failed subroutines.                  *
+* Arguments:    const char *sSubName    Subroutine name                              *
+*               int nLineNo             Line number                                  *
+*               int nErrCode            Error code                                   *
+* Return Value: None                                                                 *
+\************************************************************************************/
+void optimizermsg(XPRSprob prob, void* stream, const char* sMsg, int nLen, int nMsglvl);

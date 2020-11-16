@@ -1,6 +1,8 @@
 #include "functions_test.h"
 
-void declaration_solver(SolverAbstract::Ptr& solver, const std::string solver_name) {
+SolverAbstract::Ptr declaration_solver(const std::string solver_name) {
+
+	SolverAbstract::Ptr solver;
 
 	if (solver_name == "") {
 		std::cout << "SOLVER NON RECONU" << std::endl;
@@ -21,6 +23,8 @@ void declaration_solver(SolverAbstract::Ptr& solver, const std::string solver_na
 		std::cout << "SOLVER NON RECONU" << std::endl;
 		std::exit(0);
 	}
+
+	return solver;
 }
 
 /*================================================================================================
@@ -175,6 +179,18 @@ void get_and_print_variables_bounds(SolverAbstract::Ptr solver) {
 }
 
 
+void print_full_problem_from_solver(SolverAbstract::Ptr solver) {
+	std::string flag = "LP";
+	solver->write_prob("test.lp", flag.c_str());
+	std::ifstream testProb("test.lp");
+
+	std::string line;
+	while (getline(testProb, line)) {
+		std::cout << line << std::endl;;
+	}
+}
+
+
 /*================================================================================================
 			Global tests -- using previous functions
 ================================================================================================*/
@@ -183,9 +199,8 @@ void test_read_prob(const std::string solver_name, const std::string prob_name){
 
 	print_big_message("Reading a problem");
 
-    SolverAbstract::Ptr solver;
 	print_small_message("Solver declaration");
-	declaration_solver(solver, solver_name);
+    SolverAbstract::Ptr solver = declaration_solver(solver_name);
 	std::cout << "     Declaration solver: OK" << std::endl;
 
     const std::string flags = "MPS";
@@ -217,8 +232,7 @@ void test_read_prob(const std::string solver_name, const std::string prob_name){
 
 void test_modify_prob(const std::string solver_name, const std::string prob_name){
 
-    SolverAbstract::Ptr solver;
-	declaration_solver(solver, solver_name);
+    SolverAbstract::Ptr solver = declaration_solver(solver_name);
 	
     const std::string flags = "MPS";
     solver->read_prob(prob_name.c_str(), flags.c_str());
@@ -245,12 +259,14 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	//     Get intial rows
 	print_action_message("Rows before modification");
 	print_rows(n_elems, matval, mstart, mind, rhs, rtypes);
+	print_full_problem_from_solver(solver);
 
 	//     Del Rows
 	solver->del_rows(0, 1);
 
 	print_action_message("Rows after deletion of 2 first rows");
 	get_and_print_rows(solver);
+	print_full_problem_from_solver(solver);
 
 
 	// 2. Adding rows to the end
@@ -284,6 +300,7 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	
 	print_action_message("Rows after adding the deleted rows");
 	get_and_print_rows(solver);
+	print_full_problem_from_solver(solver);
 
 
     // 3. Changing obj
@@ -300,6 +317,7 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	solver->chg_obj(n_vars, ids.data(), obj.data());
 	print_action_message("Obj after substracting 1 to every value");
 	print_obj(obj);
+	print_full_problem_from_solver(solver);
 
     // 4. Changing RHS
 	// rhs already got before
@@ -316,6 +334,7 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 
 	print_action_message("Rows after adding one to every RHS");	
 	get_and_print_rows(solver);
+	print_full_problem_from_solver(solver);
 
 	// 5. Change coef
 	// dividing last coef by 10
@@ -332,6 +351,7 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 
 	print_action_message("Rows after dividing last element by 10");
 	get_and_print_rows(solver);
+	print_full_problem_from_solver(solver);
 
 	// 6. Add a column, and set its coef in obj to 3 and in first row
 	print_small_message("Adding columns to problem");
@@ -340,15 +360,16 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	get_and_print_rows(solver);
 
 	double nobjT[1];
-	nobjT[0] = 3;
+	nobjT[0] = 3.0;
 	int mstartT[] = { 0 };
-	int mrwindT[] = { 1, 2};
+	int mrwindT[] = { 0, 1};
 	double matvalT[] = { 2.0, 1.0};
 	double bdlT[1];
 	double bduT[1];
 	bdlT[0] = XPRS_MINUSINFINITY; 
 	bduT[0] = 12.0;
 	solver->add_cols(1, 2, nobjT, mstartT, mrwindT, matvalT, bdlT, bduT);
+	
 
 	std::cout << "add cls example xpress ok" << std::endl;
 
@@ -357,7 +378,7 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 
 	get_and_print_obj(solver);
 	get_and_print_rows(solver);
-
+	print_full_problem_from_solver(solver);
 
 
 	int newcol = 1;
@@ -367,8 +388,9 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	nmstart[0] = 0;
 	// Row indices
 	std::vector<int> nmind(nnz);
-	nmstart[0] = 0;
-	nmstart[1] = 1;
+	nmind[0] = 0;
+	nmind[1] = 1;
+
 	// Values
 	std::vector<double> nmatval(nnz);
 	nmatval[0] = 8.32;
@@ -387,14 +409,14 @@ void test_modify_prob(const std::string solver_name, const std::string prob_name
 	
 	get_and_print_obj(solver);
 	get_and_print_rows(solver);
+	print_full_problem_from_solver(solver);
 }
 
 void solve_problem(const std::string solver_name, const std::string prob_name){
 
 	print_big_message("Solving problem and getting solutions");
 
-    SolverAbstract::Ptr solver;
-	declaration_solver(solver, solver_name);
+	SolverAbstract::Ptr solver = declaration_solver(solver_name);
 	
     const std::string flags = "MPS";
     solver->read_prob(prob_name.c_str(), flags.c_str());
@@ -472,8 +494,9 @@ void solve_with_and_without_solver_output(const std::string solver_name,
 	==================================================================================*/
 	print_big_message("Solving with solver output");
 	// 1. Solver declaraion
-	SolverAbstract::Ptr solver;
-	declaration_solver(solver, solver_name);
+	SolverAbstract::Ptr solver = declaration_solver(solver_name);
+
+	solver->add_stream(std::cout);
 	
 	// 2. Reading problem
     const std::string flags = "MPS";
@@ -490,14 +513,13 @@ void solve_with_and_without_solver_output(const std::string solver_name,
 	solver->get_mip_value(mip_val);
 	std::cout << "     Objective value: " << mip_val << std::endl;
 
-	solver->free();
-
+	//solver->free();
+	
 	/*==================================================================================
 				        	Solving without solver output
 	==================================================================================*/
 	print_big_message("Solving without solver output");
-	// 1. Solver declaraion
-	declaration_solver(solver, solver_name);
+	solver = declaration_solver(solver_name);
 
 	// 2. Reading problem
 	solver->read_prob(prob_name.c_str(), flags.c_str());

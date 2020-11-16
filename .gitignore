@@ -10,3 +10,6 @@ test_case_expansion
 *.7z
 __pycache__
 *.pyc
+data_test/toto.mps
+
+data_test/pgp2.mps
