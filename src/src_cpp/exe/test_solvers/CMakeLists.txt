@@ -12,7 +12,10 @@
 
 add_executable (test_solver
 	${CMAKE_CURRENT_SOURCE_DIR}/test.cpp	
-    ${CMAKE_CURRENT_SOURCE_DIR}/functions_test.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/functions_test.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/test_reading_problem.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/test_modifying_problem.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/test_solving_problem.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/functions_test.h
 	${CMAKE_CURRENT_SOURCE_DIR}/catch2.hpp
 

@@ -62,6 +62,7 @@ public:
     * @brief destructor of SolverAbstract class : does nothing
     */
 	virtual ~SolverAbstract() {};
+    virtual int get_number_of_instances() = 0;
 
 
 /*************************************************************************************************
@@ -108,7 +109,6 @@ public:
     * @brief Frees all the datas contained in the Solver environment
     */
     virtual void free() = 0;
-
 
 /*************************************************************************************************
 -------------------------------    Reading & Writing problems    -------------------------------

@@ -10,13 +10,13 @@ SolverAbstract::Ptr declaration_solver(const std::string solver_name) {
 	}
 #ifdef CPLEX
 	else if (solver_name == "CPLEX") {
-		solver = std::make_shared< SolverCplex>("");
-		solver = std::make_shared< SolverCplex>();
+		solver = std::make_unique< SolverCplex>("");
+		solver = std::make_unique< SolverCplex>();
 	}
 #endif
 #ifdef XPRESS
 	else if (solver_name == "XPRESS") {
-		solver = std::make_shared< SolverXpress>();
+		solver = std::make_unique< SolverXpress>();
 	}
 #endif
 	else {
@@ -495,6 +495,7 @@ void solve_with_and_without_solver_output(const std::string solver_name,
 	print_big_message("Solving with solver output");
 	// 1. Solver declaraion
 	SolverAbstract::Ptr solver = declaration_solver(solver_name);
+	solver->init();
 
 	solver->add_stream(std::cout);
 	
@@ -519,8 +520,8 @@ void solve_with_and_without_solver_output(const std::string solver_name,
 				        	Solving without solver output
 	==================================================================================*/
 	print_big_message("Solving without solver output");
-	solver = declaration_solver(solver_name);
-	
+	//solver = declaration_solver(solver_name);
+	solver->init();
 	solver->read_prob(prob_name.c_str(), flags.c_str());
 
 	// 3. Solving prob with output

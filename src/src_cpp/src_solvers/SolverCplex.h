@@ -43,7 +43,7 @@ public:
     */
 	SolverCplex(const std::string& name, const SolverAbstract::Ptr fictif);
 	virtual ~SolverCplex();
-
+	virtual int get_number_of_instances();
 
 /*************************************************************************************************
 ---------------------------------    Output and stream management    -----------------------------
@@ -56,7 +56,6 @@ public:
 public:
 	virtual void init() ;
     virtual void free() ;
-
 
 /*************************************************************************************************
 -------------------------------    Reading & Writing problems    -------------------------------

@@ -13,10 +13,7 @@ SolverCplex::SolverCplex() {
     _env = CPXopenCPLEX(&status);
 	zero_status_check(status, "open CPLEX");
 
-    // Creating empty problem
-    const std::string name = "DefaultProblem_" + std::to_string(_NumberOfProblems + 1);
-    _prb = CPXcreateprob(_env, &status, name.c_str());
-    zero_status_check(status, "create problem");
+	_prb = NULL;
 
 	_NumberOfProblems += 1;
 }
@@ -58,14 +55,20 @@ SolverCplex::SolverCplex(const std::string& name, const SolverAbstract::Ptr fict
 }
 
 SolverCplex::~SolverCplex() {
-    free();
 	_NumberOfProblems -= 1;
+	free();
+	
 	if (_NumberOfProblems == 0) {
 		int status = CPXcloseCPLEX(&_env);
         zero_status_check(status, "close CPLEX environment");
 
         std::cout << "Closing CPLEX environment." << std::endl;
 	}
+}
+
+int SolverCplex::get_number_of_instances()
+{
+	return _NumberOfProblems;
 }
 
 /*************************************************************************************************
@@ -75,6 +78,17 @@ SolverCplex::~SolverCplex() {
 /*************************************************************************************************
 ------------    Destruction of inner strctures and datas, closing environments    ---------------
 *************************************************************************************************/
+void SolverCplex::init() {
+	// Creating empty problem
+	int status = 0;
+	const std::string name = "DefaultProblem_" + std::to_string(_NumberOfProblems);
+	_prb = CPXcreateprob(_env, &status, name.c_str());
+	zero_status_check(status, "create problem");
+}
+
+
+
+
 void SolverCplex::free() {
     int status(0);
     status = CPXfreeprob(_env, &_prb);

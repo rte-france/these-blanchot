@@ -14,12 +14,6 @@ SolverXpress::SolverXpress() {
 
 	_NumberOfProblems += 1;
 	_xprs = NULL;
-	status = XPRScreateprob(&_xprs);
-	zero_status_check(status, "create XPRESS problem");
-
-
-	std::cout << "Nprob" << _NumberOfProblems << std::endl;
-	std::cout << "coucou constrcteur" << std::endl;
 }
 
 SolverXpress::SolverXpress(const std::string& name, const SolverAbstract::Ptr fictif) {
@@ -37,8 +31,11 @@ SolverXpress::~SolverXpress() {
 		zero_status_check(status, "free XPRESS environment");
 		std::cout << "Closing XPRESS environment." << std::endl;
 	}
-	std::cout << "Nprob" << _NumberOfProblems << std::endl;
-	std::cout << "coucou destructeur" << std::endl;
+}
+
+int SolverXpress::get_number_of_instances()
+{
+	return _NumberOfProblems;
 }
 
 /*************************************************************************************************
@@ -49,11 +46,11 @@ SolverXpress::~SolverXpress() {
 ------------    Destruction of inner strctures and datas, closing environments    ---------------
 *************************************************************************************************/
 void SolverXpress::init() {
-
+	int status = XPRScreateprob(&_xprs);
+	zero_status_check(status, "create XPRESS problem");
 }
 
 void SolverXpress::free() {
-	
 	int status = XPRSdestroyprob(_xprs);
 	_xprs = NULL;
 	zero_status_check(status, "destroy XPRESS problem");

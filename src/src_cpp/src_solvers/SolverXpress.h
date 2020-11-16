@@ -35,7 +35,7 @@ public:
 	SolverXpress(const std::string& name, const SolverAbstract::Ptr toCopy);
 
 	virtual ~SolverXpress();
-
+	virtual int get_number_of_instances();
 
 /*************************************************************************************************
 ---------------------------------    Output and stream management    -----------------------------
@@ -48,7 +48,6 @@ public:
 public:
 	virtual void init() ;
     virtual void free() ;
-
 
 /*************************************************************************************************
 -------------------------------    Reading & Writing problems    -------------------------------
