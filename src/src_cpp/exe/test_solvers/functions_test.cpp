@@ -513,15 +513,14 @@ void solve_with_and_without_solver_output(const std::string solver_name,
 	solver->get_mip_value(mip_val);
 	std::cout << "     Objective value: " << mip_val << std::endl;
 
-	//solver->free();
+	solver->free();
 	
 	/*==================================================================================
 				        	Solving without solver output
 	==================================================================================*/
 	print_big_message("Solving without solver output");
 	solver = declaration_solver(solver_name);
-
-	// 2. Reading problem
+	
 	solver->read_prob(prob_name.c_str(), flags.c_str());
 
 	// 3. Solving prob with output

@@ -96,9 +96,14 @@ public:
 	};
 
 /*************************************************************************************************
-------------    Destruction of inner strctures and datas, closing environments    ---------------
+------    Destruction or creation of inner strctures and datas, closing environments    ----------
 *************************************************************************************************/
 public:
+    /**
+    * @brief Initializes a problem
+    */
+    virtual void init() = 0;
+
     /**
     * @brief Frees all the datas contained in the Solver environment
     */

@@ -43,9 +43,10 @@ public:
 
 
 /*************************************************************************************************
-------------    Destruction of inner strctures and datas, closing environments    ---------------
+------    Destruction or creation of inner strctures and datas, closing environments    ----------
 *************************************************************************************************/
 public:
+	virtual void init() ;
     virtual void free() ;
 
 
