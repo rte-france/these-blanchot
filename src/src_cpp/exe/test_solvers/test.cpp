@@ -30,7 +30,5 @@ int main(int argc, char *argv[]){
     if (test_file != "")
         std::cout << "test file running ici : " << test_file << std::endl;
 
-
-
     return session.run();
 }

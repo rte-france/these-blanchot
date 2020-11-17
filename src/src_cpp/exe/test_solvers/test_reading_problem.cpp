@@ -109,6 +109,7 @@ TEST_CASE("1. MPS file can be read and we can get every information about the pr
     std::vector<double> neededLb = { 0.0 , 0.0 };
     REQUIRE(lb == neededLb);
 
+
     //========================================================================================
     // 10. Recuperation des bornes sup sur les variables
     n_vars = solver->get_ncols();

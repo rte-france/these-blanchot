@@ -1,5 +1,4 @@
 TEST_NAME               MIP_TOY_PROB_1
-SOLVER                  ALL
 INSTANCE                ../../data_test/mip_toy_prob.mps
 VARIABLES               2
 INTEGER_VARIABLES       2

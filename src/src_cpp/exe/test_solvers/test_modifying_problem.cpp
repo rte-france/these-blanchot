@@ -31,7 +31,6 @@ TEST_CASE("2. Every part of a problem can be modified") {
     // 3. Delete Rows
     SECTION( "Deleting the first row actually delete it" ) {
         solver->del_rows(0, 0);
-        REQUIRE(solver->get_nrows() == 1);
 
         int n_elems = solver->get_nelems();
         int n_cstr = solver->get_nrows();
@@ -39,16 +38,16 @@ TEST_CASE("2. Every part of a problem can be modified") {
         std::vector<int>	mstart(n_cstr + 1);
         std::vector<int>	mind(n_elems);
         int n_returned(0);
-        solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_returned, 0, n_cstr - 1);
-        REQUIRE(n_returned == 2);
+        solver->get_rows(mstart.data(), mind.data(), matval.data(), n_elems, &n_returned, 0, n_cstr - 1);     
 
         std::vector<double> neededMatval = { 10.0, 6.0 };
-        REQUIRE(matval == neededMatval);
-
         std::vector<int> neededMatind = { 0, 1 };
-        REQUIRE(mind == neededMatind);
-
         std::vector<int> neededMstart = { 0, 2 };
+
+        REQUIRE(solver->get_nrows() == 1);
+        REQUIRE(n_returned == 2);
+        REQUIRE(matval == neededMatval);
+        REQUIRE(mind == neededMatind);
         REQUIRE(mstart == neededMstart);
     }
 
