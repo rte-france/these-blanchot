@@ -4,6 +4,7 @@
 #include "SolverAbstract.h"
 #include <iostream>
 #include "functions_test.h"
+#include "define_datas.hpp"
 
 #ifdef CPLEX
 #include "SolverCplex.h"
@@ -11,6 +12,13 @@
 #ifdef XPRESS
 #include "SolverXpress.h"
 #endif
+
+TEST_CASE("test_datas") {
+    AllDatas datas;
+    fill_datas(datas);
+    std::cout << " ICI AUSSI ON A LES DATAS" << std::endl;
+    std::cout << "VARIS " << datas[MIP_TOY]._nelems << std::endl;
+}
 
 TEST_CASE("2. Every part of a problem can be modified") {
 

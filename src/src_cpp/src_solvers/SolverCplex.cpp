@@ -7,10 +7,10 @@
 int SolverCplex::_NumberOfProblems = 0;
 
 SolverCplex::SolverCplex() {
-    int status(0);
+	int status(0);
 
-    // Openning CPLEX environment
-    _env = CPXopenCPLEX(&status);
+	// Openning CPLEX environment
+	_env = CPXopenCPLEX(&status);
 	zero_status_check(status, "open CPLEX");
 
 	_prb = NULL;

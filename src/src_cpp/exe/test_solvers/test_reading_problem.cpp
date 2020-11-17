@@ -4,6 +4,7 @@
 #include "SolverAbstract.h"
 #include <iostream>
 #include "functions_test.h"
+#include "define_datas.hpp"
 
 #ifdef CPLEX
 #include "SolverCplex.h"
@@ -108,7 +109,6 @@ TEST_CASE("1. MPS file can be read and we can get every information about the pr
     solver->get_lb(lb.data(), 0, n_vars - 1);
     std::vector<double> neededLb = { 0.0 , 0.0 };
     REQUIRE(lb == neededLb);
-
 
     //========================================================================================
     // 10. Recuperation des bornes sup sur les variables
