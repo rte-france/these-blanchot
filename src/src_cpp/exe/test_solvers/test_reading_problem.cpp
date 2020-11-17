@@ -12,7 +12,7 @@
 #include "SolverXpress.h"
 #endif
 
-TEST_CASE("MPS file can be read we can get every information about the problem") {
+TEST_CASE("1. MPS file can be read and we can get every information about the problem") {
 
     std::string instance = "../../data_test/mip_toy_prob.mps";
     std::string solver_name = "XPRESS";
