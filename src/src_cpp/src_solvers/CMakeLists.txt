@@ -14,7 +14,10 @@
 # Conditionnal settings of solver source files
 # ---------------------------------------------------------------------------
 list(APPEND Solver_sources
+	${CMAKE_CURRENT_LIST_DIR}/Solver.h
 	${CMAKE_CURRENT_LIST_DIR}/SolverAbstract.h
+	${CMAKE_CURRENT_LIST_DIR}/SolverFactory.h
+	${CMAKE_CURRENT_LIST_DIR}/SolverFactory.cpp
 )
 # CPLEX
 IF( CPLEX )

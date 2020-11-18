@@ -1,21 +1,16 @@
 #pragma once
 #include "catch2.hpp"
 #include <iostream>
-#include "SolverAbstract.h"
+#include "Solver.h"
 #include "define_datas.hpp"
 
-#ifdef CPLEX
-#include "SolverCplex.h"
-#endif
-#ifdef XPRESS
-#include "SolverXpress.h"
-#endif
 
 TEST_CASE("2. Every part of a problem can be modified") {
 
-
     AllDatas datas;
     fill_datas(datas);
+
+    SolverFactory factory;
 
     auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB);
     SECTION("Reanding instance") {
@@ -23,7 +18,7 @@ TEST_CASE("2. Every part of a problem can be modified") {
         std::string solver_name = "XPRESS";
         //========================================================================================
         // 1. declaration d'un objet solveur
-        SolverAbstract::Ptr solver = declaration_solver(solver_name);
+        SolverAbstract::Ptr solver = factory.create_solver(solver_name);
 
         //========================================================================================
         // 2. initialisation d'un probleme et lecture
