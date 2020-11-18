@@ -25,13 +25,13 @@ add_library (sequentialcore STATIC
 target_include_directories (sequentialcore
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}
-		$ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex
 )
 
 target_link_libraries (sequentialcore
 	PUBLIC
 		helpers
 		jsoncpp
+		solvers
 )
 
 add_library (${PROJECT_NAME}::sequentialcore ALIAS sequentialcore)
