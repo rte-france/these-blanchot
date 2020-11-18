@@ -22,4 +22,4 @@ endif ()
 
 
 ##### TEST SOLVERS LIBRARY
-add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/test_solvers")
+add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/test_solvers_library")

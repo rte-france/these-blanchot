@@ -4,7 +4,6 @@
 #include "SolverAbstract.h"
 #include <iostream>
 #include <fstream>
-#include "functions_test.h"
 #include "define_datas.hpp"
 
 #ifdef CPLEX

@@ -1,9 +1,7 @@
 #pragma once
 #include "catch2.hpp"
-
-#include "SolverAbstract.h"
 #include <iostream>
-#include "functions_test.h"
+#include "SolverAbstract.h"
 #include "define_datas.hpp"
 
 #ifdef CPLEX
