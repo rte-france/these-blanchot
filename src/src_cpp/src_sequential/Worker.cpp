@@ -19,6 +19,9 @@ Worker::~Worker() {
 *  \brief Free the problem
 */
 void Worker::free() {
+	_id_to_name.clear();
+	_name_to_id.clear();
+
 	_solver.reset();
 	_solver = nullptr;
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Worker.h"
 #include "SlaveCut.h"
 

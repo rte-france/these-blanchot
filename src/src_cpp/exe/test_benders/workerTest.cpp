@@ -2,7 +2,7 @@
 #include "Worker.h"
 #include "define_datas.hpp"
 
-TEST_CASE("Test Worker.h") {
+TEST_CASE("Test init and free Worker object", "[worker][worker-init]") {
 	
 	//========================================================================================
 	// 1. declaration et initialisation
@@ -31,9 +31,14 @@ TEST_CASE("Test Worker.h") {
 			REQUIRE(kvp.first == worker._id_to_name[kvp.second]);
 		}
 	}
+
+	REQUIRE(worker._solver != nullptr);
+
+	worker.free();
+	REQUIRE(worker._solver == nullptr);
 }
 
-TEST_CASE("Test solving worker") {
+TEST_CASE("Reading and solving through Worker", "[worker][worker-solve]") {
 
 	AllDatas datas;
 	fill_datas(datas);
@@ -44,7 +49,7 @@ TEST_CASE("Test solving worker") {
 	Str2Int varmap;
 
 	auto inst = GENERATE(MIP_TOY, MULTIKP);
-	SECTION("Read and solving through Worker") {
+	SECTION("") {
 
 		SolverFactory factory;
 		for (auto const& solver_name : factory.get_solvers_list()) {
@@ -91,7 +96,7 @@ TEST_CASE("Test solving worker") {
 		
 }
 
-TEST_CASE("Mid size LP to check simplex iterations") {
+TEST_CASE("Mid size LP to check simplex iterations", "[worker][worker-solve]") {
 	Worker worker;
 	Str2Int varmap;
 
@@ -115,6 +120,4 @@ TEST_CASE("Mid size LP to check simplex iterations") {
 		worker.free();
 		REQUIRE(worker._solver == nullptr);
 	}
-	
-	
 }
