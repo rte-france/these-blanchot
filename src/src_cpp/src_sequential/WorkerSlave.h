@@ -1,10 +1,8 @@
 #pragma once
 
-
 #include "Worker.h"
 #include "SlaveCut.h"
 #include "SimplexBasis.h"
-
 
 /*!
 * \class WorkerSlave

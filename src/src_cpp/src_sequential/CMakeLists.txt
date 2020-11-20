@@ -12,7 +12,7 @@ add_library (sequentialcore STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/BendersOptions.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Worker.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WorkerTrace.cpp
-	#${CMAKE_CURRENT_SOURCE_DIR}/WorkerSlave.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/WorkerSlave.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SlaveCut.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SimplexBasis.cpp
 
@@ -22,7 +22,7 @@ add_library (sequentialcore STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/BendersOptions.hxx
 	${CMAKE_CURRENT_SOURCE_DIR}/Worker.h
 	${CMAKE_CURRENT_SOURCE_DIR}/WorkerTrace.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/WorkerSlave.h
+	${CMAKE_CURRENT_SOURCE_DIR}/WorkerSlave.h
 	${CMAKE_CURRENT_SOURCE_DIR}/SlaveCut.h
 	${CMAKE_CURRENT_SOURCE_DIR}/SimplexBasis.h
 )

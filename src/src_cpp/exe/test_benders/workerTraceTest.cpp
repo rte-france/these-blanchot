@@ -14,6 +14,19 @@ TEST_CASE("WorkerTrace", "[wrk-trace]") {
 	trace->_x0 = ptrx;
 	REQUIRE(trace->get_point() == x);
 
-	IntVector minVec = { 0, 1, 3, 5 };
-	
+	Point mx;
+	mx["mA"] = 1.0;
+	mx["mB"] = 1.5;
+	mx["mC"] = 2.0;
+	PointPtr ptrMin(new Point(mx));
+	trace->_min_invest = ptrMin;
+	REQUIRE(trace->get_min_invest() == mx);
+
+	Point Mx;
+	Mx["MA"] = 1.0;
+	Mx["MB"] = 1.5;
+	Mx["MC"] = 2.0;
+	PointPtr ptrMax(new Point(Mx));
+	trace->_max_invest = ptrMax;
+	REQUIRE(trace->get_max_invest() == Mx);
 }
