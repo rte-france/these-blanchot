@@ -1,0 +1,38 @@
+
+Log started (V12.9.0.0) Fri Nov 20 18:15:44 2020
+
+
+Selected objective sense:  MINIMIZE
+Selected objective  name:  OBJ
+Selected RHS        name:  RHS
+
+Problem 'SP1.mps' read.
+Read time = 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 3 rows and 4 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.00 ticks)
+
+Dual simplex - Optimal:  Objective =  3.0000000000e+00
+Solution time =    0.00 sec.  Iterations = 0 (0)
+Deterministic time = 0.00 ticks  (2.76 ticks/sec)
+
+
+Log started (V12.9.0.0) Fri Nov 20 18:16:15 2020
+
+
+Selected objective sense:  MINIMIZE
+Selected objective  name:  OBJ
+Selected RHS        name:  RHS
+
+Problem 'SP2.mps' read.
+Read time = 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 3 rows and 4 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.00 ticks)
+
+Dual simplex - Optimal:  Objective =  9.0000000000e+00
+Solution time =    0.00 sec.  Iterations = 0 (0)
+Deterministic time = 0.00 ticks  (2.76 ticks/sec)
+

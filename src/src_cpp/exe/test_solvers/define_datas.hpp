@@ -44,7 +44,10 @@ enum INSTANCES {
     MIP_TOY,
     MULTIKP,
     UNBD_PRB,
-    INFEAS_PRB
+    INFEAS_PRB,
+    NET_MASTER,
+    NET_SP1,
+    NET_SP2
 };
 
 typedef std::vector<InstanceData> AllDatas;

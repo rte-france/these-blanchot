@@ -10,7 +10,7 @@ TEST_CASE("Un objet solveur peut etre cree et detruit", "[read][init]") {
 
     SolverFactory factory;
 
-    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB);
+    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB, NET_MASTER, NET_SP1, NET_SP2);
     SECTION("Construction and destruction") {
 
         for (auto const& solver_name : factory.get_solvers_list()) {
@@ -38,7 +38,7 @@ TEST_CASE("1. MPS file can be read and we can get every information about the pr
 
     SolverFactory factory;
 
-    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB);
+    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB, NET_MASTER, NET_SP1, NET_SP2);
     SECTION("Reading instance") {
 
         for (auto const& solver_name : factory.get_solvers_list()) {

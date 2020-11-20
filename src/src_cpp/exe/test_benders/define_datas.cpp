@@ -154,6 +154,105 @@ void fill_datas(AllDatas& datas) {
     infeas.first_col_name = "x";
     infeas.first_row_name = "low";
 
-    datas.push_back(unbd);
+    datas.push_back(infeas);
 
+
+    //==================================================================
+    // 5. NETWORK instance -- master
+    InstanceData net_master = InstanceData();
+    net_master._path = "../../data_test/mini_network/master.mps";
+    net_master._ncols = 2;
+    net_master._nintegervars = 0;
+    net_master._nrows = 1;
+    net_master._nelems = 2;
+    net_master._obj = { 3.0, 2.0 };
+
+    net_master._matval = { 1.0, 1.0 };
+    net_master._mind = { 0, 1 };
+    net_master._mstart = { 0, 2 };
+
+    net_master._rhs = { 10.0 };
+    net_master._lb = { 0.0, 0.0 };
+    net_master._ub = { 1e20, 1e20 };
+    net_master._coltypes = { 'C', 'C' };
+    net_master._rowtypes = { 'L' };
+    net_master._optval = 0.0;
+    net_master._primals = { 0.0, 0.0 };
+    net_master._duals = { };
+    net_master._slacks = { };
+    net_master._reduced_costs = { };
+
+    net_master._status = { "OPTIMAL" };
+    net_master._status_int = { OPTIMAL };
+
+    net_master._varmap["t"] = 0;
+    net_master._varmap["p"] = 1;
+
+    datas.push_back(net_master);
+
+    //==================================================================
+    // 6. NETWORK instance -- SP1
+    InstanceData net_sp1 = InstanceData();
+    net_sp1._path = "../../data_test/mini_network/SP1.mps";
+    net_sp1._ncols = 4;
+    net_sp1._nintegervars = 0;
+    net_sp1._nrows = 3;
+    net_sp1._nelems = 6;
+    net_sp1._obj = { 0.0, 0.0, 1.5, 100.0 };
+
+    net_sp1._matval = { -1.0, 1.5, -1.0, 1.0, 1.0, 1.0 };
+    net_sp1._mind = { 1, 2, 0, 2, 2, 3 };
+    net_sp1._mstart = { 0, 2, 4, 6 };
+
+    net_sp1._rhs = { 0.0, 0.0, 2.0 };
+    net_sp1._lb = { 0.0, 0.0, 0.0, 0.0 };
+    net_sp1._ub = { 1e20, 1e20, 1e20, 1e20 };
+    net_sp1._coltypes = { 'C', 'C', 'C', 'C' };
+    net_sp1._rowtypes = { 'L', 'L', 'G' };
+    net_sp1._optval = 3.0;
+    net_sp1._primals = { 2.0, 2.0, 2.0, 0.0 };
+    net_sp1._duals = { };
+    net_sp1._slacks = { };
+    net_sp1._reduced_costs = { };
+
+    net_sp1._status = { "OPTIMAL" };
+    net_sp1._status_int = { OPTIMAL };
+
+    net_sp1._varmap["t"] = 0;
+    net_sp1._varmap["p"] = 1;
+
+    datas.push_back(net_sp1);
+
+    //==================================================================
+    // 7. NETWORK instance -- SP2
+    InstanceData net_sp2 = InstanceData();
+    net_sp2._path = "../../data_test/mini_network/SP2.mps";
+    net_sp2._ncols = 4;
+    net_sp2._nintegervars = 0;
+    net_sp2._nrows = 3;
+    net_sp2._nelems = 6;
+    net_sp2._obj = { 0.0, 0.0, 1.5, 100.0 };
+
+    net_sp2._matval = { -1.0, 1.5, -1.0, 1.0, 1.0, 1.0 };
+    net_sp2._mind = { 1, 2, 0, 2, 2, 3 };
+    net_sp2._mstart = { 0, 2, 4, 6 };
+
+    net_sp2._rhs = { 0.0, 0.0, 6.0 };
+    net_sp2._lb = { 0.0, 0.0, 0.0, 0.0 };
+    net_sp2._ub = { 1e20, 1e20, 1e20, 1e20 };
+    net_sp2._coltypes = { 'C', 'C', 'C', 'C' };
+    net_sp2._rowtypes = { 'L', 'L', 'G' };
+    net_sp2._optval = 9.0;
+    net_sp2._primals = { 6.0, 6.0, 6.0, 0.0 };
+    net_sp2._duals = { };
+    net_sp2._slacks = { };
+    net_sp2._reduced_costs = { };
+
+    net_sp2._status = { "OPTIMAL" };
+    net_sp2._status_int = { OPTIMAL };
+
+    net_sp2._varmap["t"] = 0;
+    net_sp2._varmap["p"] = 1;
+
+    datas.push_back(net_sp2);
 }

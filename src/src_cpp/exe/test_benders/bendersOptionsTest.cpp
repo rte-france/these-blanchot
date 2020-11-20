@@ -5,7 +5,7 @@
 
 #include "BendersOptions.h"
 
-TEST_CASE("Test BendersOptions"){
+TEST_CASE("Test BendersOptions", "[options]"){
     
     BendersOptions options;
 

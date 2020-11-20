@@ -89,7 +89,7 @@ TEST_CASE("3. A problem is solved and we can get the optimal solution without ou
 
     SolverFactory factory;
 
-    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB);
+    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB, NET_MASTER, NET_SP1, NET_SP2);
     SECTION("Loop on the instances") {
 
         for (auto const& solver_name : factory.get_solvers_list()) {

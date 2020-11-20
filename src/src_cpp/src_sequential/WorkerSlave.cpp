@@ -17,19 +17,21 @@ WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_
 	double const & slave_weight, BendersOptions const & options, 
 	std::string const& solver_name) {
 	init(variable_map, path_to_mps, solver_name);
-	std::cout << "TO DO CONSTRUCTEUR" << std::endl;
-	//int mps_ncols(_solver->NumVariables());
-	DblVector o_l;
-	/*IntVector sequence(mps_ncols);
+	int mps_ncols(_solver->get_ncols());
+
+	DblVector o_l(mps_ncols);
+	_solver->get_obj(o_l.data(), 0, mps_ncols - 1);
+	IntVector sequence(mps_ncols);
 	for (int i(0); i < mps_ncols; ++i) {
 		sequence[i] = i;
-	}*/
-	//ORTgetobj(*_solver, o_l, 0, mps_ncols - 1);
+	}
+
 	//std::cout << "slave_weight : " << slave_weight << std::endl;
+
 	for (auto & c : o_l) {
 		c *= slave_weight;
 	}
-	//ORTchgobj(*_solver, sequence, o_l);	
+	_solver->chg_obj(mps_ncols, sequence.data(), o_l.data());
 }
 
 WorkerSlave::~WorkerSlave() {
@@ -44,7 +46,6 @@ WorkerSlave::~WorkerSlave() {
 *  \param x0 : Set of variables to fix
 */
 void WorkerSlave::fix_to(Point const & x0) {
-	std::cout << "TO DO FIXTO" << std::endl;
 	int nbnds((int)_name_to_id.size());
 	std::vector<int> indexes(nbnds);
 	std::vector<char> bndtypes(nbnds, 'B');
@@ -58,6 +59,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 	}
 
 	//ORTchgbounds(*_solver, indexes, bndtypes, values);
+	_solver->chg_bounds(nbnds, indexes.data(), bndtypes.data(), values.data());
 }
 
 /*!

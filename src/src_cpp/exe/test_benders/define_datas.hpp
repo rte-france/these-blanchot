@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include "SolverAbstract.h"
 
 /* Contains all the data to check the results of the tests on an instance*/
@@ -39,13 +40,17 @@ public:
     std::string first_col_name;
     std::string first_row_name;
     int iterations;
+    std::map<std::string, int> _varmap;
 };
 
 enum INSTANCES {
     MIP_TOY,
     MULTIKP,
     UNBD_PRB,
-    INFEAS_PRB
+    INFEAS_PRB,
+    NET_MASTER,
+    NET_SP1,
+    NET_SP2
 };
 
 typedef std::vector<InstanceData> AllDatas;
