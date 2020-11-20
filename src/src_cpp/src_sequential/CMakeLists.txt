@@ -7,19 +7,16 @@
 # ===========================================================================
 
 add_library (sequentialcore STATIC 
-	${CMAKE_CURRENT_SOURCE_DIR}/SimplexBasis.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/launcher.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WorkerSlave.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WorkerStabilizedMaster.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/BendersOptions.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/BendersFunctions.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/Benders.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WorkerMaster.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/SlaveCut.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Timer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/WorkerTrace.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/BendersOptions.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Worker.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/JsonWriter.cpp
+
+	${CMAKE_CURRENT_SOURCE_DIR}/Timer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/common.h
+	${CMAKE_CURRENT_SOURCE_DIR}/BendersOptions.h
+	${CMAKE_CURRENT_SOURCE_DIR}/BendersOptions.hxx
+	${CMAKE_CURRENT_SOURCE_DIR}/Worker.h
 )
 
 target_include_directories (sequentialcore
@@ -29,8 +26,6 @@ target_include_directories (sequentialcore
 
 target_link_libraries (sequentialcore
 	PUBLIC
-		helpers
-		jsoncpp
 		solvers
 )
 

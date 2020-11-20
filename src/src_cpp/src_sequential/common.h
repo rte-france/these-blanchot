@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <thread>
 #include <cmath>
+
+#include "Solver.h"
 #include "Timer.h"
 
 struct Predicate;

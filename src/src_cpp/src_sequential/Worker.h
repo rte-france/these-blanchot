@@ -3,7 +3,6 @@
 #include "common.h"
 #include "BendersOptions.h"
 
-// void XPRS_CC optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);
 class Worker;
 typedef std::shared_ptr<Worker> WorkerPtr;
 
@@ -17,8 +16,18 @@ typedef std::shared_ptr<Worker> WorkerPtr;
 class Worker
 {
 public:
+	std::string _path_to_mps;
+	Str2Int _name_to_id; /*!< Link between the variable name and its identifier */
+	Int2Str _id_to_name; /*!< Link between the identifier of a variable and its name*/
+
+	SolverAbstract::Ptr _solver;  /*!< Problem stocked in the instance Worker*/
+	std::list<std::ostream* >_stream;
+	bool _is_master;
+
+public:
 	Worker();
-	void init(Str2Int const & variable_map, std::string const & path_to_mps);
+	void init(Str2Int const & variable_map, std::string const & path_to_mps, 
+		std::string const& solver_name);
 	virtual ~Worker();
 
 	void get_value(double & lb);
@@ -26,10 +35,6 @@ public:
 	void get_simplex_ite(int & result);
 
 	void free();
-public:
-	std::string _path_to_mps;
-	Str2Int _name_to_id; /*!< Link between the variable name and its identifier */
-	Int2Str _id_to_name; /*!< Link between the identifier of a variable and its name*/
 
 public:
 
@@ -43,12 +48,4 @@ public:
 	std::list<std::ostream *> & stream();
 
 	void solve(int & lp_status);
-
-
-public:
-	operations_research::MPSolver * _solver;  /*!< Problem stocked in the instance Worker*/
-	std::list<std::ostream * >_stream;
-	bool _is_master;
 };
-
-// void optimizermsg(XPRSprob prob, void* worker, const char *sMsg, int nLen, int nMsglvl);

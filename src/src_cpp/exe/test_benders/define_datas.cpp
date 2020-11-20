@@ -39,8 +39,10 @@ void fill_datas(AllDatas& datas) {
 
     miptoy.first_col_name = "x1";
     miptoy.first_row_name = "C1";
+    miptoy.iterations = 3;
 
     datas.push_back(miptoy);
+
 
     //==================================================================
     //2. multi knapsack
@@ -76,6 +78,7 @@ void fill_datas(AllDatas& datas) {
 
     multikp.first_col_name = "x11";
     multikp.first_row_name = "sac1";
+    multikp.iterations = 5;
 
     datas.push_back(multikp);
 
@@ -117,7 +120,7 @@ void fill_datas(AllDatas& datas) {
     datas.push_back(unbd);
 
     //==================================================================
-    //3. unbounded
+    //4. infeasible
     InstanceData infeas = InstanceData();
     infeas._path = "../../data_test/infeas.mps";
     infeas._ncols = 2;

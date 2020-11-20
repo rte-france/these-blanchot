@@ -38,6 +38,7 @@ public:
 
     std::string first_col_name;
     std::string first_row_name;
+    int iterations;
 };
 
 enum INSTANCES {

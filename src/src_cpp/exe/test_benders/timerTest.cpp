@@ -6,8 +6,13 @@
 #include "Timer.h"
 
 TEST_CASE("Test Timer.h"){
-    std::cout << "Hello waiter" << std::endl;
-    std::chrono::seconds dura( 10);
+    Timer timer;
+    int tps = 1;
+    double precision = 0.05;
+    std::chrono::seconds dura( tps);
     std::this_thread::sleep_for( dura );
-    std::cout << "Waited 10s\n";
+    REQUIRE( timer.elapsed() > tps - precision);
+    REQUIRE(timer.elapsed() < tps + precision);
+    timer.restart();
+    REQUIRE(timer.elapsed() < precision);
 }

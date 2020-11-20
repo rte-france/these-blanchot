@@ -6,7 +6,7 @@
 # Targets
 # ===========================================================================
 
-add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/merge")
+#add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/merge")
 #add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/exe_lpnamer")
 #add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/analyse")
 
@@ -22,4 +22,5 @@ endif ()
 
 
 ##### TEST SOLVERS LIBRARY
-add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/test_solvers_library")
+add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/test_solvers")
+add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/test_benders")

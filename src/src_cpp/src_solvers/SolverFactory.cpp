@@ -36,3 +36,7 @@ SolverAbstract::Ptr SolverFactory::create_solver(const std::string solver_name){
 
 	return solver;
 }
+
+const std::vector<std::string>& SolverFactory::get_solvers_list() const {
+	return _available_solvers;
+}

@@ -9,7 +9,7 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR}/generatedInclude)
 # Targets
 # ===========================================================================
 
-add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_helpers")
+#add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_helpers")
 #add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_lpnamer")
 add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/src_sequential")
 

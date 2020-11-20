@@ -30,4 +30,9 @@ public:
     * @param solver_name : Name of the solver to use
     */
     SolverAbstract::Ptr create_solver(const std::string solver_name);
+
+    /**
+    * @brief Returns a reference to the list of available solvers
+    */
+    const std::vector<std::string>& get_solvers_list() const;
 };

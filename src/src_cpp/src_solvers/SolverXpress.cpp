@@ -159,13 +159,17 @@ void SolverXpress::get_col_type(char* coltype, int first, int last) const{
 }
 
 int SolverXpress::get_row_index(std::string const& name) const{
-	std::cout << "Get XPRESS row index : TO DO WHEN NEEDED" << std::endl;
-	return 0;
+	std::cout << "Seems not working as XPRESS renaims the rows \"Ri\" " << std::endl;
+	int id = 0;
+	int status = XPRSgetindex(_xprs, 1, name.c_str(), &id);
+	return id;
 }
 
 int SolverXpress::get_col_index(std::string const& name) const{
-	std::cout << "Get XPRESS row index : TO DO WHEN NEEDED" << std::endl;
-	return 0;
+	std::cout << "Seems not working as XPRESS renaims the rows \"Ci\" " << std::endl;
+	int id = 0;
+	int status = XPRSgetindex(_xprs, 2, name.c_str(), &id);
+	return id;
 }
 
 void SolverXpress::get_lb(double* lb, int first, int last) const{
