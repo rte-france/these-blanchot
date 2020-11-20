@@ -1,7 +1,4 @@
 #include "WorkerSlave.h"
-#include "launcher.h"
-
-#include "ortools_utils.h"
 
 WorkerSlave::WorkerSlave() {
 
@@ -16,65 +13,25 @@ WorkerSlave::WorkerSlave() {
 *  \param problem_name : Name of the problem
 *
 */
-WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, double const & slave_weight, BendersOptions const & options) {
-	init(variable_map, path_to_mps);
-
-	int mps_ncols(_solver->NumVariables());
+WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, 
+	double const & slave_weight, BendersOptions const & options, 
+	std::string const& solver_name) {
+	init(variable_map, path_to_mps, solver_name);
+	std::cout << "TO DO CONSTRUCTEUR" << std::endl;
+	//int mps_ncols(_solver->NumVariables());
 	DblVector o_l;
-	IntVector sequence(mps_ncols);
+	/*IntVector sequence(mps_ncols);
 	for (int i(0); i < mps_ncols; ++i) {
 		sequence[i] = i;
-	}
-	ORTgetobj(*_solver, o_l, 0, mps_ncols - 1);
+	}*/
+	//ORTgetobj(*_solver, o_l, 0, mps_ncols - 1);
 	//std::cout << "slave_weight : " << slave_weight << std::endl;
 	for (auto & c : o_l) {
 		c *= slave_weight;
 	}
-	ORTchgobj(*_solver, sequence, o_l);
-	// XPRSsetintcontrol(_xprs, XPRS_DEFAULTALG, 2);
-
-	//IntVector scols;
-	//for (auto const & x : _id_to_name) {
-	//	scols.push_back(x.first);
-	//}
-	//int ncols;
-	//int nrows;
-	//XPRSgetintattrib(_xprs, XPRS_COLS, &ncols);
-	//XPRSgetintattrib(_xprs, XPRS_COLS, &nrows);
-	//XPRSsetintcontrol(_xprs, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	//XPRSloadsecurevecs(_xprs, 0, scols.size(), NULL, scols.data());
-	//XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 0);
-	//XPRSlpoptimize(_xprs, "");
-	//double objrhs(0);
-	//XPRSgetdblattrib(_xprs, XPRS_OBJRHS, &objrhs);
-	//IntVector colmap(ncols);
-	//XPRSgetpresolvemap(_xprs, NULL, colmap.data());
-	//for (int i(0); i < ncols; ++i) {
-	//	//if(_id_to_name.find(colmap[i]) != _id_to_name.end())
-	//	//std::cout << i << "   |   " << colmap[i] << std::endl;
-	//}
-	//StandardLp datapre(_xprs);
-	//IntVector precolstatus(ncols);
-	//IntVector prerowstatus(nrows);
-	//XPRSgetpresolvebasis(_xprs, prerowstatus.data(), precolstatus.data());
-	//XPRSprob prexp;
-	//XPRScreateprob(&prexp);
-	//XPRSsetcbmessage(prexp, optimizermsg, this);
-	//XPRSsetintcontrol(prexp, XPRS_OUTPUTLOG, XPRS_OUTPUTLOG_FULL_OUTPUT);
-	//XPRSsetintcontrol(prexp, XPRS_THREADS, 1);
-	//XPRSloadlp(prexp, "prexp", 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-	//datapre.append_in(prexp);
-	//IntVector minus_one(1, -1);
-	//std::cout << "objrhs : " << objrhs << std::endl;
-	//XPRSchgobj(prexp, 1, minus_one.data(), &objrhs);
-	//XPRSloadbasis(prexp, prerowstatus.data(), precolstatus.data());
-	//std::cout << "solving prexp" << std::endl;
-	//XPRSlpoptimize(prexp, "");
-	//std::cout << "solving xprs" << std::endl;
-	//XPRSsetintcontrol(_xprs, XPRS_LPITERLIMIT, 2147483645);
-	//XPRSlpoptimize(_xprs, "");
-	//std::exit(0);
+	//ORTchgobj(*_solver, sequence, o_l);	
 }
+
 WorkerSlave::~WorkerSlave() {
 
 }
@@ -87,6 +44,7 @@ WorkerSlave::~WorkerSlave() {
 *  \param x0 : Set of variables to fix
 */
 void WorkerSlave::fix_to(Point const & x0) {
+	std::cout << "TO DO FIXTO" << std::endl;
 	int nbnds((int)_name_to_id.size());
 	std::vector<int> indexes(nbnds);
 	std::vector<char> bndtypes(nbnds, 'B');
@@ -99,7 +57,7 @@ void WorkerSlave::fix_to(Point const & x0) {
 		++i;
 	}
 
-	ORTchgbounds(*_solver, indexes, bndtypes, values);
+	//ORTchgbounds(*_solver, indexes, bndtypes, values);
 }
 
 /*!
@@ -108,9 +66,10 @@ void WorkerSlave::fix_to(Point const & x0) {
 *  \param s : Empty point which receives the solution
 */
 void WorkerSlave::get_subgradient(Point & s) {
+	std::cout << "TO DO GET SUBGRADIENT" << std::endl;
 	s.clear();
 	std::vector<double> ptr;
-	ORTgetlpreducedcost(*_solver, ptr);
+	//ORTgetlpreducedcost(*_solver, ptr);
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
 	}
@@ -123,9 +82,10 @@ void WorkerSlave::get_subgradient(Point & s) {
 *  Method to store simplex basis of a problem, and build the distance matrix
 */
 SimplexBasis WorkerSlave::get_basis() {
+	std::cout << "TO DO GETBASIS" << std::endl;
 	IntVector cstatus;
 	IntVector rstatus;
-	ORTgetbasis(*_solver, rstatus, cstatus);
+	//ORTgetbasis(*_solver, rstatus, cstatus);
 	return std::make_pair(rstatus, cstatus);
 }
 
