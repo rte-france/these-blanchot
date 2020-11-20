@@ -16,7 +16,7 @@ TEST_CASE("3. A problem is solved and we can get the optimal solution with scree
 
     std::ofstream out("out.txt");
 
-    auto inst = GENERATE(MIP_TOY, MULTIKP);
+    auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB);
     SECTION("Loop on the instances") {
 
         for (auto const& solver_name : factory.get_solvers_list()) {
@@ -90,7 +90,7 @@ TEST_CASE("3. A problem is solved and we can get the optimal solution without ou
     SolverFactory factory;
 
     auto inst = GENERATE(MIP_TOY, MULTIKP, UNBD_PRB, INFEAS_PRB);
-    SECTION("Solving the problem without solver's output solves it and nothing is written in the output file out.txt") {
+    SECTION("Loop on the instances") {
 
         for (auto const& solver_name : factory.get_solvers_list()) {
 

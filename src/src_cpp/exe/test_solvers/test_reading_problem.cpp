@@ -4,7 +4,7 @@
 #include "Solver.h"
 #include "define_datas.hpp"
 
-TEST_CASE("Un objet solveur peut etre cree et detruit", "[read]") {
+TEST_CASE("Un objet solveur peut etre cree et detruit", "[read][init]") {
     AllDatas datas;
     fill_datas(datas);
 
