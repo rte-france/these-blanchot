@@ -202,7 +202,6 @@ void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double c
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs) {
-	std::cout << "TO DO ADD CUT BY ITER" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	// int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -225,7 +224,7 @@ void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & 
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 
-	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	_solver->add_rows(1, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
 
@@ -238,7 +237,6 @@ void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & 
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double const & rhs) {
-	std::cout << "TO DO ADD CUT SLAVE ?" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int ncoeffs(1 + (int)_name_to_id.size());
 	std::vector<char> rowtype(1, 'L');
@@ -260,7 +258,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 
-	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	_solver->add_rows(1, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
 /*!
@@ -269,6 +267,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param bestUB : bound to fix
 */
 void WorkerMaster::fix_alpha(double const & bestUB) {
-	std::cout << "TO DO FIX UPPER BOUND ON A" << std::endl;
+	_solver->chg_bounds(1, IntVector(1, _id_alpha).data(), CharVector(1, 'U').data(),
+		DblVector(1, bestUB).data());
 	//_solver->variables()[_id_alpha]->SetUB(bestUB);
 }

@@ -309,6 +309,7 @@ TEST_CASE("WorkerMaster add dynamic cuts", "[wrk-master][wrk-master-addcuts]") {
 				REQUIRE(matval[k] == -5.0);
 			}
 			REQUIRE(matval[nelsCut - 1] == -1.0);
+			REQUIRE(mind[nelsCut - 1] == datas[inst]._ncols);
 
 			mstart.clear();
 			mind.clear();
@@ -372,19 +373,29 @@ TEST_CASE("WorkerMaster add cut by iter ", "[wrk-master][wrk-master-addcuts]") {
 			mind.clear();
 			matval.clear();
 
-			mstart.resize(2);
+			mstart.resize(3);
 			int nelsCut = worker->_name_to_id.size() + 1;
-			mind.resize(nelsCut);
-			matval.resize(nelsCut);
+			mind.resize(2*nelsCut);
+			matval.resize(2*nelsCut);
 
-			worker->_solver->get_rows(mstart.data(), mind.data(), matval.data(), nelsCut, &nreturned,
-				worker->get_number_constraint() - 1, worker->get_number_constraint() - 1);
+			worker->_solver->get_rows(mstart.data(), mind.data(), matval.data(), 2*nelsCut, &nreturned,
+				worker->get_number_constraint() - 2, worker->get_number_constraint() - 1);
 
-			REQUIRE(nreturned == nelsCut);
+			REQUIRE(nreturned == 2*nelsCut);
+
+			// check cut 1: id alpha = 0
 			for (int k = 0; k < nelsCut - 1; k++) {
 				REQUIRE(matval[k] == -5.0);
 			}
 			REQUIRE(matval[nelsCut - 1] == -1.0);
+			REQUIRE(mind[nelsCut - 1] == datas[inst]._ncols + 1);
+
+			// check cut 2: id alpha = 3
+			for (int k = nelsCut; k < 2*nelsCut - 1; k++) {
+				REQUIRE(matval[k] == -5.0);
+			}
+			REQUIRE(matval[2*nelsCut - 1] == -1.0);
+			REQUIRE(mind[2*nelsCut - 1] == datas[inst]._ncols + 4);
 
 			mstart.clear();
 			mind.clear();
@@ -430,7 +441,7 @@ TEST_CASE("WorkerMaster add cut slave", "[wrk-master][wrk-master-addcuts]") {
 			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 1);
 
 			// ==================================================================================
-			// coupe 1 : add_cut
+			// Coupe 3: add cut by iter
 			x0.clear();
 			s.clear();
 
@@ -439,27 +450,38 @@ TEST_CASE("WorkerMaster add cut slave", "[wrk-master][wrk-master-addcuts]") {
 				s[kvp.first] = -5.0;
 			}
 			rhs = 10.0;
-			worker->add_cut(s, x0, rhs);
+			worker->add_cut_slave(0, s, x0, rhs);
+			worker->add_cut_slave(3, s, x0, rhs);
 
-			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 2);
+			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 3);
 
 			mstart.clear();
 			mind.clear();
 			matval.clear();
 
-			mstart.resize(2);
+			mstart.resize(3);
 			int nelsCut = worker->_name_to_id.size() + 1;
-			mind.resize(nelsCut);
-			matval.resize(nelsCut);
+			mind.resize(2 * nelsCut);
+			matval.resize(2 * nelsCut);
 
-			worker->_solver->get_rows(mstart.data(), mind.data(), matval.data(), nelsCut, &nreturned,
-				worker->get_number_constraint() - 1, worker->get_number_constraint() - 1);
+			worker->_solver->get_rows(mstart.data(), mind.data(), matval.data(), 2 * nelsCut, &nreturned,
+				worker->get_number_constraint() - 2, worker->get_number_constraint() - 1);
 
-			REQUIRE(nreturned == nelsCut);
+			REQUIRE(nreturned == 2 * nelsCut);
+
+			// check cut 1: id alpha = 0
 			for (int k = 0; k < nelsCut - 1; k++) {
 				REQUIRE(matval[k] == -5.0);
 			}
 			REQUIRE(matval[nelsCut - 1] == -1.0);
+			REQUIRE(mind[nelsCut - 1] == datas[inst]._ncols + 1);
+
+			// check cut 2: id alpha = 3
+			for (int k = nelsCut; k < 2 * nelsCut - 1; k++) {
+				REQUIRE(matval[k] == -5.0);
+			}
+			REQUIRE(matval[2 * nelsCut - 1] == -1.0);
+			REQUIRE(mind[2 * nelsCut - 1] == datas[inst]._ncols + 4);
 
 			mstart.clear();
 			mind.clear();
@@ -506,5 +528,31 @@ TEST_CASE("WorkerMaster del cuts", "[wrk-master][wrk-master-delcuts]") {
 }
 
 TEST_CASE("WorkerMaster bound alpha", "[wrk-master][wrk-master-alpha]") {
+	WorkerMasterPtr worker;
 
+	SolverFactory factory;
+	BendersOptions opt;
+
+	AllDatas datas;
+	fill_datas(datas);
+
+	std::string instance_path("");
+
+	auto inst = GENERATE(NET_MASTER);
+	SECTION("Loop over the instances") {
+
+		instance_path = datas[inst]._path;
+		for (auto const& solver_name : factory.get_solvers_list()) {
+			worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
+				opt, solver_name);
+
+			double UB = 150.0;
+			worker->fix_alpha(UB);
+
+			DblVector ubs(1);
+			worker->_solver->get_ub(ubs.data(), worker->_id_alpha, worker->_id_alpha);
+
+			REQUIRE(ubs[0] == UB);
+		}
+	}
 }
