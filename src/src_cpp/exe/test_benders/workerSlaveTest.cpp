@@ -158,7 +158,6 @@ TEST_CASE("Worker Slave methods : get_subgradient", "[wrk-slave]") {
 
 			Point s;
 			worker->get_subgradient(s);
-			std::cout << datas[inst]._path << std::endl;
 			for (auto const& kvp : s) {
 				REQUIRE(s[kvp.first] <= datas[inst]._subgrad[kvp.first] + 1e-3);
 				REQUIRE(s[kvp.first] >= datas[inst]._subgrad[kvp.first] - 1e-3);

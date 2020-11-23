@@ -1,10 +1,68 @@
 #include "WorkerMaster.h"
 
-WorkerMaster::WorkerMaster() {
+WorkerMaster::WorkerMaster() :Worker(){
+	_is_master = true;
+}
+
+/*!
+*  \brief Constructor of a Master Problem
+*
+*  Construct a Master Problem by loading mps and mapping files and adding the variable alpha
+*
+*  \param variable_map : map linking each variable to its id in the problem
+*  \param path_to_mps : path to the problem mps file
+*  \param options : set of benders options
+*  \param nslaves : number of slaves
+*/
+WorkerMaster::WorkerMaster(Str2Int const& variable_map, std::string const& path_to_mps,
+	BendersOptions const& options, std::string const& solver_name, int nslaves){
+	_is_master = true;
+	init(variable_map, path_to_mps, solver_name);
+
+	// add the variable alpha
+	auto const it(_name_to_id.find("alpha"));
+	if (it == _name_to_id.end()) {
+		double lb(-1e10); /*!< Lower Bound */
+		double ub(+1e20); /*!< Upper Bound*/
+		double obj(+1);
+		std::vector<int> start(2, 0);
+		_id_alpha = _solver->get_ncols(); /* Set the number of columns in _id_alpha */
+		_solver->add_cols(1, 0, std::vector<double>(1, obj).data(), 0, 0, 0, 
+			std::vector<double>(1, lb).data(), std::vector<double>(1, ub).data());
+
+		_id_alpha_i.resize(nslaves, -1);
+		for (int i(0); i < nslaves; ++i) {
+			std::stringstream buffer;
+			buffer << "alpha_" << i;
+			_id_alpha_i[i] = _solver->get_ncols();
+			_solver->add_cols(1, 0, std::vector<double>(1, 0.0).data(), 0, 0, 0,
+				std::vector<double>(1, lb).data(), std::vector<double>(1, ub).data());
+		}
+		
+		std::vector<char> rowtype = { 'E' };
+		std::vector<double> rowrhs = { 0 };
+		std::vector<double> matval(nslaves + 1, 0);
+		std::vector<int> mclind(nslaves + 1);
+		std::vector<int> mstart = { 0 };
+		mclind[0] = _id_alpha;
+		matval[0] = 1;
+
+		for (int i(0); i < nslaves; ++i) {
+			mclind[i + 1] = _id_alpha_i[i];
+			matval[i + 1] = -1;
+		}
+		_solver->add_rows(1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, mstart.data(),
+			mclind.data(), matval.data());
+		
+	}
+	else {
+		std::cout << "ERROR a variable named alpha is in input" << std::endl;
+	}
 }
 
 
 WorkerMaster::~WorkerMaster() {
+
 }
 
 /*!
@@ -202,60 +260,6 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	matval.back() = -1;
 
 	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
-}
-
-
-/*!
-*  \brief Constructor of a Master Problem
-*
-*  Construct a Master Problem by loading mps and mapping files and adding the variable alpha
-*
-*  \param variable_map : map linking each variable to its id in the problem
-*  \param path_to_mps : path to the problem mps file
-*  \param options : set of benders options
-*  \param nslaves : number of slaves
-*/
-WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
-	std::cout << "TO DO CONSTRUCTOR" << std::endl;
-	_is_master = true;
-	init(variable_map, path_to_mps);
-
-	// add the variable alpha
-	auto const it(_name_to_id.find("alpha"));
-	if (it == _name_to_id.end()) {
-		double lb(-1e10); /*!< Lower Bound */
-		double ub(+1e20); /*!< Upper Bound*/
-		double obj(+1);
-		std::vector<int> start(2, 0);
-		_id_alpha = _solver->get_ncols(); /* Set the number of columns in _id_alpha */
-		//ORTaddcols(*_solver, {obj}, {}, {}, {}, {lb}, {ub}, {'C'}, {"alpha"}); /* Add variable alpha and its parameters */
-
-		_id_alpha_i.resize(nslaves, -1);
-		for (int i(0); i < nslaves; ++i) {
-			std::stringstream buffer;
-			buffer << "alpha_" << i;
-			_id_alpha_i[i] = _solver->get_ncols();
-			//ORTaddcols(*_solver, {0}, {}, {}, {}, {lb}, {ub}, {'C'}, {buffer.str()}); /* Add variable alpha_i and its parameters */
-		}
-		{
-			std::vector<char> rowtype = {'E'};
-			std::vector<double> rowrhs = {0};
-			std::vector<double> matval(nslaves + 1, 0);
-			std::vector<int> mclind(nslaves + 1);
-			std::vector<int> mstart = {0};
-			mclind[0] = _id_alpha;
-			matval[0] = 1;
-
-			for (int i(0); i < nslaves; ++i) {
-				mclind[i + 1] = _id_alpha_i[i];
-				matval[i + 1] = -1;
-			}
-			//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
-		}
-	}
-	else {
-		std::cout << "ERROR a variable named alpha is in input" << std::endl;
-	}
 }
 
 /*!
