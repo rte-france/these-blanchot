@@ -1,7 +1,4 @@
 #include "Benders.h"
-
-#include "ortools_utils.h"
-
 #include <iomanip>
 
 Benders::~Benders() {
@@ -16,7 +13,8 @@ Benders::~Benders() {
 *
 *  \param options : set of options fixed by the user
 */
-Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) : _options(options) {
+Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options) 
+	: _options(options) {
 	if (!problem_list.empty()) {
 		_data.nslaves = _options.SLAVE_NUMBER;
 		if (_data.nslaves < 0) {
@@ -30,7 +28,9 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		for(int i(0); i < _data.nslaves; ++it) {
 			if (it != it_master) {
 				_problem_to_id[it->first] = i;
-				_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, it->first), _options));
+				_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, 
+					_options.get_slave_path(it->first), _options.slave_weight(_data.nslaves, 
+						it->first), _options));
 				_slaves.push_back(it->first);
 				i++;
 			}

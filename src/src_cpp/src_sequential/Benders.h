@@ -1,11 +1,9 @@
 #pragma once
-
 #include "WorkerMaster.h"
 #include "WorkerTrace.h"
 #include "BendersOptions.h"
 #include "BendersFunctions.h"
 #include "SimplexBasis.h"
-
 
 /*!
 * \class Benders
