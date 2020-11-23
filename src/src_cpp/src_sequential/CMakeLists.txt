@@ -16,6 +16,7 @@ add_library (sequentialcore STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/SlaveCut.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/SimplexBasis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/WorkerMaster.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/BendersFunctions.cpp
 
 	${CMAKE_CURRENT_SOURCE_DIR}/Timer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common.h
@@ -27,6 +28,7 @@ add_library (sequentialcore STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/SlaveCut.h
 	${CMAKE_CURRENT_SOURCE_DIR}/SimplexBasis.h
 	${CMAKE_CURRENT_SOURCE_DIR}/WorkerMaster.h
+	${CMAKE_CURRENT_SOURCE_DIR}/BendersFunctions.h
 )
 
 target_include_directories (sequentialcore

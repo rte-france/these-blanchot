@@ -23,6 +23,7 @@ add_executable (test_benders
 	${CMAKE_CURRENT_SOURCE_DIR}/workerTraceTest.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/workerSlaveTest.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/workerMasterTest.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/bendersFunctionsTest.cpp
 
 	${CMAKE_CURRENT_SOURCE_DIR}/define_datas.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/define_datas.hpp
