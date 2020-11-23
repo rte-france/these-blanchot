@@ -221,6 +221,9 @@ void fill_datas(AllDatas& datas) {
     net_sp1._varmap["t"] = 0;
     net_sp1._varmap["p"] = 1;
 
+    net_sp1._subgrad["t"] = 0.0;
+    net_sp1._subgrad["p"] = -65.6667;
+
     datas.push_back(net_sp1);
 
     //==================================================================
@@ -253,6 +256,9 @@ void fill_datas(AllDatas& datas) {
 
     net_sp2._varmap["t"] = 0;
     net_sp2._varmap["p"] = 1;
+
+    net_sp2._subgrad["t"] = 0.0;
+    net_sp2._subgrad["p"] = -65.6667;
 
     datas.push_back(net_sp2);
 }

@@ -68,9 +68,10 @@ void WorkerSlave::fix_to(Point const & x0) {
 *  \param s : Empty point which receives the solution
 */
 void WorkerSlave::get_subgradient(Point & s) {
-	std::cout << "TO DO GET SUBGRADIENT" << std::endl;
 	s.clear();
-	std::vector<double> ptr;
+	std::vector<double> ptr(_solver->get_ncols());
+	_solver->get_LP_sol(NULL, NULL, NULL, ptr.data());
+
 	//ORTgetlpreducedcost(*_solver, ptr);
 	for (auto const & kvp : _id_to_name) {
 		s[kvp.second] = +ptr[kvp.first];
@@ -84,9 +85,9 @@ void WorkerSlave::get_subgradient(Point & s) {
 *  Method to store simplex basis of a problem, and build the distance matrix
 */
 SimplexBasis WorkerSlave::get_basis() {
-	std::cout << "TO DO GETBASIS" << std::endl;
-	IntVector cstatus;
-	IntVector rstatus;
+	IntVector cstatus(_solver->get_ncols());
+	IntVector rstatus(_solver->get_nrows());
+	_solver->get_basis(rstatus.data(), cstatus.data());
 	//ORTgetbasis(*_solver, rstatus, cstatus);
 	return std::make_pair(rstatus, cstatus);
 }

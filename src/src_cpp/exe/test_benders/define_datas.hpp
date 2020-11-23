@@ -40,7 +40,9 @@ public:
     std::string first_col_name;
     std::string first_row_name;
     int iterations;
+
     std::map<std::string, int> _varmap;
+    std::map<std::string, double> _subgrad;
 };
 
 enum INSTANCES {

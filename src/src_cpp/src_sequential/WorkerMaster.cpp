@@ -1,7 +1,5 @@
 #include "WorkerMaster.h"
 
-#include "ortools_utils.h"
-
 WorkerMaster::WorkerMaster() {
 }
 
@@ -19,10 +17,11 @@ WorkerMaster::~WorkerMaster() {
 *  \param alpha : reference to an empty double
 */
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
+	std::cout << "TO DO GET" << std::endl;
 	x0.clear();
 	std::vector<double> ptr;
-	ORTgetlpsolution(*_solver, ptr);
-	assert(_id_alpha_i.back()+1 == ptr.size());
+	//ORTgetlpsolution(*_solver, ptr);
+	//assert(_id_alpha_i.back()+1 == ptr.size());
 	for (auto const & kvp : _id_to_name) {
 		x0[kvp.second] = ptr[kvp.first];
 	}
@@ -38,14 +37,15 @@ void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 *  \param dual : reference to a vector of double
 */
 void WorkerMaster::get_dual_values(std::vector<double> & dual) {
-	ORTgetlpdual(*_solver, dual);
+	std::cout << "TO DO GET DUAL VALUES" << std::endl;
+	//ORTgetlpdual(*_solver, dual);
 }
 
 /*!
 *  \brief Return number of constraint in a problem
 */
 int WorkerMaster::get_number_constraint() {
-	return _solver->NumConstraints();
+	return _solver->get_nrows();
 }
 
 /*!
@@ -54,13 +54,14 @@ int WorkerMaster::get_number_constraint() {
 *  \param nrows : number of rows to delete
 */
 void WorkerMaster::delete_constraint(int const nrows) {
+	std::cout << "TO DO DELETE CSTR" << std::endl;
 	std::vector<int> mindex(nrows, 0);
 	int const nconstraint(get_number_constraint());
 	for (int i(0); i < nrows; i++) {
 		mindex[i] = nconstraint - nrows + i;
 	}
 	// XPRSdelrows(_xprs, nrows, mindex.data());
-	ORTdeactivaterows(*_solver, mindex); //rows are not really deleted
+	//ORTdeactivaterows(*_solver, mindex); //rows are not really deleted
 }
 
 /*!
@@ -71,6 +72,7 @@ void WorkerMaster::delete_constraint(int const nrows) {
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs) {
+	std::cout << "TO DO ADD CUT" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	// int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -94,7 +96,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 	mclind.back() = _id_alpha;
 	matval.back() = -1;
 
-	ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
 }
 
 /*!
@@ -105,6 +107,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double const & rhs) {
+	std::cout << "TO DO ADD DYNAMIC CUT, MPi??" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	// int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -128,7 +131,7 @@ void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double c
 	mclind.back() = _id_alpha;
 	matval.back() = -1;
 
-	ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
 }
 
 /*!
@@ -140,6 +143,7 @@ void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double c
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & sx0, double const & rhs) {
+	std::cout << "TO DO ADD CUT BY ITER" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	// int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -162,7 +166,7 @@ void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & 
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 
-	ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
 }
 
 
@@ -175,6 +179,7 @@ void WorkerMaster::add_cut_by_iter(int const i, Point const & s, double const & 
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, double const & rhs) {
+	std::cout << "TO DO ADD CUT SLAVE ?" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	int ncoeffs(1 + (int)_name_to_id.size());
 	std::vector<char> rowtype(1, 'L');
@@ -196,7 +201,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 	mclind.back() = _id_alpha_i[i];
 	matval.back() = -1;
 
-	ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
 }
 
 
@@ -211,6 +216,7 @@ void WorkerMaster::add_cut_slave(int i, Point const & s, Point const & x0, doubl
 *  \param nslaves : number of slaves
 */
 WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
+	std::cout << "TO DO CONSTRUCTOR" << std::endl;
 	_is_master = true;
 	init(variable_map, path_to_mps);
 
@@ -221,15 +227,15 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 		double ub(+1e20); /*!< Upper Bound*/
 		double obj(+1);
 		std::vector<int> start(2, 0);
-		_id_alpha = _solver->NumVariables(); /* Set the number of columns in _id_alpha */
-		ORTaddcols(*_solver, {obj}, {}, {}, {}, {lb}, {ub}, {'C'}, {"alpha"}); /* Add variable alpha and its parameters */
+		_id_alpha = _solver->get_ncols(); /* Set the number of columns in _id_alpha */
+		//ORTaddcols(*_solver, {obj}, {}, {}, {}, {lb}, {ub}, {'C'}, {"alpha"}); /* Add variable alpha and its parameters */
 
 		_id_alpha_i.resize(nslaves, -1);
 		for (int i(0); i < nslaves; ++i) {
 			std::stringstream buffer;
 			buffer << "alpha_" << i;
-			_id_alpha_i[i] = _solver->NumVariables();
-			ORTaddcols(*_solver, {0}, {}, {}, {}, {lb}, {ub}, {'C'}, {buffer.str()}); /* Add variable alpha_i and its parameters */
+			_id_alpha_i[i] = _solver->get_ncols();
+			//ORTaddcols(*_solver, {0}, {}, {}, {}, {lb}, {ub}, {'C'}, {buffer.str()}); /* Add variable alpha_i and its parameters */
 		}
 		{
 			std::vector<char> rowtype = {'E'};
@@ -244,7 +250,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 				mclind[i + 1] = _id_alpha_i[i];
 				matval[i + 1] = -1;
 			}
-			ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+			//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
 		}
 	}
 	else {
@@ -258,5 +264,6 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 *  \param bestUB : bound to fix
 */
 void WorkerMaster::fix_alpha(double const & bestUB) {
-	_solver->variables()[_id_alpha]->SetUB(bestUB);
+	std::cout << "TO DO FIX UPPER BOUND ON A" << std::endl;
+	//_solver->variables()[_id_alpha]->SetUB(bestUB);
 }
