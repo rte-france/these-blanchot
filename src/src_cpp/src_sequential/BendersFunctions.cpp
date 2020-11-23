@@ -380,7 +380,8 @@ void get_master_value(WorkerMasterPtr & master, BendersData & data,
 
 	data.invest_cost = data.lb - data.alpha;
 
-	std::cout << "Min invest et max invest pas codes : n'ont de sens que si les contraintes sont un pave ?" << std::endl;
+	//@TODO : question sur le sens de ces variables et recoder si besoin
+	//std::cout << "Min invest et max invest pas codes : n'ont de sens que si les contraintes sont un pave ?" << std::endl;
 	for(auto pairIdName : master->_id_to_name)
 	{
 		//auto var_l = master->_solver->variables()[pairIdName.first];

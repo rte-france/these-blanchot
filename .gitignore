@@ -13,3 +13,7 @@ __pycache__
 data_test/toto.mps
 
 data_test/pgp2.mps
+
+*.csv
+
+*.log
