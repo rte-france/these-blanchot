@@ -46,12 +46,14 @@ TEST_CASE("WorkerMaster constructor", "[wrk-master][wrk-master-init]") {
 		
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			// Testing 3 differents slave_weights 0, 1.0, and 10
 			for (auto const& nslaves : IntVector({ 10, 20, 30})) {
 
 
 				worker = std::make_shared<WorkerMaster>(varmap, instance_path,
-					opt, solver_name, nslaves);
+					opt, nslaves);
 
 				//1. varmap
 				REQUIRE(worker->_name_to_id == varmap);
@@ -144,11 +146,13 @@ TEST_CASE("WorkerMaster getters", "[wrk-master][wrk-master-get]") {
 
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			// Testing 3 differents slave_weights 0, 1.0, and 10
 			for (auto const& nslaves : IntVector({ 1, 10, 100 })) {
 
 				worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-					opt, solver_name, nslaves);
+					opt, nslaves);
 
 				int mipstatus;
 				worker->solve(mipstatus);
@@ -198,8 +202,10 @@ TEST_CASE("WorkerMaster add cuts", "[wrk-master][wrk-master-addcuts]") {
 		instance_path = datas[inst]._path;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-				opt, solver_name, 5);
+				opt, 5);
 
 			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 1);
 
@@ -274,8 +280,10 @@ TEST_CASE("WorkerMaster add dynamic cuts", "[wrk-master][wrk-master-addcuts]") {
 		instance_path = datas[inst]._path;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-				opt, solver_name, 5);
+				opt, 5);
 
 			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 1);
 
@@ -350,8 +358,10 @@ TEST_CASE("WorkerMaster add cut by iter ", "[wrk-master][wrk-master-addcuts]") {
 		instance_path = datas[inst]._path;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-				opt, solver_name, 5);
+				opt, 5);
 
 			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 1);
 
@@ -435,8 +445,10 @@ TEST_CASE("WorkerMaster add cut slave", "[wrk-master][wrk-master-addcuts]") {
 		instance_path = datas[inst]._path;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-				opt, solver_name, 5);
+				opt, 5);
 
 			REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 1);
 
@@ -510,10 +522,12 @@ TEST_CASE("WorkerMaster del cuts", "[wrk-master][wrk-master-delcuts]") {
 		instance_path = datas[inst]._path;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			for (int i(1) ; i < 3; i++) {
 
 				worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-					opt, solver_name);
+					opt);
 
 				REQUIRE(worker->get_number_constraint() == datas[inst]._nrows + 1);
 
@@ -543,8 +557,10 @@ TEST_CASE("WorkerMaster bound alpha", "[wrk-master][wrk-master-alpha]") {
 
 		instance_path = datas[inst]._path;
 		for (auto const& solver_name : factory.get_solvers_list()) {
+			opt.SOLVER = solver_name;
+
 			worker = std::make_shared<WorkerMaster>(datas[inst]._varmap, instance_path,
-				opt, solver_name);
+				opt);
 
 			double UB = 150.0;
 			worker->fix_alpha(UB);

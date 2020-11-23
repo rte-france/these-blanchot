@@ -15,9 +15,9 @@ WorkerMaster::WorkerMaster() :Worker(){
 *  \param nslaves : number of slaves
 */
 WorkerMaster::WorkerMaster(Str2Int const& variable_map, std::string const& path_to_mps,
-	BendersOptions const& options, std::string const& solver_name, int nslaves){
+	BendersOptions const& options, int nslaves){
 	_is_master = true;
-	init(variable_map, path_to_mps, solver_name);
+	init(variable_map, path_to_mps, options.SOLVER);
 
 	// add the variable alpha
 	auto const it(_name_to_id.find("alpha"));

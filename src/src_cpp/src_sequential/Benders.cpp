@@ -36,7 +36,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 		std::cout << it_master->first << " " << _options.get_master_path() << std::endl;
-		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
+		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), 
+			_options, _data.nslaves));
 	}
 
 }
@@ -75,7 +76,8 @@ void Benders::build_cut() {
 	}
 	_data.timer_slaves = timer_slaves.elapsed();
 	all_package.push_back(slave_cut_package);
-	build_cut_full(_master, all_package, _problem_to_id, _trace, _slave_cut_id, _all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
+	build_cut_full(_master, all_package, _problem_to_id, _trace, _slave_cut_id, 
+		_all_cuts_storage, _dynamic_aggregate_cuts, _data, _options);
 	if (_options.BASIS) {
 		SimplexBasisPackage slave_basis_package;
 		AllBasisPackage all_basis_package;
@@ -103,18 +105,19 @@ void Benders::run(std::ostream & stream) {
 	while (!_data.stop) {
 		Timer timer_master;
 		++_data.it;
-		LOG(INFO) << "ITERATION " << _data.it << " :" << std::endl;
+		//LOG(INFO) << "ITERATION " << _data.it << " :" << std::endl;
 
-		LOG(INFO) << "\tSolving master..." << std::endl;
+		//LOG(INFO) << "\tSolving master..." << std::endl;
 		get_master_value(_master, _data, _options);
 
-		LOG(INFO) << "\tmaster solved in "<< _data.timer_master << "." << std::endl;
+		//LOG(INFO) << "\tmaster solved in "<< _data.timer_master << "." << std::endl;
 
-		LOG(INFO) << "\t\tCandidates:" << std::endl;
-		for(auto pairVarnameValue : _data.x0)
+		//LOG(INFO) << "\t\tCandidates:" << std::endl;
+		/*for(auto pairVarnameValue : _data.x0)
 		{
-			LOG(INFO) << "\t\t\t" << pairVarnameValue.first << "  =  " << pairVarnameValue.second << std::endl;
-		}
+			LOG(INFO) << "\t\t\t" << pairVarnameValue.first << "  =  " 
+				<< pairVarnameValue.second << std::endl;
+		}*/
 
 		if (_options.ACTIVECUTS) {
 			update_active_cuts(_master, _active_cuts, _slave_cut_id, _data.it);
@@ -124,20 +127,24 @@ void Benders::run(std::ostream & stream) {
 			_trace.push_back(WorkerMasterDataPtr(new WorkerMasterData));
 		}
 
-		LOG(INFO) << "\tBuilding cuts...\n";
+		//LOG(INFO) << "\tBuilding cuts...\n";
 		build_cut();
-		LOG(INFO) << "\tCuts built.\n";
+		//LOG(INFO) << "\tCuts built.\n";
 
 		update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x0, _data.best_it, _data.it);
 
-		LOG(INFO) << "\t\tSolution:" << std::endl;
+		/*LOG(INFO) << "\t\tSolution:" << std::endl;
 		LOG(INFO) << "\t\t\tBest Upper Bound : " << _data.best_ub << std::endl;
 		LOG(INFO) << "\t\t\tUpper Bound : " << _data.ub << std::endl;
 		LOG(INFO) << "\t\t\tLower Bound : " << _data.lb << std::endl;
 		LOG(INFO) << "\t\t\tGap : " << _data.best_ub - _data.lb << std::endl;
-		LOG(INFO) << "\t\t\tOperational cost : " << std::fixed << std::setprecision(2) << _data.slave_cost << "€" << std::endl;
-		LOG(INFO) << "\t\t\tInvestment cost : " << std::fixed << std::setprecision(2) << _data.invest_cost << "€" << std::endl;
-		LOG(INFO) << "\t\t\tOverall cost : " << std::fixed << std::setprecision(2) <<  _data.slave_cost + _data.invest_cost << "€" << std::endl;
+		LOG(INFO) << "\t\t\tOperational cost : " << std::fixed << std::setprecision(2) 
+			<< _data.slave_cost << "€" << std::endl;
+		LOG(INFO) << "\t\t\tInvestment cost : " << std::fixed << std::setprecision(2) 
+			<< _data.invest_cost << "€" << std::endl;
+		LOG(INFO) << "\t\t\tOverall cost : " << std::fixed << std::setprecision(2) 
+			<<  _data.slave_cost + _data.invest_cost << "€" << std::endl;
+			*/
 
 		if (_options.TRACE) {
 			update_trace(_trace, _data);

@@ -57,3 +57,6 @@ BENDERS_OPTIONS_MACRO(CSV_NAME, std::string, "benders_output_trace")
 
 //True if alpha needs to be bounded by best upper bound, false otherwise
 BENDERS_OPTIONS_MACRO(BOUND_ALPHA, bool, true)
+
+//Name of the solver to use
+BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")

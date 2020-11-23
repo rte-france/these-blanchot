@@ -14,9 +14,8 @@ WorkerSlave::WorkerSlave() {
 *
 */
 WorkerSlave::WorkerSlave(Str2Int const & variable_map, std::string const & path_to_mps, 
-	double const & slave_weight, BendersOptions const & options, 
-	std::string const& solver_name) {
-	init(variable_map, path_to_mps, solver_name);
+	double const & slave_weight, BendersOptions const & options) {
+	init(variable_map, path_to_mps, options.SOLVER);
 	int mps_ncols(_solver->get_ncols());
 
 	DblVector o_l(mps_ncols);

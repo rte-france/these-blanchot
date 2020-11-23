@@ -17,7 +17,7 @@ public:
 
 	WorkerMaster();
 	WorkerMaster(Str2Int const & variable_map, std::string const & problem_name, 
-		BendersOptions const & options, std::string const& solver_name, int nslaves = 1);
+		BendersOptions const & options, int nslaves = 1);
 	virtual ~WorkerMaster();
 
 	void get(Point & x0, double & alpha, DblVector & alpha_i);

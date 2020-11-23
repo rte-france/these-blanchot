@@ -37,11 +37,13 @@ TEST_CASE("Worker Slave instanciation", "[wrk-slave][wrk-slave-init]") {
 		SolverFactory factory;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			// Testing 3 differents slave_weights 0, 1.0, and 10
 			for (auto const& slave_wieght : DblVector({ 0.0, 1.0, 10.0 })) {
 
 				worker = std::make_unique<WorkerSlave>(varmap, instance_path,
-					slave_wieght, opt, solver_name);
+					slave_wieght, opt);
 
 				//1. varmap
 				REQUIRE(worker->_name_to_id == varmap);
@@ -89,9 +91,11 @@ TEST_CASE("Worker Slave methods : fix_to", "[wrk-slave]") {
 		SolverFactory factory;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			varmap = datas[inst]._varmap;
 			worker = std::make_unique<WorkerSlave>(varmap, instance_path,
-				1.0, opt, solver_name);
+				1.0, opt);
 				
 			// method fixto
 			for (int val(0); val <= 4; val += 2) {
@@ -140,9 +144,11 @@ TEST_CASE("Worker Slave methods : get_subgradient", "[wrk-slave]") {
 		SolverFactory factory;
 		for (auto const& solver_name : factory.get_solvers_list()) {
 
+			opt.SOLVER = solver_name;
+
 			varmap = datas[inst]._varmap;
 			worker = std::make_unique<WorkerSlave>(varmap, instance_path,
-				1.0, opt, solver_name);
+				1.0, opt);
 
 			// method fixto
 			Point x0;
