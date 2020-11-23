@@ -25,6 +25,7 @@
 #include <thread>
 #include <cmath>
 
+#include <assert.h>
 #include "Solver.h"
 #include "Timer.h"
 

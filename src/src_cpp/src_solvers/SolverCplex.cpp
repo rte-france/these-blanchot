@@ -150,7 +150,7 @@ void SolverCplex::get_rows(int* mstart, int* mclind, double* dmatval, int size, 
     zero_status_check(status, "get rows");
 
 	// As other solvers adds the last element in mstart
-	mstart[get_nrows()] = get_nelems();
+	mstart[last - first + 1] = size;
 }
 
 void SolverCplex::get_row_type(char* qrtype, int first, int last) const{

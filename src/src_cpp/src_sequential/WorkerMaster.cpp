@@ -75,17 +75,20 @@ WorkerMaster::~WorkerMaster() {
 *  \param alpha : reference to an empty double
 */
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
-	std::cout << "TO DO GET" << std::endl;
 	x0.clear();
-	std::vector<double> ptr;
-	//ORTgetlpsolution(*_solver, ptr);
-	//assert(_id_alpha_i.back()+1 == ptr.size());
+	DblVector primals(_solver->get_ncols());
+	alpha_i.resize(_id_alpha_i.size());
+
+	_solver->get_MIP_sol(primals.data(), NULL);
+	assert(_id_alpha_i.back()+1 == primals.size());
+
 	for (auto const & kvp : _id_to_name) {
-		x0[kvp.second] = ptr[kvp.first];
+		x0[kvp.second] = primals[kvp.first];
 	}
-	alpha = ptr[_id_alpha];
+	alpha = primals[_id_alpha];
+
 	for (int i(0); i < _id_alpha_i.size(); ++i) {
-		alpha_i[i] = ptr[_id_alpha_i[i]];
+		alpha_i[i] = primals[_id_alpha_i[i]];
 	}
 }
 
@@ -95,7 +98,7 @@ void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 *  \param dual : reference to a vector of double
 */
 void WorkerMaster::get_dual_values(std::vector<double> & dual) {
-	std::cout << "TO DO GET DUAL VALUES" << std::endl;
+	std::cout << "Dual values if master is a MIP ?" << std::endl;
 	//ORTgetlpdual(*_solver, dual);
 }
 
@@ -112,14 +115,14 @@ int WorkerMaster::get_number_constraint() {
 *  \param nrows : number of rows to delete
 */
 void WorkerMaster::delete_constraint(int const nrows) {
-	std::cout << "TO DO DELETE CSTR" << std::endl;
 	std::vector<int> mindex(nrows, 0);
 	int const nconstraint(get_number_constraint());
 	for (int i(0); i < nrows; i++) {
 		mindex[i] = nconstraint - nrows + i;
 	}
-	// XPRSdelrows(_xprs, nrows, mindex.data());
-	//ORTdeactivaterows(*_solver, mindex); //rows are not really deleted
+
+	int n = get_number_constraint();
+	_solver->del_rows(n - nrows, n - 1);
 }
 
 /*!
@@ -130,7 +133,6 @@ void WorkerMaster::delete_constraint(int const nrows) {
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs) {
-	std::cout << "TO DO ADD CUT" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	// int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -154,7 +156,7 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 	mclind.back() = _id_alpha;
 	matval.back() = -1;
 
-	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	_solver->add_rows(1, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
 /*!
@@ -165,7 +167,6 @@ void WorkerMaster::add_cut(Point const & s, Point const & x0, double const & rhs
 *  \param rhs : optimal slave value
 */
 void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double const & rhs) {
-	std::cout << "TO DO ADD DYNAMIC CUT, MPi??" << std::endl;
 	// cut is -rhs >= alpha  + s^(x-x0)
 	// int nrows(1);
 	int ncoeffs(1 + (int)_name_to_id.size());
@@ -189,7 +190,7 @@ void WorkerMaster::add_dynamic_cut(Point const & s, double const & sx0, double c
 	mclind.back() = _id_alpha;
 	matval.back() = -1;
 
-	//ORTaddrows(*_solver, rowtype, rowrhs, {}, mstart, mclind, matval);
+	_solver->add_rows(1, ncoeffs, rowtype.data(), rowrhs.data(), NULL, mstart.data(), mclind.data(), matval.data());
 }
 
 /*!
