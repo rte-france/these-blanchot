@@ -308,7 +308,7 @@ void SolverCplex::solve_lp(int& lp_status){
 		lp_status = INForUNBOUND;
 	}
 	else if(cpx_status == CPX_STAT_OPTIMAL_INFEAS) {
-        std::cout << "WARNING: Code optimal_infeasible treated as optimal" << std::endl;
+        std::cout << "WARNING: Code CPX_STAT_OPTIMAL_INFEAS treated as optimal" << std::endl;
 		lp_status = OPTIMAL;
 	}
 	else if (cpx_status == CPX_STAT_ABORT_IT_LIM) {

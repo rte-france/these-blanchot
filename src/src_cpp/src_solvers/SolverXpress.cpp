@@ -84,7 +84,7 @@ void SolverXpress::read_prob(const char* prob_name, const char* flags){
 		status = XPRSsetintcontrol(_xprs, XPRS_KEEPNROWS, -1);
 		zero_status_check(status, "set XPRS_KEEPNROWS to -1");
 	}
-
+	
 	status = XPRSreadprob(_xprs, prob_name, xprs_flags.c_str());
 	zero_status_check(status, "read problem");
 }

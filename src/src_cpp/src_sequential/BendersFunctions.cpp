@@ -458,7 +458,7 @@ void get_random_slave_cut(SlaveCutPackage & slave_cut_package, SlavesMapPtr & ma
 		}
 		ptr->get_value(handler->get_dbl(SLAVE_COST));
 		ptr->get_subgradient(handler->get_subgradient());
-			ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
+		ptr->get_simplex_ite(handler->get_int(SIMPLEXITER));
 		handler->get_dbl(SLAVE_TIMER) = timer_slave.elapsed();
 		slave_cut_package[name_slave] = *slave_cut_data;
 	}
