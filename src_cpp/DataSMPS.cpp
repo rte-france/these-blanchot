@@ -427,10 +427,12 @@ void read_master_cstr(BendersData& data, BendersOptions const& options)
 		else if (part_type == "COLUMNS"){
 			ss << line;
 			ss >> key1 >> key2 >> value;
+			
 			ss.str("");
 			ss.clear();
-
-			data.A[key2][key1] = std::stod(value);
+			if (key1 != "MARK") {
+				data.A[key2][key1] = std::stod(value);
+			}
 		}
 		else if (part_type == "RHS") {
 			ss << line;

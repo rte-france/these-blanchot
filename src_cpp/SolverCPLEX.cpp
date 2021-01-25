@@ -239,7 +239,6 @@ void SolverCPLEX::get_rhs_range(double* range, int first, int last) const {
 }
 
 void SolverCPLEX::get_col_type(char* coltype, int first, int last) const {
-
 	// Declaration en MIP pour creer les types de variables dans la memoire (CPLEX)
 	CPXchgprobtype(_env, _prb, CPXPROB_MILP);
 	int status = CPXgetctype(_env, _prb, coltype, first, last);
@@ -280,7 +279,7 @@ void SolverCPLEX::free() {
 }
 
 void SolverCPLEX::fix_first_stage(Point const& x0) {
-
+	
 }
 
 void SolverCPLEX::add_cut(Point const& s, Point const& x0, double rhs) {

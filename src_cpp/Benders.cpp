@@ -30,8 +30,6 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 	}
 	std::uniform_real_distribution<double> dis(0.0, 1.0);
 
-
-
 	if (!problem_list.empty()) {
 
 		_data.nslaves = _options.SLAVE_NUMBER;
@@ -49,7 +47,6 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		// Either : RIGHT ROWNAME for a RHS
 		// Or : COLNAME ROWNAME for a matrix element
 		// and a value associated to this element
-		
 		
 		//StrPair2Dbl realisation;
 		StrPairVector keys;
@@ -88,6 +85,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 				_problem_to_id[it->first] = i;
 				if (options.DATA_FORMAT == "DECOMPOSED") {
+
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first),
 						_options.slave_weight(_data.nslaves, it->first), _options));
 				}
@@ -104,8 +102,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				i++;
 			}
 		}
-
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
+
 
 		if (_master->get_n_integer_vars() > 0) {
 			if (options.ALGORITHM == "IN-OUT") {
@@ -118,6 +116,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 	// Ajout de la matrice du maitre et du RHS dans les donnees en dur
 	read_master_cstr(_data, _options);
+
+	std::cout << "ceci nest pas affiche a lecran" << std::endl;
 }
 
 
