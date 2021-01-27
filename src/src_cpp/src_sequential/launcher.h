@@ -2,7 +2,7 @@
 #include "common.h"
 #include "Benders.h"
 #include "Timer.h"
-//#include "JsonWriter.h"
+#include "JsonWriter.h"
 
 #include "BendersOptions.h"
 

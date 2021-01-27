@@ -19,6 +19,8 @@ add_library (sequentialcore STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/BendersFunctions.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Benders.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/launcher.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/JsonWriter.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/jsoncpp.cpp
 
 	${CMAKE_CURRENT_SOURCE_DIR}/Timer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common.h
@@ -33,6 +35,10 @@ add_library (sequentialcore STATIC
 	${CMAKE_CURRENT_SOURCE_DIR}/BendersFunctions.h
 	${CMAKE_CURRENT_SOURCE_DIR}/Benders.h
 	${CMAKE_CURRENT_SOURCE_DIR}/launcher.h
+	${CMAKE_CURRENT_SOURCE_DIR}/JsonWriter.h
+	${CMAKE_CURRENT_SOURCE_DIR}/json/json.h
+	${CMAKE_CURRENT_SOURCE_DIR}/json/json-forwards.h
+
 )
 
 target_include_directories (sequentialcore

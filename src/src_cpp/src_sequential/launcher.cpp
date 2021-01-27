@@ -77,9 +77,9 @@ void sequential_launch(BendersOptions const & options) {
 	//LOG(INFO) << "Building input" << std::endl;
 	build_input(options, input);
 
-	//JsonWriter jsonWriter_l;
-	//jsonWriter_l.write(options);
-	//jsonWriter_l.updateBeginTime();
+	JsonWriter jsonWriter_l;
+	jsonWriter_l.write(options);
+	jsonWriter_l.updateBeginTime();
 	//LOG(INFO) << "Constructing workers..." << std::endl;
 
 	Benders benders(input, options);
@@ -87,9 +87,9 @@ void sequential_launch(BendersOptions const & options) {
 	benders.run(std::cout);
 	//LOG(INFO) << "Benders solver terminated." << std::endl;
 
-	//jsonWriter_l.updateEndTime();
-	//jsonWriter_l.write(input.size(), benders._trace, benders._data);
-	//jsonWriter_l.dump("out.json");
+	jsonWriter_l.updateEndTime();
+	jsonWriter_l.write(input.size(), benders._trace, benders._data);
+	jsonWriter_l.dump("out.json");
 
 	benders.free();
 	//LOG(INFO) << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

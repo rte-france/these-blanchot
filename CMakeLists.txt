@@ -163,7 +163,7 @@ find_package (Threads REQUIRED)
 
 
 ###############################################################################
-# Removed by Xavier
+# Removed by Xavier Blanchot
 ###############################################################################
 # OR-Tools
 #find_package (ortools REQUIRED)

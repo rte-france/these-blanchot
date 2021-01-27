@@ -6,7 +6,7 @@
 #include "WorkerTrace.h"
 #include "common.h"
 
-#include <json/writer.h>
+#include <json/json.h>
 
 class JsonWriter
 {
