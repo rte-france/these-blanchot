@@ -249,6 +249,7 @@ void Benders::enhanced_multicut_iteration(std::ostream& stream) {
 		_data.has_cut = false;
 		_data.n_slaves_no_cut = 0;
 		_data.misprices = 0;
+		_data.subproblem_gaps.clear();
 
 		get_master_value(_master, _data, _options);
 		set_slaves_order(_data, _options);
@@ -317,46 +318,6 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 5. cutting loop
 		separation_loop(stream);
-
-		// 6. update stab
-		if (_options.ALPHA_STRAT == "DYNAMIQUE") {
-
-			if (_data.it == 1) {
-				ub_memory = _data.ub;
-				_data.best_ub = _data.ub;
-				last_ub = _data.ub;
-				lbk_1 = _data.lb;
-			}
-			
-
-			// 1. si on ralentit
-
-			if (_data.lb - lbk_1 <= lbk_1 - lbk_2 + 1e-6) {
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.03));
-				hausse += 1;
-			}
-			else {
-				baisse += 1;
-				_data.step_size = std::max(0.1, _data.step_size * (1.0 - 0.03));
-			}
-
-			last_grad = std::max(0.0, last_ub - _data.ub);
-
-			_data.best_ub = _data.ub;
-			last_ub = _data.ub;
-
-			grad = ub_memory;
-			ub_memory = beta * ub_memory + (1 - beta) * _data.ub;
-			grad -= ub_memory;
-			//std::cout << grad << std::endl;
-		}
-		else if (_options.ALPHA_STRAT == "STATIQUE") {
-			_data.step_size = _options.STEP_SIZE;
-		}
-		else {
-			std::cout << "BAD STRATEGY" << std::endl;
-			std::exit(0);
-		}
 		
 
 		if (_data.stop) {
@@ -375,6 +336,7 @@ void Benders::separation_loop(std::ostream& stream)
 	while ( _data.has_cut == false ) {
 
 		_data.n_slaves_solved = 0;
+		_data.subproblem_gaps.clear();
 		set_slaves_order(_data, _options);
 
 		// 1. Compute separation point

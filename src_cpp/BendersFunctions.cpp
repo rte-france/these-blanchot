@@ -754,8 +754,23 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 	int total_counter = 0;
 
 	data.stay_in_x_cut = false;
-	double gap = compute_gap(options, data);
 
+	// Computing gap before adding new subproblems gaps in data.subproblem_gaps
+	double gap = compute_gap(options, data);
+	data.espilon_s = gap - data.epsilon_x;
+	data.remaining_gap = 0.0;
+	//std::cout << "epsilon - epsilon_x = " << data.espilon_s << std::endl;
+	//std::cout << "Computing remaining" << std::endl;
+	for (auto& small_gap : data.subproblem_gaps) {
+		//std::cout << data.remaining_gap << std::endl;
+		data.remaining_gap += small_gap;
+	}
+	data.espilon_s -= std::max(0.0, data.remaining_gap);
+
+	//std::cout << "epsilon final : " << data.espilon_s << std::endl;
+
+	double local_ub = 0;
+	double local_epigraph = 0;
 	for (int i(0); i < all_package.size(); i++) {
 		for (auto const & kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
@@ -764,9 +779,6 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 				data.x_cut, handler->get_dbl(SLAVE_COST));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
-			
-			//data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
-			//data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
 
 			// Check if the cut has really cut or not
 			if (has_cut_master(master, data, options, problem_to_id[kvp.first],
@@ -778,19 +790,20 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 				data.nocutmaster += 1;
 			}
 
-			// Check local optimality
-			data.espilon_s = std::min( ( gap - data.epsilon_x) , data.remaining_gap);
-			
-			if ( (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) ) {
-				optcounter += 1;
-			}
+			local_ub += handler->get_dbl(SLAVE_COST);
+			local_epigraph += handler->get_dbl(ALPHA_I);
 
 			total_counter += 1;
 			data.n_slaves_solved += 1;
 
-			data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) 
-				- handler->get_dbl(ALPHA_I), 0.0);
+			//Ajout du nouveau gap
+			data.subproblem_gaps.push_back( handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) );
+
 		}
+	}
+
+	if (std::max(local_ub - local_epigraph, 0.0) < data.espilon_s) {
+		optcounter += total_counter;
 	}
 
 	data.final_gap = ( gap - data.epsilon_x) - data.remaining_gap;
@@ -823,7 +836,20 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 	int total_counter = 0;
 
 	data.stay_in_x_cut = false;
+
+	// Computing gap before adding new subproblems gaps in data.subproblem_gaps
 	double gap = compute_gap(options, data);
+	data.espilon_s = gap - data.epsilon_x;
+	data.remaining_gap = 0.0;
+	//std::cout << "epsilon - epsilon_x = " << data.espilon_s << std::endl;
+	//std::cout << "Computing remaining" << std::endl;
+	for (auto& small_gap : data.subproblem_gaps) {
+		//std::cout << data.remaining_gap << std::endl;
+		data.remaining_gap += small_gap;
+	}
+	data.espilon_s -= std::max(0.0, data.remaining_gap);
+
+	//std::cout << "epsilon final : " << data.espilon_s << std::endl;
 
 	Point s;
 	double rhs(0);
@@ -834,13 +860,7 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 	double local_ub			= 0;
 	double local_epigraph	= 0;
 
-	//std::cout << "GAP INIT " << data.remaining_gap << std::endl;
-
 	for (int i(0); i < all_package.size(); i++) {
-
-		local_ub		= 0;
-		local_epigraph	= 0;
-
 		for (auto const& kvp : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
 			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
@@ -867,48 +887,20 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 				data.nocutmaster += 1;
 			}
 
-
 			local_ub		+= handler->get_dbl(SLAVE_COST);
 			local_epigraph	+= handler->get_dbl(ALPHA_I);
-
-			data.espilon_s = data.remaining_gap;
-
-			/*if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
-				optcounter += 1;
-			}*/
-
-
-			/*data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
-			if (data.remaining_gap > 0) {
-				std::cout << data.remaining_gap << "      " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) << std::endl;
-			}*/
 
 			total_counter += 1;
 			data.n_slaves_solved += 1;
 
+			data.subproblem_gaps.push_back(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I));
+
 		}
-
-		/*std::cout << "coucou " << std::scientific << std::setprecision(8) 
-			<< "    "  << local_ub 
-			<< "    " << local_epigraph 
-			<< "    "  << local_ub - local_epigraph << std::endl;*/
-
-		// Check local optimality
-		//std::cout << data.espilon_s << "    " << data.remaining_gap << std::endl;
-		//data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
-		data.espilon_s = data.remaining_gap;
-		//std::cout << data.espilon_s <<  std::endl;
-
-		/*std::cout << "   " << local_ub << "      " << local_epigraph << "    " << local_ub - local_epigraph
-			<< "     " << data.espilon_s << "    " << data.epsilon_x << std::endl;*/
-
-		if (std::max(local_ub - local_epigraph, 0.0) < data.espilon_s) {
-			optcounter += total_counter;
-		}
-
-		data.remaining_gap -= std::max(local_ub - local_epigraph, 0.0);
 	}
 
+	if (std::max(local_ub - local_epigraph, 0.0) < data.espilon_s) {
+		optcounter += total_counter;
+	}
 
 
 	master->add_agregated_cut_slaves(ids, s, data.x_cut, rhs);
@@ -1268,9 +1260,9 @@ double compute_gap(BendersOptions const& options, BendersData& data)
 		gap = options.GAP;
 	}
 
-	if (data.n_slaves_no_cut == 0) {
+	/*if (data.n_slaves_no_cut == 0) {
 		data.remaining_gap = (gap - data.epsilon_x);
-	}
+	}*/
 
 	return gap;
 }
