@@ -115,7 +115,9 @@ void SolverXPRESS::init(std::string const& path_to_mps) {
 	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
 }
 
-void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, const double* range, const double* obj, const int* mstart, const int* mnel, const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
+void SolverXPRESS::load_lp(const char* probname, int ncol, int nrow, const char* qrtype, const double* rhs, 
+	const double* range, const double* obj, const int* mstart, const int* mnel, 
+	const int* mrwind, const double* dmatval, const double* dlb, const double* dub)
 {
 	XPRSsetintcontrol(_xprs, XPRS_THREADS, 1);
 	XPRSsetcbmessage(_xprs, optimizermsg, &get_stream());
@@ -176,6 +178,10 @@ void SolverXPRESS::read_prob(const char* prob_name, const char* flags)
 	}
 
 	XPRSreadprob(_xprs, prob_name, xprs_flags.c_str());
+}
+
+void SolverXPRESS::copy_prob(Ptr fictif_solv)
+{
 }
 
 void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
@@ -419,6 +425,10 @@ void SolverXPRESS::optimality_gap(double gap)
 }
 
 void SolverXPRESS::set_simplex_iter(int iter)
+{
+}
+
+void SolverXPRESS::numerical_emphasis(int val)
 {
 }
 

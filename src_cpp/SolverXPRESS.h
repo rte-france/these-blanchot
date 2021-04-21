@@ -90,6 +90,7 @@ public:
 	virtual void presolve(int presolve);
 	virtual void optimality_gap(double gap);
 	virtual void set_simplex_iter(int iter);
+	virtual void numerical_emphasis(int val);
 };
 
 void errormsg(XPRSprob& xprs, const char* sSubName, int nLineNo, int nErrCode);
