@@ -16,7 +16,7 @@ Benders::~Benders() {
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, 
 	SMPSData const& smps_data) : _options(options) {
 
-	// 1. On fixe la seed
+	// 1. Fixing seed
 	std::mt19937 rdgen;
 	if (_options.SEED != -1) {
 		std::cout << "SEED : " << _options.SEED << std::endl;
@@ -67,7 +67,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 		double proba;
 
-		// On cree un SP fictif (lecture mps) et on le copie ensuite
+		// Creating one fictive subproblem to copy it in order to create every subproblem
 		WorkerPtr slave_fictif;
 		if (options.DATA_FORMAT == "SMPS") {
 			slave_fictif = WorkerPtr(new Worker());
@@ -174,7 +174,7 @@ void Benders::run(std::ostream & stream) {
 	
 	init(_data, _options);
 
-	// NUMERICAL EMPHASIS
+	// set numerical emphasis parameter
 	numerical_emphasis(_master, _options);
 
 	_data.timer_iter.restart();
@@ -184,19 +184,13 @@ void Benders::run(std::ostream & stream) {
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
 		master_loop(stream);
 	}
-
-	while (!_data.stop) {
-		if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
-			classic_iteration(stream);
-		}
-		else if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
-			enhanced_multicut_iteration(stream);
-		}
-		else {
-			std::cout << "ERROR : UNKNOWN ALGORITHM " << std::endl;
-			std::exit(0);
-		}
+	else if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
+		classic_iteration(stream);
+	}else {
+		std::cout << "ERROR : UNKNOWN ALGORITHM " << std::endl;
+		std::exit(0);
 	}
+
 	print_solution(stream, _data.x_cut, true, _data.global_prb_status, _options.PRINT_SOLUTION);
 
 	std::cout << "Computation time : " << timer.elapsed() << std::endl;
@@ -217,7 +211,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	reset_iteration_data(_data, _options);
 
 	get_master_value(_master, _data, _options);
-	_data.ub = 0;
+	
 	_data.time_master = _data.timer_master.elapsed();
 	compute_x_cut(_options, _data);
 	build_cut();
@@ -231,60 +225,12 @@ void Benders::classic_iteration(std::ostream& stream) {
 	_data.stop = stopping_criterion(_data, _options);
 }
 
-/*!
-*  \brief Perform one iteration of enhanced multicut Benders decomposition
-*
-*  Perform one iteration of enhanced multicut Benders decomposition (ALGORITHM = ENHANCED_MULTICUT)
-*
-* \param stream : stream to print the output
-*/
-
-void Benders::enhanced_multicut_iteration(std::ostream& stream) {
-	_data.timer_master.restart();
-	++_data.it;
-
-	reset_iteration_data(_data, _options);
-
-	if (_data.has_cut == true) {
-		_data.has_cut = false;
-		_data.n_slaves_no_cut = 0;
-		_data.misprices = 0;
-
-		get_master_value(_master, _data, _options);
-		set_slaves_order(_data, _options);
-		compute_x_cut(_options, _data);
-	}
-
-	build_cut();
-
-	_data.time_master = _data.timer_master.elapsed();
-	
-	if (_data.n_slaves_no_cut == _data.nslaves) {
-		compute_ub(_master, _data);
-		_data.has_cut = true;
-	}
-	_data.stop = stopping_criterion(_data, _options);
-
-	if (_data.it % _options.LOG_NUMBER_ITE == 0 || _data.stop) {
-		print_log(stream, _data, _options.LOG_LEVEL, _options);
-	}	
-}
-
 void Benders::master_loop(std::ostream& stream) {
 
 	double ub_memory = 0;
 	double beta = 1.0 - (1.0 / (1.0 * _data.nslaves));
-	double grad;
-	double last_grad = 0;
 
-	double last_ub = 0;
-
-	double lbk_2 = 0.0;
-	double lbk_1 = 0.0;
 	_data.n_slaves_solved = 1;
-
-	int baisse = 0;
-	int hausse = 0;
 
 	_data.early_termination = false;
 
@@ -295,11 +241,6 @@ void Benders::master_loop(std::ostream& stream) {
 	}
 
 	while (!_data.stop) {
-
-		if (_data.it > 1) {
-			lbk_2 = lbk_1;
-			lbk_1 = _data.lb;
-		}
 
 		// 1. resolution of master problem
 		_data.timer_master.restart();
@@ -317,47 +258,6 @@ void Benders::master_loop(std::ostream& stream) {
 
 		// 5. cutting loop
 		separation_loop(stream);
-
-		// 6. update stab
-		if (_options.ALPHA_STRAT == "DYNAMIQUE") {
-
-			if (_data.it == 1) {
-				ub_memory = _data.ub;
-				_data.best_ub = _data.ub;
-				last_ub = _data.ub;
-				lbk_1 = _data.lb;
-			}
-			
-
-			// 1. si on ralentit
-
-			if (_data.lb - lbk_1 <= lbk_1 - lbk_2 + 1e-6) {
-				_data.step_size = std::min(1.0, _data.step_size / (1.0 - 0.03));
-				hausse += 1;
-			}
-			else {
-				baisse += 1;
-				_data.step_size = std::max(0.1, _data.step_size * (1.0 - 0.03));
-			}
-
-			last_grad = std::max(0.0, last_ub - _data.ub);
-
-			_data.best_ub = _data.ub;
-			last_ub = _data.ub;
-
-			grad = ub_memory;
-			ub_memory = beta * ub_memory + (1 - beta) * _data.ub;
-			grad -= ub_memory;
-			//std::cout << grad << std::endl;
-		}
-		else if (_options.ALPHA_STRAT == "STATIQUE") {
-			_data.step_size = _options.STEP_SIZE;
-		}
-		else {
-			std::cout << "BAD STRATEGY" << std::endl;
-			std::exit(0);
-		}
-		
 
 		if (_data.stop) {
 			print_log(stream, _data, _options.LOG_LEVEL, _options);

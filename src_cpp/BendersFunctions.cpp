@@ -164,7 +164,7 @@ void reset_iteration_data(BendersData& data, BendersOptions const& options)
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
-
+	data.ub = 0;
 }
 
 
