@@ -389,7 +389,8 @@ void Benders::solve_level(std::ostream& stream)
 
 			// If the new solution has a cost deacreasing of at least 10% of the gap
 			// we update the best solution and best UB
-			if (_data.ub < 0.8 * _data.best_ub + 0.2 * _data.level) {
+			double accept_param = 0.9;
+			if (_data.ub < accept_param * _data.best_ub + (1-accept_param) * _data.level) {
 				_data.best_ub = _data.ub;
 				_data.bestx = _data.x_cut;
 				_master->update_level_objective(_data.bestx);

@@ -98,7 +98,6 @@ void sequential_launch(BendersOptions const & options) {
 			generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
 		}
 
-
 		generate_number_of_realisations(blocks, sto_path);
 		smps_data.read_sto_file(sto_path);
 		read_struct_SMPS(options, input, blocks);
@@ -110,7 +109,7 @@ void sequential_launch(BendersOptions const & options) {
 	else if (options.DATA_FORMAT == "DECOMPOSED") {
 		build_input(options, input);
 	}
-		
+
 	Benders benders(input, options, smps_data);
 	benders.run(std::cout);
 	benders.free();
