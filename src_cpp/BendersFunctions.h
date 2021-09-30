@@ -12,6 +12,7 @@ void init_log(std::ostream&stream, int const log_level, BendersOptions const& op
 void init_log_base(std::ostream& stream, int const log_level);
 void init_log_inout(std::ostream& stream, int const log_level);
 void init_log_enhanced_multicut(std::ostream& stream, int const log_level);
+void init_log_level(std::ostream& stream, int const log_level);
 
 void reset_iteration_data(BendersData & data, BendersOptions const& options);
 
@@ -19,6 +20,7 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 void print_log_base(std::ostream& stream, BendersData const& data, int const log_level);
 void print_log_inout(std::ostream& stream, BendersData const& data, int const log_level);
 void print_log_enhanced_multicut(std::ostream& stream, BendersData const& data, int const log_level);
+void print_log_level(std::ostream& stream, BendersData const& data, int const log_level);
 
 void print_cut_csv(std::ostream&stream, SlaveCutDataHandler const & handler, 
 	std::string const & name, int const islaves);

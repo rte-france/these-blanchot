@@ -43,7 +43,6 @@ void init(BendersData & data, BendersOptions const& options) {
 
 	data.step_size = options.STEP_SIZE;
 
-	data.last_value = std::vector<double>(data.nslaves, 1e20);
 	data.nocutmaster = 0;
 	data.misprices = 0;
 	data.nul_simplex_cnt = 0;
@@ -68,6 +67,9 @@ void init_log(std::ostream&stream, int const log_level, BendersOptions const& op
 	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
 		init_log_enhanced_multicut(stream, log_level);
 	}
+	else if (options.ALGORITHM == "LEVEL") {
+		init_log_level(stream, log_level);
+	}
 }
 
 /*!
@@ -82,6 +84,36 @@ void init_log(std::ostream&stream, int const log_level, BendersOptions const& op
 void init_log_base(std::ostream& stream, int const log_level) {
 	stream << std::setw(10) << "ITE";
 	stream << std::setw(20) << "LB";
+	stream << std::setw(20) << "UB";
+	stream << std::setw(20) << "BESTUB";
+	stream << std::setw(15) << "GAP";
+
+	if (log_level > 1) {
+		stream << std::setw(15) << "MINSIMPLEX";
+		stream << std::setw(15) << "MAXSIMPLEX";
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << "DELETEDCUT";
+		stream << std::setw(15) << "TIMEMASTER";
+		stream << std::setw(15) << "TIMESLAVES";
+	}
+	stream << std::endl;
+}
+
+/*!
+*  \brief Initialize Benders log for BASE algorithm
+*
+*  Method to initialize Benders log by printing each column title
+*
+*  \param stream : output to print log
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void init_log_level(std::ostream& stream, int const log_level) {
+	stream << std::setw(10) << "ITE";
+	stream << std::setw(20) << "LB";
+	stream << std::setw(20) << "LEV";
 	stream << std::setw(20) << "UB";
 	stream << std::setw(20) << "BESTUB";
 	stream << std::setw(15) << "GAP";
@@ -164,7 +196,7 @@ void reset_iteration_data(BendersData& data, BendersOptions const& options)
 	data.deletedcut = 0;
 	data.maxsimplexiter = 0;
 	data.minsimplexiter = std::numeric_limits<int>::max();
-
+	data.ub = 0;
 }
 
 
@@ -189,6 +221,9 @@ void print_log(std::ostream&stream, BendersData const & data, int const log_leve
 	}
 	else if (options.ALGORITHM == "ENHANCED_MULTICUT") {
 		print_log_enhanced_multicut(stream, data, log_level);
+	}
+	else if (options.ALGORITHM == "LEVEL") {
+		print_log_level(stream, data, log_level);
 	}
 }
 
@@ -218,6 +253,54 @@ void print_log_base(std::ostream&stream, BendersData const & data, int const log
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
 	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
+
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / data.best_ub;
+
+	if (log_level > 1) {
+		stream << std::setw(15) << data.minsimplexiter;
+		stream << std::setw(15) << data.maxsimplexiter;
+	}
+
+	if (log_level > 2) {
+		stream << std::setw(15) << data.deletedcut;
+		stream << std::setw(15) << std::setprecision(2) << data.time_master;
+		stream << std::setw(15) << std::setprecision(2) << data.time_slaves;
+	}
+	stream << std::endl;
+}
+
+
+/*!
+*  \brief Print iteration log for LEVEL algorithm
+*
+*  Method to print the log of an iteration
+*
+*  \param stream : output to print log
+*
+* \param data : data to print
+*
+* \param log_level : level of log precision (from 1 to 3)
+*/
+void print_log_level(std::ostream& stream, BendersData const& data, int const log_level) {
+	stream << std::setw(10) << data.it;
+	if (data.lb == -1e20)
+		stream << std::setw(20) << "-INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.lb;
+
+	stream << std::setw(20) << std::scientific << std::setprecision(10) << data.level;
+
+	if (data.ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.ub;
+	if (data.best_ub == +1e20)
+		stream << std::setw(20) << "+INF";
+	else
+		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
+
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / data.best_ub;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -257,7 +340,9 @@ void print_log_inout(std::ostream& stream, BendersData const& data, int const lo
 		stream << std::setw(20) << "+INF";
 	else
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
+
 	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / data.best_ub;
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -717,15 +802,6 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 		}
 	}
 
-	//std::cout << all_cuts_storage.size() << std::endl;
-	//for (auto const& itmap : all_package[0]) {
-		//std::cout << all_cuts_storage[itmap.first].size() << std::endl;
-		//break;
-		//all_cuts_storage[itmap.first].clear();
-		//std::cout << all_cuts_storage[itmap.first].size() << std::endl;
-	//}
-	
-	//std::cout << all_package[0].size() << std::endl;
 	master->add_cut(s, data.x_cut, rhs);
 }
 
@@ -764,9 +840,6 @@ void add_random_cuts(WorkerMasterPtr & master, AllCutPackage const & all_package
 				data.x_cut, handler->get_dbl(SLAVE_COST));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
-			
-			//data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
-			//data.last_value[ problem_to_id[kvp.first] ] = handler->get_dbl(SLAVE_COST);
 
 			// Check if the cut has really cut or not
 			if (has_cut_master(master, data, options, problem_to_id[kvp.first],
@@ -834,8 +907,6 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 	double local_ub			= 0;
 	double local_epigraph	= 0;
 
-	//std::cout << "GAP INIT " << data.remaining_gap << std::endl;
-
 	for (int i(0); i < all_package.size(); i++) {
 
 		local_ub		= 0;
@@ -854,9 +925,6 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 				s[var.first] += handler->get_subgradient()[var.first];
 			}
 
-			//data.ub += (1.0 / data.nslaves) * handler->get_dbl(SLAVE_COST);
-			//data.last_value[problem_to_id[kvp.first]] = handler->get_dbl(SLAVE_COST);
-
 			// Check if the cut has really cut or not
 			if (has_cut_master(master, data, options, problem_to_id[kvp.first],
 				handler->get_dbl(SLAVE_COST), handler->get_subgradient())) {
@@ -873,34 +941,13 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 
 			data.espilon_s = data.remaining_gap;
 
-			/*if (handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) < data.espilon_s) {
-				optcounter += 1;
-			}*/
-
-
-			/*data.remaining_gap -= std::max(handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I), 0.0);
-			if (data.remaining_gap > 0) {
-				std::cout << data.remaining_gap << "      " << handler->get_dbl(SLAVE_COST) - handler->get_dbl(ALPHA_I) << std::endl;
-			}*/
-
 			total_counter += 1;
 			data.n_slaves_solved += 1;
 
 		}
 
-		/*std::cout << "coucou " << std::scientific << std::setprecision(8) 
-			<< "    "  << local_ub 
-			<< "    " << local_epigraph 
-			<< "    "  << local_ub - local_epigraph << std::endl;*/
-
 		// Check local optimality
-		//std::cout << data.espilon_s << "    " << data.remaining_gap << std::endl;
-		//data.espilon_s = std::min((gap - data.epsilon_x), data.remaining_gap);
 		data.espilon_s = data.remaining_gap;
-		//std::cout << data.espilon_s <<  std::endl;
-
-		/*std::cout << "   " << local_ub << "      " << local_epigraph << "    " << local_ub - local_epigraph
-			<< "     " << data.espilon_s << "    " << data.epsilon_x << std::endl;*/
 
 		if (std::max(local_ub - local_epigraph, 0.0) < data.espilon_s) {
 			optcounter += total_counter;
@@ -955,16 +1002,9 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 			add_random_cuts(master, all_package, problem_to_id, options, data);
 		}
 	}
-
-	/*if (!options.AGGREGATION && !options.RAND_AGGREGATION) {
-		sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
-	}
-	else if (options.AGGREGATION) {
+	else if (options.ALGORITHM == "LEVEL") {
 		sort_cut_slave_aggregate(all_package, master, problem_to_id, all_cuts_storage, data, options);
 	}
-	else if (options.RAND_AGGREGATION) {
-		add_random_cuts(master, all_package, problem_to_id, options, data);
-	}*/
 }
 
 /*!
@@ -976,7 +1016,7 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 */
 void compute_x_cut(BendersOptions const& options, BendersData& data) {
 	
-	if (options.ALGORITHM == "BASE") {
+	if (options.ALGORITHM == "BASE" || options.ALGORITHM == "LEVEL") {
 		data.x_stab = data.x0;
 		data.x_cut = data.x0;
 	}
@@ -999,88 +1039,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		}
 		else {
 			data.x_stab = data.x_cut;
-			if (options.MEMORY_TYPE == "DIRECTION") {
-				
-				// Sanity check
-				Point left;
-				Point right;
-				// 1. computing the points for the left and right hand 
-				// sides of the inequality
-				for (auto const& kvp : data.x0) {
-					left[kvp.first] = data.x_mem[kvp.first]
-						- kvp.second + data.x_cut[kvp.first];
-					left[kvp.first] *= data.step_size;
-
-					right[kvp.first] = data.step_size * kvp.second
-						+ (1 - data.step_size) * data.x_cut[kvp.first];
-
-				}
-
-
-				double beta_val = 1.0;
-				double left_val, right_val, cur_beta_val;
-				// 2. Chacking the values for beta
-				//std::cout << "TEST CONTRAINTES" << std::endl;
-				for (auto const& kvp : data.rowtype) {
-
-					//std::cout << kvp.first << "  " << kvp.second << std::endl;
-
-					if (kvp.first != "OBJ") {
-						left_val = data.step_size * scalar_product(data.A[kvp.first], left);
-						right_val = data.rhs[kvp.first] - scalar_product(data.A[kvp.first], right);
-
-						if (kvp.second == "L" && left_val > right_val) {
-							cur_beta_val = std::max(right_val / left_val, 0.0);
-							/*std::cout << "    "
-								<< kvp.first << "   " 
-								<< kvp.second << "   "
-								<< left_val << "   "
-								<< right_val << "   " <<
-								cur_beta_val << std::endl;*/
-
-							beta_val = std::min(beta_val, cur_beta_val);
-						}
-						else if (kvp.second == "G" && left_val < right_val) {
-							cur_beta_val = std::max(right_val / left_val, 0.0);
-							
-							/*std::cout << "    " 
-								<< kvp.first << "   "
-								<< kvp.second << "   "
-								<< left_val << "   "
-								<< right_val << "   " <<
-								cur_beta_val << std::endl;
-								*/
-							beta_val = std::min(beta_val, cur_beta_val);
-						}
-						else {
-							/*std::cout << "NO PROB" << std::endl;
-							std::cout << "    "
-								<< kvp.first << "   "
-								<< kvp.second << "   "
-								<< left_val << "   "
-								<< right_val << "   " << std::endl;*/
-						}
-
-
-					}
-				}
-
-				beta_val = std::min(beta_val, options.BETA);
-				//std::cout << "BETA FINAL " << beta_val << std::endl;
-				
-				for (auto const& kvp : data.x_mem) {
-					data.x_mem[kvp.first] = (1.0 - beta_val) *
-						( data.x0[kvp.first] - data.x_cut[kvp.first] ) +
-						beta_val * data.x_mem[kvp.first];
-
-					data.x_cut[kvp.first] = std::max(
-						data.x_cut[kvp.first] + data.step_size * data.x_mem[kvp.first],
-						0.0
-					);
-				}
-
-			}
-			else if (options.MEMORY_TYPE == "SOLUTION") {
+			if (options.MEMORY_TYPE == "SOLUTION") {
 				for (auto const& kvp : data.x_mem) {
 					data.x_mem[kvp.first] = (1.0 - options.BETA) * data.x0[kvp.first] +
 						options.BETA * data.x_mem[kvp.first];
@@ -1101,15 +1060,9 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 			}
 			
 		}
-		//data.x_stab = data.x0;
-		//data.x_cut = data.x0;
-
-		/*for (auto const& kvp : data.x0) {
-			std::cout << std::setprecision(12) << kvp.first << "   " << kvp.second << "   " << data.x_cut[kvp.first] << std::endl;
-		}*/
 	}
 	else {
-		std::cout << "ALGORITHME " << options.ALGORITHM << " NON RECONNU" << std::endl;
+		std::cout << "ALGORITHM " << options.ALGORITHM << " UNKNOWN" << std::endl;
 		std::exit(0);
 	}
 
@@ -1177,24 +1130,6 @@ void set_slaves_order(BendersData& data, BendersOptions const& options) {
 	}
 	else if (options.SORTING_METHOD == "RANDOM"){
 		std::random_shuffle(data.indices.begin(), data.indices.end());
-	}
-	else if (options.SORTING_METHOD == "MAX_GAP"){
-		// il faut initialiser les valeurs avec une resolution de chaque SP
-		if (data.it <= data.nslaves) {
-			std::rotate(data.indices.begin(), data.indices.begin() + data.n_slaves_no_cut + 1, data.indices.end());
-		}
-		else {
-			std::sort(data.indices.begin(), data.indices.end(), [&](const int i, const int j)
-				{ 
-					if (abs((data.last_value[i] - data.alpha_i[i])) < -1e10) {
-						return true;
-					}
-					else {
-						return (abs((data.last_value[i] - data.alpha_i[i]) / data.last_value[i])
-						> abs((data.last_value[j] - data.alpha_i[j]) / data.last_value[j]));
-					} 
-				});
-		}
 	}
 	else {
 		std::cout << "SORTING METHOD UNKNOWN. Please check README.txt to see available methods." << std::endl;

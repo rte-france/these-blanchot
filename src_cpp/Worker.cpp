@@ -176,6 +176,11 @@ void Worker::solve_integer(int& lp_status, BendersOptions const& options, int n_
 	write_errored_prob(lp_status, options, path_to_mps);
 }
 
+void Worker::solve_quadratic(int& lp_status)
+{
+	_solver->solve_qp(lp_status);
+}
+
 /*!
 *  \brief Write a problem which was not solved to optimality
 *

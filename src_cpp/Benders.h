@@ -21,10 +21,11 @@ public:
 	void run(std::ostream& stream);
 
 	void classic_iteration(std::ostream& stream);
-	void enhanced_multicut_iteration(std::ostream& stream);
 	void master_loop(std::ostream& stream);
 	void separation_loop(std::ostream& stream);
 	void optimality_loop(std::ostream& stream);
+
+	void solve_level(std::ostream& stream);
 
 public:
 	WorkerMasterPtr _master; /*!<  Pointer to master problem */

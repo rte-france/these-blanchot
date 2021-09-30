@@ -117,4 +117,9 @@ public:
 	virtual void set_simplex_iter(int iter) = 0;
 
 	virtual void numerical_emphasis(int val) = 0;
+
+// Quadratic problems management
+	virtual void set_problem_to_quadratic() = 0;
+	virtual void chg_quadratic_coef(int i, int j, double val) = 0;
+	virtual void solve_qp(int& status) = 0;
 };

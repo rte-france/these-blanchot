@@ -395,6 +395,7 @@ void SolverCPLEX::set_algorithm(std::string const& algo) {
 	}
 	else {
 		CPXsetintparam(_env, CPXPARAM_LPMethod, CPX_ALG_DUAL);
+		CPXsetintparam(_env, CPXPARAM_QPMethod, CPX_ALG_DUAL);
 	}
 }
 
@@ -424,6 +425,40 @@ void SolverCPLEX::set_simplex_iter(int iter)
 void SolverCPLEX::numerical_emphasis(int val)
 {
 	CPXsetintparam(_env, CPX_PARAM_NUMERICALEMPHASIS, val);
+}
+
+void SolverCPLEX::set_problem_to_quadratic()
+{
+	CPXchgprobtype(_env, _prb, CPXPROB_QP);
+}
+
+void SolverCPLEX::chg_quadratic_coef(int i, int j, double val)
+{
+	CPXchgqpcoef(_env, _prb, i, j, val);
+}
+
+void SolverCPLEX::solve_qp(int& status)
+{
+	CPXqpopt(_env, _prb);
+	int cpx_status(0);
+	cpx_status = CPXgetstat(_env, _prb);
+
+	if (cpx_status == CPX_STAT_OPTIMAL || cpx_status == CPX_STAT_NUM_BEST) {
+		status = OPTIMAL;
+	}
+	else if (cpx_status == CPX_STAT_INFEASIBLE || cpx_status == CPX_STAT_ABORT_DUAL_OBJ_LIM) {
+		status = INFEASIBLE;
+	}
+	else if (cpx_status == CPX_STAT_UNBOUNDED) {
+		status = UNBOUNDED;
+	}
+	else if (cpx_status == CPX_STAT_INForUNBD) {
+		status = INForUNBOUND;
+	}
+	else {
+		status = UNKNOWN;
+		std::cout << "CPLEX STATUS IS : " << cpx_status << std::endl;
+	}
 }
 
 #endif

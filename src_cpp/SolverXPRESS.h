@@ -91,6 +91,11 @@ public:
 	virtual void optimality_gap(double gap);
 	virtual void set_simplex_iter(int iter);
 	virtual void numerical_emphasis(int val);
+
+// Quadratic problems management
+	virtual void set_problem_to_quadratic();
+	virtual void chg_quadratic_coef(int i, int j, double val);
+	virtual void solve_qp(int& status);
 };
 
 void errormsg(XPRSprob& xprs, const char* sSubName, int nLineNo, int nErrCode);

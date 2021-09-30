@@ -14,6 +14,8 @@ class WorkerMaster : public Worker {
 public:
 	int _id_alpha;					/*!< Column id of the global epigraph variable alpha (weighted sum of the subproblems epigraph variables ) */
 	std::vector<int> _id_alpha_i;	/*!< Column id of each subproblem epigraph variable */
+	int _id_level_constraint;		/*!< Id of constraint "theta <= level" of level bundle algorithm */
+	DblVector _initial_obj;			/*!< Initial master objective, removed when using LEVEL Bundle, saved to compute solution values */
 
 public:
 	WorkerMaster();
@@ -34,4 +36,11 @@ public:
 	void delete_constraint(int const nrows);
 	void fix_alpha(double const & bestUB);
 
+	// Level bundle related methods
+	void remove_obj();
+	void set_problem_to_quadratic();
+	void update_level_objective(Point const & center);
+	void update_level_constraint(double const & lev);
+	void set_matrix_identity(int n_first_vars);
+	void save_obj();
 };

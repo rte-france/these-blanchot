@@ -94,7 +94,7 @@ BENDERS_OPTIONS_MACRO(PRINT_SOLUTION, bool, 1)
 // Bool to say if the optimal solution appear in the log
 BENDERS_OPTIONS_MACRO(CUT_MASTER_TOL, double, -1e-1)
 
-// Bool to say if the optimal solution appear in the log
+// Static or dynamic strategy in in-out separation scheme
 BENDERS_OPTIONS_MACRO(ALPHA_STRAT, std::string, "DYNAMIQUE")
 
 // Bool to say if the options appear in the log
@@ -103,10 +103,10 @@ BENDERS_OPTIONS_MACRO(PRINT_OPTIONS, bool, 1)
 // memory parameter (0 without memory, beta in [0;1[)
 BENDERS_OPTIONS_MACRO(BETA, double, 0.0)
 
-// memory parameter (0 without memory, beta in [0;1[)
+// memory type stabilization (WITHOUT, SOLUTION, DIRECTION)
 BENDERS_OPTIONS_MACRO(MEMORY_TYPE, std::string, "WITHOUT")
 
-// DECOMPOSED or SMPS
+// Data format : DECOMPOSED (one MPS by scenario) or SMPS
 BENDERS_OPTIONS_MACRO(DATA_FORMAT, std::string, "DECOMPOSED")
 
 // Name of .tim file if data format is SMPS
