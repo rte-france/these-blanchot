@@ -432,4 +432,16 @@ void SolverXPRESS::numerical_emphasis(int val)
 {
 }
 
+void SolverXPRESS::set_problem_to_quadratic()
+{
+}
+
+void SolverXPRESS::chg_quadratic_coef(int i, int j, double val)
+{
+}
+
+void SolverXPRESS::solve_qp(int& status)
+{
+}
+
 #endif

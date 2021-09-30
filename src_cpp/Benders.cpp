@@ -116,8 +116,6 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 
 	// Ajout de la matrice du maitre et du RHS dans les donnees en dur
 	read_master_cstr(_data, _options);
-
-	std::cout << "ceci nest pas affiche a lecran" << std::endl;
 }
 
 
@@ -144,7 +142,7 @@ void Benders::build_cut() {
 		_data.slave_status = get_random_slave_cut(slave_cut_package, _map_slaves, _slaves, _options, 
 			_data, _problem_to_id);
 	}
-	else if(_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT"){
+	else if(_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT" || _options.ALGORITHM == "LEVEL"){
 		_data.slave_status = get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
 	}
 	else {
@@ -185,7 +183,11 @@ void Benders::run(std::ostream & stream) {
 		master_loop(stream);
 	}
 	else if (_options.ALGORITHM == "BASE" || _options.ALGORITHM == "IN-OUT") {
-		classic_iteration(stream);
+		while (!_data.stop) {
+			classic_iteration(stream);
+		}
+	}else if(_options.ALGORITHM == "LEVEL"){
+		solve_level(stream);
 	}else {
 		std::cout << "ERROR : UNKNOWN ALGORITHM " << std::endl;
 		std::exit(0);
@@ -299,6 +301,9 @@ void Benders::separation_loop(std::ostream& stream)
 			_data.step_size = std::min(1.0, _data.step_size * (1.0 + (1.0 / _data.misprices)));
 			std::cout << "       MISPRICE : " << _data.step_size << std::endl;
 		}
+		else {
+			_data.step_size = _options.STEP_SIZE;
+		}
 	}
 }
 
@@ -331,29 +336,73 @@ void Benders::optimality_loop(std::ostream& stream)
 
 		++_data.it;
 
-		/*if (_data.maxsimplexiter == 0) {
-			_data.nul_simplex_cnt += _options.BATCH_SIZE;
-
-			if (_data.nul_simplex_cnt > _data.nslaves) {
-
-				_data.ub = _data.invest_separation_cost;
-
-				SlaveCutPackage slave_cut_package;
-				AllCutPackage all_package;
-				get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
-				all_package.push_back(slave_cut_package);
-				build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
-
-				_data.early_termination = true;
-				_data.final_gap = _data.ub - _data.lb;
-			}
-		}
-		else {
-			_data.nul_simplex_cnt = 0;
-		}*/
-
 	} while (_data.stay_in_x_cut);
 	
 	_data.ub /= float(_data.n_slaves_solved) / float(_data.nslaves);
 	_data.ub += _data.invest_separation_cost;
+}
+
+void Benders::solve_level(std::ostream& stream)
+{
+	// initialization
+	_data.alpha_i.resize(_data.nslaves);
+	_data.lb = _options.THETA_LB;
+	_data.best_ub = 1e10; // pour commencer
+
+	int master_status = 0;
+
+	_master->_solver->set_algorithm("DUAL");
+	//_master->_solver->set_output_log_level(3);
+
+	while (!_data.stop) {
+
+		// Compute level
+		_data.level = _data.stab_value * _data.lb + (1 - _data.stab_value) * _data.ub;
+		_master->update_level_constraint(_data.level);
+
+		// 1. Solve master
+		_data.timer_master.restart();
+		_master->solve_quadratic(master_status);
+		_data.time_master = _data.timer_master.elapsed();
+		
+		// 2. Check feasibility
+		if (_data.it > 0 && master_status != OPTIMAL) {
+			// Case INFEASIBLE : LEVEL is too low
+			_data.lb = _data.level;
+		}
+		else {
+			// 3. get master solution
+			_master->get(_data.x0, _data.alpha, _data.alpha_i); /*Get the optimal variables of the Master Problem*/
+			compute_x_cut(_options, _data);
+
+			// 4. compute and add cuts
+			build_cut();
+
+			// 5. update UB
+			_data.invest_separation_cost = 0;
+			int col_id = 0;
+			for (auto const& kvp : _data.x_cut) {
+				col_id = _master->_name_to_id[kvp.first];
+				_data.invest_separation_cost += kvp.second * _master->_initial_obj[col_id];
+			}
+			_data.ub += _data.invest_separation_cost;
+
+			// If the new solution has a cost deacreasing of at least 10% of the gap
+			// we update the best solution and best UB
+			if (_data.ub < 0.8 * _data.best_ub + 0.2 * _data.level) {
+				_data.best_ub = _data.ub;
+				_data.bestx = _data.x_cut;
+				_master->update_level_objective(_data.bestx);
+			}
+		}
+		
+		print_log(stream, _data, _options.LOG_LEVEL, _options);
+
+		// 6. stopping criterion
+		_data.stop = stopping_criterion(_data, _options);
+		_data.it++;
+	}
+
+
+
 }

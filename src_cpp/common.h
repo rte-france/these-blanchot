@@ -189,8 +189,6 @@ struct BendersData {
 	double step_size;				/*!< Step size taken by enhanced multicut
 									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
 
-	DblVector last_value;			/*!< Last value observed of a subproblem */
-
 	int nocutmaster;				/*!< Number of time the master is not cut */
 	int misprices;					/*!< Number if successive misprices */
 	double epsilon_x;
@@ -202,6 +200,7 @@ struct BendersData {
 	bool early_termination;
 	double final_gap;
 
+	double level;
 
 	// Matrice et RHS du master
 	std::map<std::string, Point> A;

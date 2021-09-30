@@ -25,6 +25,8 @@ public:
 	void separation_loop(std::ostream& stream);
 	void optimality_loop(std::ostream& stream);
 
+	void solve_level(std::ostream& stream);
+
 public:
 	WorkerMasterPtr _master; /*!<  Pointer to master problem */
 	SlavesMapPtr _map_slaves; /*!< Map of slaves problems <string, WorkerSlavePre> */
