@@ -328,6 +328,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 			
 		// bundle level constraint "(1/nslaves).theta + c^T.x <= lev" if applicable, 
 		// initialisazion of level with a 0 RHS
+		save_obj();
 		if (options.ALGORITHM == "LEVEL") {
 			int nvars = _solver->get_ncols() - nslaves - 1;
 
@@ -335,7 +336,6 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 			_solver->set_problem_to_quadratic();
 
 			// saving and removing old objective function
-			save_obj();
 			remove_obj();
 
 			// Passing matrix identity as QP matrix to problem

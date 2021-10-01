@@ -94,7 +94,6 @@ void sequential_launch(BendersOptions const & options) {
 		std::string master_name = "master.mps";
 		std::ifstream fichier(master_name.c_str());
 		if (fichier.fail()) {
-			std::cout << "coucou" << std::endl;
 			generate_base_of_instance(cor_path, options.OUTPUTROOT, first_stage_vars, col_stage, row_stage);
 		}
 

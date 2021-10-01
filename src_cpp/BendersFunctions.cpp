@@ -547,7 +547,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 			gap_ok = (data.lb + options.GAP >= data.best_ub);
 		}
 		else {
-			gap_ok = ( (data.ub - data.lb) <= options.GAP * data.ub);
+			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.ub);
 		}
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
@@ -1021,7 +1021,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 		data.x_cut = data.x0;
 	}
 	else if (options.ALGORITHM == "IN-OUT") {
-		if (data.it <= 1) {
+		if (data.it <= 1 && !options.INIT_MEAN_VALUE_SOLUTION) {
 			data.x_stab = data.x0;
 			data.x_cut = data.x0;
 		} else {
@@ -1104,7 +1104,7 @@ void update_in_out_stabilisation(WorkerMasterPtr & master, BendersData& data, Be
 */
 void compute_ub(WorkerMasterPtr& master, BendersData& data) {
 	// Taking the obj function of master prob to compute c.x_cut
-	DblVector obj;
+	/*DblVector obj;
 	int n_cols = master->get_ncols();
 	obj.resize(n_cols, -1);
 	master->get_obj(obj, 0, n_cols - 1);
@@ -1113,7 +1113,15 @@ void compute_ub(WorkerMasterPtr& master, BendersData& data) {
 	for (auto const& kvp : data.x_cut) {
 		col_id = master->_name_to_id[kvp.first];
 		data.ub += kvp.second * obj[col_id];
+	}*/
+
+	data.invest_separation_cost = 0;
+	int col_id = 0;
+	for (auto const& kvp : data.x_cut) {
+		col_id = master->_name_to_id[kvp.first];
+		data.invest_separation_cost += kvp.second * master->_initial_obj[col_id];
 	}
+	data.ub += data.invest_separation_cost;
 }
 
 /*!
