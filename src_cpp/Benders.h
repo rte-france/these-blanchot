@@ -25,7 +25,11 @@ public:
 	void separation_loop(std::ostream& stream);
 	void optimality_loop(std::ostream& stream);
 
+	int nbr_first_stage_vars();
+
 	void solve_level(std::ostream& stream);
+
+	void solve_mean_value_problem(StrPairVector const& keys, DblVector const& values);
 
 public:
 	WorkerMasterPtr _master; /*!<  Pointer to master problem */
@@ -39,4 +43,8 @@ public:
 	AllCutStorage _all_cuts_storage; /*!< Storage of cuts */
 
 	SlaveCutId _slave_cut_id; /*!< id of the cuts */
+
+	WorkerPtr _mean_value_prb; /*!< Problem with the expectation of all the outcomes to solve 
+							   and get starting point*/
+	Point _x_init;
 };

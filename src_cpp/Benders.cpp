@@ -16,6 +16,8 @@ Benders::~Benders() {
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, 
 	SMPSData const& smps_data) : _options(options) {
 
+	
+
 	// 1. Fixing seed
 	std::mt19937 rdgen;
 	if (_options.SEED != -1) {
@@ -48,24 +50,27 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		// Or : COLNAME ROWNAME for a matrix element
 		// and a value associated to this element
 		
-		//StrPair2Dbl realisation;
 		StrPairVector keys;
 		DblVector values;
+
+		StrPairVector mean_keys;
+		DblVector mean_values;
 		
-		IntVector real_counter;
-		long int nbr_real = 1;
-		/*for (auto const& kvp : smps_data._rd_entries) {
-			real_counter[kvp.first] = 0;
-			nbr_real *= kvp.second.size();
-		}*/
-		for (int i(0); i < smps_data.nbr_entries(); i++) {
+		// real_counter represents one outcome of a random realization
+		// [0, 5, 3, 7] means we take the first outcome of the first random variable,
+		// then the fifth of the second random variable ect.
+		int nbr_rd_vars = smps_data.nbr_entries();
+		IntVector real_counter(nbr_rd_vars, 0);
+		/*for (int i(0); i < smps_data.nbr_entries(); i++) {
 			real_counter.push_back(0);
-		}
+		}*/
 		if (_options.SLAVE_NUMBER != -1) {
+			// if -1, then we take all the realisations, so no sampling is needed
+			// else, in this case, we initailize the first realization here
 			smps_data.go_to_next_realisation(real_counter, _options, rdgen, dis);
 		}
 
-		double proba;
+		double proba;		
 
 		// Creating one fictive subproblem to copy it in order to create every subproblem
 		WorkerPtr slave_fictif;
@@ -74,15 +79,36 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			slave_fictif->init(it->second, _options.get_slave_path("slave_init"), _options.SOLVER);
 		}
 
+		// Only to initialization of mean_value_problem elements
+		// We get keys, values and proba of the current realisation
+		// mean_value problem will be created at the end of the loop 
+		smps_data.find_rand_realisation_lines(keys, values, real_counter);
+		for (auto& v : values) { 
+			mean_values.push_back(0.0); 
+		}
+		
+		mean_keys.insert(mean_keys.end(), keys.begin(), keys.end());
+		keys.clear();
+		values.clear();
+
+		// Loop on sampled realizations to create all slaves
 		for(int i(0); i < _data.nslaves; ++it) {
 
 			if (it != it_master) {
 
+				// We get keys, values and proba of the current realisation
 				proba = smps_data.find_rand_realisation_lines(keys, values, real_counter);
 				if (_options.SLAVE_NUMBER != -1) {
 					proba = 1.0 / _data.nslaves;
 				}
 
+				// Update mean_values to create mean_value problem
+				for (int i = 0; i < mean_values.size(); i++) {
+					//std::cout << "     " << keys[i].first << "   " << keys[i].second << "    " << values[i]		 << std::endl;
+					mean_values[i] += values[i] / _data.nslaves;
+				}
+
+				// Creating actual slave problem
 				_problem_to_id[it->first] = i;
 				if (options.DATA_FORMAT == "DECOMPOSED") {
 
@@ -104,6 +130,17 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		}
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
 
+		// Creating mean value problem with no respect about encapsulation at all
+		Timer timer_init_point;
+		timer_init_point.restart();
+
+		_mean_value_prb = WorkerPtr(new Worker());
+		_mean_value_prb->declare_solver(_options.SOLVER, NULL);
+		_mean_value_prb->_solver->init(_options.CORFILE_NAME);
+		_mean_value_prb->_solver->read_prob(_options.CORFILE_NAME.c_str(), "MPS");
+		solve_mean_value_problem(mean_keys, mean_values);
+
+		std::cout << "Init point solve and get sol time : " << timer_init_point.elapsed() << std::endl;
 
 		if (_master->get_n_integer_vars() > 0) {
 			if (options.ALGORITHM == "IN-OUT") {
@@ -113,9 +150,6 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			}
 		}
 	}
-
-	// Ajout de la matrice du maitre et du RHS dans les donnees en dur
-	read_master_cstr(_data, _options);
 }
 
 
@@ -178,6 +212,25 @@ void Benders::run(std::ostream & stream) {
 	_data.timer_iter.restart();
 	_data.timer_other.restart();
 	_data.time_total = 0.0;
+
+	if (_options.INIT_MEAN_VALUE_SOLUTION) {
+		_data.x_cut  = _x_init;
+		_data.x_stab = _x_init;
+		_data.ub = 0;
+		
+		// Resolution of every subproblem to get the cost of initial solution
+		std::string true_algo = _options.ALGORITHM;
+		_options.ALGORITHM = "BASE";
+		build_cut();
+		compute_ub(_master, _data);
+		_options.ALGORITHM = true_algo;
+
+		_data.bestx = _x_init;
+		_data.best_ub = _data.ub;
+	}
+	else {
+		_data.best_ub = 1e20;
+	}
 
 	if (_options.ALGORITHM == "ENHANCED_MULTICUT") {
 		master_loop(stream);
@@ -342,12 +395,16 @@ void Benders::optimality_loop(std::ostream& stream)
 	_data.ub += _data.invest_separation_cost;
 }
 
+int Benders::nbr_first_stage_vars()
+{
+	return _master->_id_to_name.size();
+}
+
 void Benders::solve_level(std::ostream& stream)
 {
 	// initialization
 	_data.alpha_i.resize(_data.nslaves);
 	_data.lb = _options.THETA_LB;
-	_data.best_ub = 1e10; // pour commencer
 
 	int master_status = 0;
 
@@ -357,7 +414,7 @@ void Benders::solve_level(std::ostream& stream)
 	while (!_data.stop) {
 
 		// Compute level
-		_data.level = _data.stab_value * _data.lb + (1 - _data.stab_value) * _data.ub;
+		_data.level = _data.stab_value * _data.lb + (1 - _data.stab_value) * _data.best_ub;
 		_master->update_level_constraint(_data.level);
 
 		// 1. Solve master
@@ -406,4 +463,37 @@ void Benders::solve_level(std::ostream& stream)
 
 
 
+}
+
+void Benders::solve_mean_value_problem(StrPairVector const& keys, DblVector const& values)
+{
+	for (int k(0); k < keys.size(); k++) {
+		int id_col, id_row;
+		// 1. RHS
+		if (keys[k].first == "RIGHT" ||
+			keys[k].first == "RHS" ||
+			keys[k].first == "RHS1") {
+			id_row = _mean_value_prb->_solver->get_row_index(keys[k].second);
+			_mean_value_prb->_solver->chg_rhs(id_row, values[k]);
+		}
+		// 2. MATRIX ELEMENT
+		else {
+			id_col = _mean_value_prb->_solver->get_row_index(keys[k].first);
+			id_row = _mean_value_prb->_solver->get_row_index(keys[k].second);
+			_mean_value_prb->_solver->chg_coef(id_row, id_col, values[k]);
+		}
+	}
+	_mean_value_prb->_solver->set_algorithm("BARRIER");
+	int mean_status;
+	_mean_value_prb->_solver->solve(mean_status, "");
+
+	// Getting solution
+	DblVector init_sol(_master->get_ncols(), 0.0);
+	_mean_value_prb->get_MIP_sol(init_sol.data(), NULL);
+
+	_x_init.clear();
+	for (int i = 0; i < nbr_first_stage_vars(); i++) {
+		//std::cout << _master->_id_to_name[i] << "   " << init_sol[i] << std::endl;
+		_x_init[_master->_id_to_name[i]] = init_sol[i];
+	}
 }

@@ -13,6 +13,7 @@ public:
 public:
 	RdRealisation(double proba);
 	RdRealisation(double proba, std::string const& key1, std::string const& key2, double val);
+	RdRealisation(double proba, StrPairVector const& keys, DblVector const& val);
 
 	//StrPair2Dbl const& get_elems() const;
 

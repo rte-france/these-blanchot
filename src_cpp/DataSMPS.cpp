@@ -304,7 +304,7 @@ void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, 
 		n_sp = options.SLAVE_NUMBER;
 	}
 	else if (options.SLAVE_NUMBER == -1) {
-		std::cout << "COUCOU LE -1" << std::endl;
+		std::cout << "-1 as slave number : All realizations" << std::endl;
 	}
 
 	std::cout << n_sp << std::endl;
@@ -401,11 +401,16 @@ void read_master_cstr(BendersData& data, BendersOptions const& options)
 	std::string master_path = "master.mps";
 	std::ifstream master_file(master_path);
 
+	std::cout << "ok debut" << std::endl;
+
 	std::string part_type = "";
 	std::string line, key1, key2, period, value, proba;
 	std::stringstream ss;
 
 	while (getline(master_file, line)) {
+
+		std::cout << "while getline" << std::endl;
+
 		// Si [0] != ' ' : Key_word pour definir la partie dans laquelle on est
 		if (line[0] == '*') {}
 		else if (line[0] != ' ') {
@@ -443,9 +448,9 @@ void read_master_cstr(BendersData& data, BendersOptions const& options)
 			data.rhs[key2] = std::stod(value);
 		}
 	}
-
+	std::cout << "fin while" << std::endl;
 	master_file.close();
-
+	std::cout << "master file closed" << std::endl;
 }
 
 void write_deterministic_reformulation(BendersOptions const& options, std::string const& col_stage,
@@ -750,6 +755,13 @@ RdRealisation::RdRealisation(double proba, std::string const& key1, std::string 
 	_nbr_lines = 1;
 }
 
+RdRealisation::RdRealisation(double proba, StrPairVector const& keys, DblVector const& val)
+{
+	_proba = proba;
+	_keys = keys;
+	_values = val;
+}
+
 /*StrPair2Dbl const& RdRealisation::get_elems() const
 {
 	return _rd_elements;
@@ -851,19 +863,8 @@ double SMPSData::find_rand_realisation_lines(StrPairVector& keys, DblVector& val
 	for (int k(0); k < real_counter.size(); k++) {
 		proba_tot *= get_proba(k, real_counter[k]);
 		keys.insert(keys.end(), _rd_entries[k][real_counter[k]]._keys.begin(), _rd_entries[k][real_counter[k]]._keys.end());
-		//keys	= _rd_entries[k][real_counter[k]]._keys;
-		//values	= _rd_entries[k][real_counter[k]]._values;
 		values.insert(values.end(), _rd_entries[k][real_counter[k]]._values.begin(), _rd_entries[k][real_counter[k]]._values.end());
 	}
-	/*
-	StrPair keys;
-	for (auto const& kvp : real_counter) {
-		proba_tot *= get_proba(kvp.first, kvp.second);
-		for (auto const& keyVal : get_lines(kvp.first, kvp.second)) {
-			keys = std::make_pair(keyVal.first.first, keyVal.first.second);
-			realisation[keys] = keyVal.second;
-		}
-	}*/
 
 	return proba_tot;
 }
