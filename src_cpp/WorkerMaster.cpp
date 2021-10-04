@@ -18,7 +18,7 @@ WorkerMaster::~WorkerMaster() {
 */
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 	x0.clear();
-	std::vector<double> ptr(_id_alpha_i.back()+1, 0);
+	std::vector<double> ptr(get_ncols(), 0.0);
 	_solver->get_MIP_sol(ptr.data(), NULL);
 
 	for (auto const & kvp : _id_to_name) {
@@ -405,7 +405,7 @@ void WorkerMaster::update_level_objective(Point const& center)
 
 	int i = 0;
 	for (auto const& kvp : center) {
-		indices[i] = i;
+		indices[i] = _name_to_id[kvp.first];
 		elts[i] = -kvp.second;
 		i++;
 	}

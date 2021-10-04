@@ -38,6 +38,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		if (_data.nslaves < 0) {
 			_data.nslaves = problem_list.size() - 1;
 		}
+		_data.alpha_i.resize(_data.nslaves);
 
 		auto it(problem_list.begin());
 		
@@ -409,7 +410,9 @@ void Benders::solve_level(std::ostream& stream)
 	int master_status = 0;
 
 	_master->_solver->set_algorithm("DUAL");
-	//_master->_solver->set_output_log_level(3);
+	if (_options.INIT_MEAN_VALUE_SOLUTION) {
+		_master->update_level_objective(_data.bestx);
+	}
 
 	while (!_data.stop) {
 
@@ -419,11 +422,12 @@ void Benders::solve_level(std::ostream& stream)
 
 		// 1. Solve master
 		_data.timer_master.restart();
+		//_master->_solver->set_output_log_level(3);
 		_master->solve_quadratic(master_status);
 		_data.time_master = _data.timer_master.elapsed();
 		
 		// 2. Check feasibility
-		if (_data.it > 0 && master_status != OPTIMAL) {
+		if (master_status != OPTIMAL) {
 			// Case INFEASIBLE : LEVEL is too low
 			_data.lb = _data.level;
 		}
@@ -484,7 +488,8 @@ void Benders::solve_mean_value_problem(StrPairVector const& keys, DblVector cons
 		}
 	}
 
-	_mean_value_prb->_solver->set_algorithm("BARRIER");
+	//_mean_value_prb->_solver->set_output_log_level(3);
+	_mean_value_prb->_solver->set_algorithm("DUAL");
 	int mean_status;
 	_mean_value_prb->_solver->solve(mean_status, "");
 
@@ -495,5 +500,6 @@ void Benders::solve_mean_value_problem(StrPairVector const& keys, DblVector cons
 	_x_init.clear();
 	for (int i = 0; i < nbr_first_stage_vars(); i++) {
 		_x_init[_master->_id_to_name[i]] = init_sol[i];
+		//std::cout << _master->_id_to_name[i] << "   "  << init_sol[i] << "   " << _x_init[_master->_id_to_name[i]] << std::endl;
 	}
 }

@@ -373,7 +373,7 @@ void SolverCPLEX::get_LP_sol(double* primals, double* slacks, double* duals, dou
 }
 
 void SolverCPLEX::get_MIP_sol(double* primals, double* duals) {
-	CPXsolution(_env, _prb, NULL, NULL, primals, NULL, NULL, NULL);
+	int status = CPXsolution(_env, _prb, NULL, NULL, primals, NULL, NULL, NULL);
 }
 
 void SolverCPLEX::set_output_log_level(int loglevel) {
@@ -440,6 +440,7 @@ void SolverCPLEX::chg_quadratic_coef(int i, int j, double val)
 void SolverCPLEX::solve_qp(int& status)
 {
 	CPXqpopt(_env, _prb);
+	
 	int cpx_status(0);
 	cpx_status = CPXgetstat(_env, _prb);
 
