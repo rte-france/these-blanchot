@@ -468,7 +468,7 @@ void Benders::solve_level(std::ostream& stream)
 void Benders::solve_mean_value_problem(StrPairVector const& keys, DblVector const& values)
 {
 	for (int k(0); k < keys.size(); k++) {
-		int id_col, id_row;
+		int id_col, id_row; 
 		// 1. RHS
 		if (keys[k].first == "RIGHT" ||
 			keys[k].first == "RHS" ||
@@ -483,17 +483,17 @@ void Benders::solve_mean_value_problem(StrPairVector const& keys, DblVector cons
 			_mean_value_prb->_solver->chg_coef(id_row, id_col, values[k]);
 		}
 	}
+
 	_mean_value_prb->_solver->set_algorithm("BARRIER");
 	int mean_status;
 	_mean_value_prb->_solver->solve(mean_status, "");
 
 	// Getting solution
-	DblVector init_sol(_master->get_ncols(), 0.0);
+	DblVector init_sol(_mean_value_prb->get_ncols(), 0.0);
 	_mean_value_prb->get_MIP_sol(init_sol.data(), NULL);
 
 	_x_init.clear();
 	for (int i = 0; i < nbr_first_stage_vars(); i++) {
-		//std::cout << _master->_id_to_name[i] << "   " << init_sol[i] << std::endl;
 		_x_init[_master->_id_to_name[i]] = init_sol[i];
 	}
 }
