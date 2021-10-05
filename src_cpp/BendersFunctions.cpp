@@ -546,7 +546,6 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 			gap_ok = (data.lb + options.GAP >= data.best_ub);
 		}
 		else {
-			std::cout << "RELATIVE GAP : " << ((data.best_ub - data.lb) <= options.GAP * data.best_ub) << std::endl;
 			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.best_ub);
 		}
 		return(
