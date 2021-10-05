@@ -540,14 +540,14 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 			(data.n_slaves_no_cut == data.nslaves) ||
 			(data.early_termination)
 			);
-	}
-	else {
+	}else {
 		bool gap_ok = false;
 		if (options.GAP_TYPE == "ABSOLUTE") {
 			gap_ok = (data.lb + options.GAP >= data.best_ub);
 		}
 		else {
-			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.ub);
+			std::cout << "RELATIVE GAP : " << ((data.best_ub - data.lb) <= options.GAP * data.best_ub) << std::endl;
+			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.best_ub);
 		}
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
