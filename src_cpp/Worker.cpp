@@ -172,7 +172,7 @@ void Worker::solve_integer(int& lp_status, BendersOptions const& options, int n_
 		_solver->optimality_gap(options.GAP / n_prob);
 	}
 
-	_solver->solve_integer(lp_status, path_to_mps);
+	_solver->solve_integer(lp_status, _path_to_mps);
 	write_errored_prob(lp_status, options, path_to_mps);
 }
 

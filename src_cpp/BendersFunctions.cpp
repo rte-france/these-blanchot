@@ -594,15 +594,13 @@ void check_status(AllCutPackage const & all_package, BendersData & data) {
 */
 void get_master_value(WorkerMasterPtr & master, BendersData & data, BendersOptions const & options) {
 	
-	std::cout << data.timer_master.elapsed() << std::endl;
 	data.alpha_i.resize(data.nslaves);
-	std::cout << "  1   " <<  data.timer_master.elapsed() << std::endl;
+
 	master->solve_integer(data.master_status, options, 1, "master_");
-	std::cout << data.timer_master.elapsed() << std::endl;
+	
 	master->get(data.x0, data.alpha, data.alpha_i); /*Get the optimal variables of the Master Problem*/
-	std::cout << data.timer_master.elapsed() << std::endl;
 	master->get_value(data.lb); /*Get the optimal value of the Master Problem*/
-	std::cout << data.timer_master.elapsed() << std::endl;
+
 }
 
 
