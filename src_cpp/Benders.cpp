@@ -267,6 +267,7 @@ void Benders::classic_iteration(std::ostream& stream) {
 	reset_iteration_data(_data, _options);
 
 	_data.timer_master.restart();
+	std::cout << _data.timer_master.elapsed() << std::endl;
 	get_master_value(_master, _data, _options);
 	_data.time_master = _data.timer_master.elapsed();
 
