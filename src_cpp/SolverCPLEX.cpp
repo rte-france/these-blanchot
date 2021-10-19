@@ -126,6 +126,7 @@ void SolverCPLEX::copy_prob(Ptr fictif_solv)
 
 void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 
+
 	int status = CPXlpopt(_env, _prb);
 	
 	//std::cout << "STATUS " << status << std::endl;
@@ -148,14 +149,14 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 		lp_status = INForUNBOUND;
 	}
 	else if(cpx_status == CPX_STAT_OPTIMAL_INFEAS) {
-		DblVector solu;
+		/*DblVector solu;
 		int n = get_ncols();
 		solu.resize(n);
 		get_LP_sol(solu.data(), NULL, NULL, NULL);
 
 		for (int i(0); i < n; i++) {
 			//std::cout << i << " " << solu[i] << std::endl;
-		}
+		}*/
 		lp_status = OPTIMAL;
 	}
 	else if (cpx_status == CPX_STAT_ABORT_IT_LIM) {

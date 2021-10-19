@@ -261,14 +261,15 @@ void Benders::run(std::ostream & stream) {
 * \param stream : stream to print the output
 */
 void Benders::classic_iteration(std::ostream& stream) {
-	_data.timer_master.restart();
+	
 	++_data.it;
 
 	reset_iteration_data(_data, _options);
 
+	_data.timer_master.restart();
 	get_master_value(_master, _data, _options);
-	
 	_data.time_master = _data.timer_master.elapsed();
+
 	compute_x_cut(_options, _data);
 	build_cut();
 	compute_ub(_master, _data);
