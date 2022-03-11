@@ -214,6 +214,41 @@ void Benders::run(std::ostream & stream) {
 	_data.timer_other.restart();
 	_data.time_total = 0.0;
 
+
+	// Shuffling the ids of Subproblems if a shuffle is required
+	for (int melange = 0; melange < _options.N_MELANGES; melange++) {
+		//std::cout << "SHUFFLE " << std::endl;
+		std::random_shuffle(_data.indices.begin(), _data.indices.end());
+	}
+	// Creating batches and maps to link SPs to batches
+	int current_batch = -1;
+	int slave_counter = 0;
+	_data.batches.reserve(int(ceil(float(_data.nslaves) / float(_data.batch_size))));
+	_data.id_to_batch.reserve(_data.nslaves);
+	for (auto id : _data.indices) {		
+		if (slave_counter % _data.batch_size == 0) {
+			current_batch += 1;
+			// Allocate new batch vector
+			_data.batches.push_back( IntVector(_data.batch_size) );
+			// Set slave counter in the batch to 0
+			slave_counter = 0;
+		}
+
+		_data.batches[current_batch][slave_counter] = id;
+		_data.name_to_batch[_slaves[id]] = current_batch;
+		slave_counter += 1;
+		
+	}
+	/**********************************/
+	// Verification batches
+	/*for (auto bat : _data.batches) {
+		for (auto id : bat) {
+			std::cout << _slaves[id] << " in batch n" << _data.name_to_batch[_slaves[id]] << std::endl;
+		}
+		std::cout << std::endl;
+	}*/
+	/**********************************/
+
 	if (_options.INIT_MEAN_VALUE_SOLUTION) {
 		_data.x_cut  = _x_init;
 		_data.x_stab = _x_init;
@@ -292,10 +327,11 @@ void Benders::master_loop(std::ostream& stream) {
 	_data.early_termination = false;
 
 	
-	for (int melange = 0; melange < _options.N_MELANGES; melange++) {
+	// Done before the loop, so that the order of indices is known for every algorithm if needed
+	/*for (int melange = 0; melange < _options.N_MELANGES; melange++) {
 		//std::cout << "SHUFFLE " << std::endl;
 		std::random_shuffle(_data.indices.begin(), _data.indices.end());
-	}
+	}*/
 
 	while (!_data.stop) {
 

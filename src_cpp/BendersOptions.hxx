@@ -13,6 +13,9 @@ BENDERS_OPTIONS_MACRO(GAP_TYPE, std::string, "ABSOLUTE")
 //True if cuts need to be aggregated, false otherwise 
 BENDERS_OPTIONS_MACRO(AGGREGATION, bool, false)
 
+// Level of aggregation : 1 local a la Trukanov, 2 total multicut
+BENDERS_OPTIONS_MACRO(AGGREGATION_LEVEL, int, 2)
+
 //Path to the folder where output files should be printed 
 BENDERS_OPTIONS_MACRO(OUTPUTROOT, std::string, ".")
 

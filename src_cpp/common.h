@@ -186,6 +186,10 @@ struct BendersData {
 	bool has_cut;					/*!< Bool saying if a subproblem has been cut at the last iteration */
 	IntVector indices;				/*!< Vector of indices of subproblems to perform sampling, the order of this 
 									vector will tell the subproblems to sample */
+	std::vector<std::vector<int>> batches; /*!< Vector of batches, containing ids of problems */
+	IntVector id_to_batch;			/*!< Vector saying in which batch each problem id is */
+	Str2Int name_to_batch;
+
 	double step_size;				/*!< Step size taken by enhanced multicut
 									x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )*/
 

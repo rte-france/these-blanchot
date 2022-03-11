@@ -908,6 +908,7 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 	double local_ub			= 0;
 	double local_epigraph	= 0;
 
+
 	for (int i(0); i < all_package.size(); i++) {
 
 		local_ub		= 0;
@@ -917,11 +918,16 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
 			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
 
+			//std::cout << kvp.first << std::endl;
+
 			handler->get_dbl(ALPHA_I) += data.alpha_i[problem_to_id[kvp.first]];
 			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
 
 			ids.push_back(problem_to_id[kvp.first]);
+			
 			rhs += handler->get_dbl(SLAVE_COST);
+			data.ub += (1.0 / data.nslaves) * handler->get_dbl(SLAVE_COST);
+
 			for (auto const& var : data.x_cut) {
 				s[var.first] += handler->get_subgradient()[var.first];
 			}
@@ -957,12 +963,60 @@ void add_aggregated_random_cuts(WorkerMasterPtr& master, AllCutPackage const& al
 		data.remaining_gap -= std::max(local_ub - local_epigraph, 0.0);
 	}
 
-
-
 	master->add_agregated_cut_slaves(ids, s, data.x_cut, rhs);
 	udpate_number_nocut(options, data, optcounter, total_counter);
 }
 
+
+void add_aggregated_cuts_trukanov(WorkerMasterPtr& master, AllCutPackage const& all_package,
+	Str2Int& problem_to_id, BendersOptions& options, BendersData& data)
+{
+	int n_batches = data.batches.size();
+
+	std::vector<Point> s(n_batches);
+	std::vector<double> rhs(n_batches, 0);
+	std::vector<IntVector> ids(n_batches);
+	//ids.clear();
+	//s.clear();
+	for (auto id : ids) {
+		id.clear();
+	}
+	for (auto subgrad : s) {
+		subgrad.clear();
+	}
+
+	int current_batch = 0;
+
+	for (int i(0); i < all_package.size(); i++) {
+		for (auto const& kvp : all_package[i]) {
+			SlaveCutDataPtr slave_cut_data(new SlaveCutData(kvp.second));
+			SlaveCutDataHandlerPtr const handler(new SlaveCutDataHandler(slave_cut_data));
+
+			current_batch = data.name_to_batch[kvp.first];
+			//std::cout << kvp.first << std::endl;
+
+			handler->get_dbl(ALPHA_I) += data.alpha_i[problem_to_id[kvp.first]];
+			bound_simplex_iter(handler->get_int(SIMPLEXITER), data);
+
+			ids[current_batch].push_back(problem_to_id[kvp.first]);
+
+			rhs[current_batch] += handler->get_dbl(SLAVE_COST);
+			data.ub += (1.0 / data.nslaves) * handler->get_dbl(SLAVE_COST);
+
+			for (auto const& var : data.x_cut) {
+				s[current_batch][var.first] += handler->get_subgradient()[var.first];
+			}
+		}
+	}
+	for (int i = 0; i < n_batches; i++) {
+		/*for (auto id : ids[i]) {
+			std::cout << id << "  ";
+		}
+		std::cout << std::endl;*/
+		master->add_agregated_cut_slaves(ids[i], s[i], data.x_cut, rhs[i]);
+	}
+	
+}
 
 /*!
 *  \brief Add cuts in master problem
@@ -990,8 +1044,20 @@ void build_cut_full(WorkerMasterPtr & master, AllCutPackage const & all_package,
 
 	if (options.ALGORITHM == "BASE" || options.ALGORITHM == "IN-OUT") {
 		if (options.AGGREGATION) {
-			sort_cut_slave_aggregate(all_package, master, problem_to_id, all_cuts_storage, data, options);
+			// Local aggregation : trukhanov
+			if (options.AGGREGATION_LEVEL == 1) {
+				add_aggregated_cuts_trukanov(master, all_package, problem_to_id, options, data);
+			}
+			// Pure monocut
+			else if (options.AGGREGATION_LEVEL = 2) {
+				sort_cut_slave_aggregate(all_package, master, problem_to_id, all_cuts_storage, data, options);
+			}
+			else {
+				std::cout << "Unknown aggregation level " << options.AGGREGATION_LEVEL << std::endl;
+				std::exit(1);
+			}
 		}
+		// Pure multicut
 		else {
 			sort_cut_slave(all_package, master, problem_to_id, all_cuts_storage, data, options, slave_cut_id);
 		}
