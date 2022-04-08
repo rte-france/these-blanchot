@@ -90,7 +90,7 @@ void sequential_launch(BendersOptions const & options) {
 		std::string sto_path = options.INPUTROOT + '/' + options.STOFILE_NAME;
 
 		analyze_time_file(time_path, col_stage, row_stage);
-		
+
 		std::string master_name = "master.mps";
 		std::ifstream fichier(master_name.c_str());
 		if (fichier.fail()) {
@@ -110,6 +110,7 @@ void sequential_launch(BendersOptions const & options) {
 	}
 
 	Benders benders(input, options, smps_data);
+
 	benders.run(std::cout);
 	benders.free();
 	std::cout << "Problem ran in " << timer.elapsed() << " seconds" << std::endl;

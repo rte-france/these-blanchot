@@ -117,7 +117,8 @@ void SolverCPLEX::read_prob(const char* prob_name, const char* flags)
 		std::cout << "ERROR : Unknown file type " << flags << std::endl;
 		std::exit(0);
 	}
-	int status = CPXreadcopyprob(_env, _prb, (name+point+ cpxflags).c_str(), flags);
+	// Before : name+point+cpxflags as name to read, but add a .mps at the end ??
+	int status = CPXreadcopyprob(_env, _prb, (name).c_str(), flags);
 }
 
 void SolverCPLEX::copy_prob(Ptr fictif_solv)

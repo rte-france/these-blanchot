@@ -140,14 +140,14 @@ void Worker::add_stream(std::ostream& stream)
 void Worker::solve(int & lp_status, BendersOptions const& options, int n_prob, std::string const& path_to_mps) {
 
 	if (_is_master) {
-		_solver->presolve(options.MASTER_PRESOLVE);
-		_solver->scaling(options.MASTER_SCALING);
-		_solver->optimality_gap(options.GAP / n_prob);
+		//_solver->presolve(options.MASTER_PRESOLVE);
+		//_solver->scaling(options.MASTER_SCALING);
+		//_solver->optimality_gap(options.GAP / n_prob);
 	}
 	else {
-		_solver->presolve(options.SLAVE_PRESOLVE);
-		_solver->scaling(options.SLAVE_SCALING);
-		_solver->optimality_gap(options.GAP / n_prob);
+		//_solver->presolve(options.SLAVE_PRESOLVE);
+		//_solver->scaling(options.SLAVE_SCALING);
+		//_solver->optimality_gap(options.GAP / n_prob);
 	}
 
 	_solver->solve(lp_status, _path_to_mps);
@@ -162,14 +162,14 @@ void Worker::solve(int & lp_status, BendersOptions const& options, int n_prob, s
 void Worker::solve_integer(int& lp_status, BendersOptions const& options, int n_prob, std::string const& path_to_mps) {
 
 	if (_is_master) {
-		_solver->presolve(options.MASTER_PRESOLVE);
-		_solver->scaling(options.MASTER_SCALING);
-		_solver->optimality_gap(options.GAP / n_prob);
+		//_solver->presolve(options.MASTER_PRESOLVE);
+		//_solver->scaling(options.MASTER_SCALING);
+		//_solver->optimality_gap(options.GAP / n_prob);
 	}
 	else {
-		_solver->presolve(options.SLAVE_PRESOLVE);
-		_solver->scaling(options.SLAVE_SCALING);
-		_solver->optimality_gap(options.GAP / n_prob);
+		//_solver->presolve(options.SLAVE_PRESOLVE);
+		//_solver->scaling(options.SLAVE_SCALING);
+		//_solver->optimality_gap(options.GAP / n_prob);
 	}
 
 	_solver->solve_integer(lp_status, _path_to_mps);

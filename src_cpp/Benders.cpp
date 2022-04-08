@@ -16,8 +16,6 @@ Benders::~Benders() {
 Benders::Benders(CouplingMap const & problem_list, BendersOptions const & options, 
 	SMPSData const& smps_data) : _options(options) {
 
-	
-
 	// 1. Fixing seed
 	std::mt19937 rdgen;
 	if (_options.SEED != -1) {
@@ -71,7 +69,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 			smps_data.go_to_next_realisation(real_counter, _options, rdgen, dis);
 		}
 
-		double proba;		
+		double proba;
 
 		// Creating one fictive subproblem to copy it in order to create every subproblem
 		WorkerPtr slave_fictif;
@@ -129,6 +127,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				i++;
 			}
 		}
+
 		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
 
 		// Creating mean value problem with no respect about encapsulation at all
@@ -139,9 +138,8 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		_mean_value_prb->declare_solver(_options.SOLVER, NULL);
 		_mean_value_prb->_solver->init(_options.CORFILE_NAME);
 		_mean_value_prb->_solver->read_prob(_options.CORFILE_NAME.c_str(), "MPS");
-		solve_mean_value_problem(mean_keys, mean_values);
 
-		std::cout << "Init point solve and get sol time : " << timer_init_point.elapsed() << std::endl;
+		solve_mean_value_problem(mean_keys, mean_values);
 
 		if (_master->get_n_integer_vars() > 0) {
 			if (options.ALGORITHM == "IN-OUT") {
@@ -255,11 +253,11 @@ void Benders::run(std::ostream & stream) {
 		_data.ub = 0;
 		
 		// Resolution of every subproblem to get the cost of initial solution
-		std::string true_algo = _options.ALGORITHM;
-		_options.ALGORITHM = "BASE";
+		//std::string true_algo = _options.ALGORITHM;
+		//_options.ALGORITHM = "BASE";
 		build_cut();
 		compute_ub(_master, _data);
-		_options.ALGORITHM = true_algo;
+		//_options.ALGORITHM = true_algo;
 
 		_data.bestx = _x_init;
 		_data.best_ub = _data.ub;
@@ -508,6 +506,7 @@ void Benders::solve_level(std::ostream& stream)
 
 void Benders::solve_mean_value_problem(StrPairVector const& keys, DblVector const& values)
 {
+
 	for (int k(0); k < keys.size(); k++) {
 		int id_col, id_row; 
 		// 1. RHS

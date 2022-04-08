@@ -254,7 +254,7 @@ void print_log_base(std::ostream&stream, BendersData const & data, int const log
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
 	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
 
-	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / data.best_ub;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / std::abs(data.best_ub);
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -300,7 +300,7 @@ void print_log_level(std::ostream& stream, BendersData const& data, int const lo
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
 
 	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
-	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / data.best_ub;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / std::abs(data.best_ub);
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -342,7 +342,7 @@ void print_log_inout(std::ostream& stream, BendersData const& data, int const lo
 		stream << std::setw(20) << std::scientific << std::setprecision(10) << data.best_ub;
 
 	stream << std::setw(15) << std::scientific << std::setprecision(2) << data.best_ub - data.lb;
-	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / data.best_ub;
+	stream << std::setw(15) << std::scientific << std::setprecision(2) << (data.best_ub - data.lb) / std::abs(data.best_ub);
 
 	if (log_level > 1) {
 		stream << std::setw(15) << data.minsimplexiter;
@@ -546,7 +546,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 			gap_ok = (data.lb + options.GAP >= data.best_ub);
 		}
 		else {
-			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.best_ub);
+			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * std::abs(data.best_ub) );
 		}
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
@@ -1273,7 +1273,7 @@ double compute_gap(BendersOptions const& options, BendersData& data)
 {
 	double gap = 0.0;
 	if (options.GAP_TYPE == "RELATIVE") {
-		gap = data.lb * options.GAP;
+		gap = std::abs(data.lb) * options.GAP;
 	}
 	else {
 		gap = options.GAP;
