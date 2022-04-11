@@ -71,6 +71,9 @@ void write_struct_slave(std::string const& slave_path, StrSet const& first_stage
 void analyze_rhs_line(std::string const& line, std::ofstream& master_file, 
 	std::ofstream& slave_file, std::vector<StrSet> const& rows);
 
+void analyze_bounds_line(std::string const& line, std::ofstream& master_file,
+	std::ofstream& slave_file, std::vector<StrSet> const& rows);
+
 void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_path);
 
 void read_struct_SMPS(BendersOptions const& options, CouplingMap& coupling_map, Str2Int blocks);

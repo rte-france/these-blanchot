@@ -87,6 +87,9 @@ void generate_base_of_instance(std::string const& cor_path, std::string const& i
 		else if (current_part == "RHS") {
 			analyze_rhs_line(line, master_file, slave_file, rows);
 		}
+		else if (current_part == "BOUNDS") {
+			analyze_bounds_line(line, master_file, slave_file, rows);
+		}
 	}
 
 	cor_file.close();
@@ -229,6 +232,25 @@ void analyze_rhs_line(std::string const& line, std::ofstream& master_file,
 		ss >> c_rhs;
 		write_mps_line(0, master_file, slave_file, c_type, c_rowname, c_rhs, rows);
 	}
+}
+
+void analyze_bounds_line(std::string const& line, std::ofstream& master_file,
+	std::ofstream& slave_file, std::vector<StrSet> const& rows)
+{
+	std::stringstream ss(line);
+	std::string c_type, c_colname, c_rhs;
+
+	// UP or Low appearw two times in BOUNDS LINES :
+	// UP UP COLNAME Val
+	ss >> c_type;
+	ss >> c_type;
+	ss >> c_colname;
+	ss >> c_rhs;
+	
+	master_file << "    " << std::left
+		<< std::setw(10) << c_type + "   " + c_type
+		<< std::setw(10) << c_colname
+		<< std::setw(10) << c_rhs << std::endl;
 }
 
 void generate_number_of_realisations(Str2Int& blocks, std::string const& sto_path)
