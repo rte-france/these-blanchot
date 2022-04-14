@@ -1120,6 +1120,12 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 				for (auto const& kvp : data.x0) {
 					data.x_cut[kvp.first] = data.step_size * data.x0[kvp.first] +
 						(1.0 - data.step_size) * data.x_stab[kvp.first];
+					if (data.x_cut[kvp.first] < 0) {
+						std::cout << "WARNING X < 0 " << kvp.first << " " << data.x_cut[kvp.first] << std::endl;
+					}
+					else if (data.x_cut[kvp.first] < 1e-6) {
+						data.x_cut[kvp.first] = 0;
+					}
 				}
 			}
 			else {
@@ -1227,6 +1233,8 @@ void compute_separation_point_cost(WorkerMasterPtr& master, BendersData& data, B
 		col_id = master->_name_to_id[kvp.first];
 		data.invest_separation_cost += kvp.second * obj[col_id];
 	}
+
+	obj.clear();
 }
 
 bool has_cut_master(WorkerMasterPtr& master, BendersData& data, BendersOptions const& options, 
@@ -1257,6 +1265,7 @@ void compute_epsilon_x(WorkerMasterPtr& master, BendersOptions const& options, B
 		col_id = master->_name_to_id[kvp.first];
 		data.epsilon_x += (kvp.second - data.x0[kvp.first]) * obj[col_id];
 	}
+	obj.clear();
 }
 
 void del_last_rows(WorkerMasterPtr& master, BendersOptions const& options, BendersData& data)

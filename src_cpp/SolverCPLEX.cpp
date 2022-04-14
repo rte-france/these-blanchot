@@ -129,11 +129,11 @@ void SolverCPLEX::solve(int& lp_status, std::string const& path_to_mps) {
 
 
 	int status = CPXlpopt(_env, _prb);
-	
-	//std::cout << "STATUS " << status << std::endl;
+	if (status != 0) {
+		std::cout << "STATUS " << status << std::endl;
+	}
 
-	int cpx_status(0);
-	cpx_status = CPXgetstat(_env, _prb);
+	int cpx_status = CPXgetstat(_env, _prb);
 
 	//std::cout << "LP STAT = " << cpx_status << std::endl;
 
@@ -196,7 +196,7 @@ void SolverCPLEX::solve_integer(int& lp_status, std::string const& path_to_mps) 
 		}
 		else {
 			lp_status = UNKNOWN;
-			std::cout << "CPLEX STATUS IS : " << cpx_status << std::endl;
+			std::cout << "CPLEX MIP STATUS IS : " << cpx_status << std::endl;
 		}
 	}
 }
