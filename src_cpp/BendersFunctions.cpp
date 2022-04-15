@@ -1125,7 +1125,7 @@ void compute_x_cut(BendersOptions const& options, BendersData& data) {
 						data.x_cut[kvp.first] = 0;
 					}
 					else if (data.x_cut[kvp.first]  > 0.0 && data.x_cut[kvp.first] < 1e-10) {
-						std::cout << "WARNING X < 1e-10 " << kvp.first << " " << data.x_cut[kvp.first] << std::endl;
+						//std::cout << "WARNING X < 1e-10 " << kvp.first << " " << data.x_cut[kvp.first] << std::endl;
 						data.x_cut[kvp.first] = 0;
 					}
 				}
