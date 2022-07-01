@@ -2,6 +2,7 @@
 
 #include "common.h"
 
+const std::string DEFAULT_OPTIONS_TXT = "options_default.txt";
 /*!
 * \class BendersOptions
 * \brief Class containing the options

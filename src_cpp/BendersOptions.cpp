@@ -15,10 +15,11 @@ BendersOptions::BendersOptions() {
 /*!
 *  \brief Write default options in "options_default" txt file
 */
-void BendersOptions::write_default(){
-std::ofstream file("options_default.txt");
-print(file);
-file.close();
+void BendersOptions::write_default()
+{
+	std::ofstream file(DEFAULT_OPTIONS_TXT);
+	print(file);
+	file.close();
 }
 
 /*!
@@ -49,14 +50,17 @@ std::string BendersOptions::get_slave_path(std::string const & slave_name) const
 */
 void BendersOptions::read(std::string const & file_name) {
 	std::ifstream file(file_name.c_str());
-	if (file.good()) {
+	if (file.good())
+	{
 		std::string line;
 		std::string name;
 		while (std::getline(file, line))
 		{
 			std::stringstream buffer(line);
 			buffer >> name;
-#define BENDERS_OPTIONS_MACRO(name__, type__, default__) if(#name__ == name) buffer >> name__;
+#define BENDERS_OPTIONS_MACRO(name__, type__, default__) \
+	if (#name__ == name)                                 \
+		buffer >> name__;
 #include "BendersOptions.hxx"
 #undef BENDERS_OPTIONS_MACRO
 		}

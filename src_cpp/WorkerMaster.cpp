@@ -19,7 +19,14 @@ WorkerMaster::~WorkerMaster() {
 void WorkerMaster::get(Point & x0, double & alpha, DblVector & alpha_i) {
 	x0.clear();
 	std::vector<double> ptr(get_ncols(), 0.0);
+
+	if (_solver->get_n_integer_vars() > 0)
+	{
 	_solver->get_MIP_sol(ptr.data(), NULL);
+	}
+	else {
+		_solver->get_LP_sol(ptr.data(), NULL, NULL, NULL);
+	}
 
 	for (auto const & kvp : _id_to_name) {
 		x0[kvp.second] = ptr[kvp.first];
@@ -273,7 +280,7 @@ void WorkerMaster::add_agregated_cut_slaves(IntVector const& ids, Point const& s
 *  \param options : set of benders options
 *  \param nslaves : number of slaves
 */
-WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves) :Worker() {
+WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & path_to_mps, BendersOptions const & options, int nslaves, double slave_weight) :Worker() {
 	init(variable_map, path_to_mps, options.SOLVER);
 	_is_master = true;
 	_id_level_constraint = -1;
@@ -320,7 +327,7 @@ WorkerMaster::WorkerMaster(Str2Int const & variable_map, std::string const & pat
 
 		for (int i(0); i < nslaves; ++i) {
 			mclind[i + 1] = _id_alpha_i[i];
-			matval[i + 1] = -(1.0/nslaves);
+			matval[i + 1] = -slave_weight;
 			//std::cout << matval[i + 1] << std::endl;
 		}
 		_solver->add_rows(1, nslaves + 1, rowtype.data(), rowrhs.data(), NULL, 

@@ -50,13 +50,13 @@ BENDERS_OPTIONS_MACRO(MASTER_METHOD, std::string, "SIMPLEX")
 BENDERS_OPTIONS_MACRO(XPRESS_TRACE, int, 0)
 
 //Choice of the solver to use (XPRESS only for now)
-BENDERS_OPTIONS_MACRO(SOLVER, std::string, "CPLEX")
+BENDERS_OPTIONS_MACRO(SOLVER, std::string, "XPRESS")
 
 //Bool to say if non optimal problem should be written in a file before exit
 BENDERS_OPTIONS_MACRO(WRITE_ERRORED_PROB, bool, true)
 
 // Algorithm used to solve the problem (BASE, IN-OUT, ENHANCED_MULTICUT)
-BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "BASE")
+BENDERS_OPTIONS_MACRO(ALGORITHM, std::string, "IN-OUT")
 
 // Method to sample scenarios if ALGORITHM == ENHANCED_MULTICUT (ORDERED -- TO ADD : RANDOM, ORDERED_RD, MAX_GAP ?)
 BENDERS_OPTIONS_MACRO(SORTING_METHOD, std::string, "ORDERED")
@@ -86,7 +86,7 @@ BENDERS_OPTIONS_MACRO(SLAVE_SCALING, int, 0)
 BENDERS_OPTIONS_MACRO(LOG_NUMBER_ITE, int, 1)
 
 // Step size of enhanced multicut algorithm (x(k) = x(k-1) + step_size* ( xMaster - x(k-1) )
-BENDERS_OPTIONS_MACRO(STEP_SIZE, float, 1.0)
+BENDERS_OPTIONS_MACRO(STEP_SIZE, float, 0.5)
 
 // Bool to say if the optimal solution appear in the log
 BENDERS_OPTIONS_MACRO(PRINT_SOLUTION, bool, 1)

@@ -38,6 +38,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 		if (_data.nslaves < 0) {
 			_data.nslaves = problem_list.size() - 1;
 		}
+		_data.slave_weight = 52.0/_data.nslaves;
 		_data.alpha_i.resize(_data.nslaves);
 
 		auto it(problem_list.begin());
@@ -100,13 +101,13 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				// We get keys, values and proba of the current realisation
 				proba = smps_data.find_rand_realisation_lines(keys, values, real_counter);
 				if (_options.SLAVE_NUMBER != -1) {
-					proba = 1.0 / _data.nslaves;
+					proba = 1.0 / _data.slave_weight;
 				}
 
 				// Update mean_values to create mean_value problem
 				for (int i = 0; i < mean_values.size(); i++) {
 					//std::cout << "     " << keys[i].first << "   " << keys[i].second << "    " << values[i]		 << std::endl;
-					mean_values[i] += values[i] / _data.nslaves;
+					mean_values[i] += values[i] / _data.slave_weight;
 				}
 
 				// Creating actual slave problem
@@ -114,7 +115,7 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				if (options.DATA_FORMAT == "DECOMPOSED") {
 
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path(it->first),
-						_options.slave_weight(_data.nslaves, it->first), _options));
+						_options.slave_weight(_data.slave_weight, it->first), _options));
 				}
 				else if (options.DATA_FORMAT == "SMPS") {
 					_map_slaves[it->first] = WorkerSlavePtr(new WorkerSlave(it->second, _options.get_slave_path("slave_init"),
@@ -129,19 +130,21 @@ Benders::Benders(CouplingMap const & problem_list, BendersOptions const & option
 				i++;
 			}
 		}
-		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves));
+		_master.reset(new WorkerMaster(master_variable, _options.get_master_path(), _options, _data.nslaves, _data.slave_weight));
 
-		// Creating mean value problem with no respect about encapsulation at all
-		Timer timer_init_point;
-		timer_init_point.restart();
+		// // Creating mean value problem with no respect about encapsulation at all
+		// Timer timer_init_point;
+		// timer_init_point.restart();
 
-		_mean_value_prb = WorkerPtr(new Worker());
-		_mean_value_prb->declare_solver(_options.SOLVER, NULL);
-		_mean_value_prb->_solver->init(_options.CORFILE_NAME);
-		_mean_value_prb->_solver->read_prob(_options.CORFILE_NAME.c_str(), "MPS");
-		solve_mean_value_problem(mean_keys, mean_values);
+		// _mean_value_prb = WorkerPtr(new Worker());
+		// _mean_value_prb->declare_solver(_options.SOLVER, NULL);
+		// _mean_value_prb->_solver->init(_options.CORFILE_NAME);
+		// _mean_value_prb->_solver->read_prob(_options.CORFILE_NAME.c_str(), "MPS");
+		// std::cout << _options.CORFILE_NAME.c_str() << std::endl;
+		// std::cout << _mean_value_prb->get_ncols() << std::endl;
+		// solve_mean_value_problem(mean_keys, mean_values);
 
-		std::cout << "Init point solve and get sol time : " << timer_init_point.elapsed() << std::endl;
+		// std::cout << "Init point solve and get sol time : " << timer_init_point.elapsed() << std::endl;
 
 		if (_master->get_n_integer_vars() > 0) {
 			if (options.ALGORITHM == "IN-OUT") {
@@ -247,7 +250,7 @@ void Benders::run(std::ostream & stream) {
 		std::exit(0);
 	}
 
-	print_solution(stream, _data.x_cut, true, _data.global_prb_status, _options.PRINT_SOLUTION);
+	print_solution(stream, _data.x_cut, false, _data.global_prb_status, _options.PRINT_SOLUTION);
 
 	std::cout << "Computation time : " << timer.elapsed() << std::endl;
 }

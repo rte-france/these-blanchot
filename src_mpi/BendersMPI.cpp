@@ -32,7 +32,8 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 			if (_data.nslaves < 0) {
 				_data.nslaves = problem_list.size() - 1;
 			}
-			std::string const & master_name(_options.MASTER_NAME);			
+			_data.slave_weight = 52.0 / _data.nslaves;
+			std::string const &master_name(_options.MASTER_NAME);
 			auto const it_master(problem_list.find(master_name));
 			if (it_master == problem_list.end()) {
 				std::cout << "UNABLE TO FIND " << master_name << std::endl;
@@ -50,7 +51,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 					++i;
 				}
 			}
-			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _options, _data.nslaves));
+			_master.reset(new WorkerMaster(it_master->second, _options.get_master_path(), _options, _data.nslaves, _data.slave_weight));
 
 			if (_master->get_n_integer_vars() > 0) {
 				if (_options.ALGORITHM == "IN-OUT") {
@@ -63,6 +64,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 			std::cout << "nrealslaves is " << _data.nslaves << std::endl;
 		}
 		mpi::broadcast(world, _data.nslaves, 0);
+		mpi::broadcast(world, _data.slave_weight, 0);
 		int current_worker(1);
 		for (int islave(0); islave < _data.nslaves; ++islave, ++current_worker) {
 			if (current_worker >= world.size()) {
@@ -77,7 +79,7 @@ void BendersMpi::load(CouplingMap const & problem_list, mpi::environment & env, 
 				CouplingMap::value_type kvp;
 				world.recv(0, islave, kvp);
 				//std::cout << "#" << world.rank() << " recv " << kvp.first << " | " << islave << std::endl;
-				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first), _options.slave_weight(_data.nslaves, kvp.first), _options));
+				_map_slaves[kvp.first] = WorkerSlavePtr(new WorkerSlave(kvp.second, _options.get_slave_path(kvp.first), _options.slave_weight(_data.slave_weight, kvp.first), _options));
 				_slaves.push_back(kvp.first);
 			}
 		}
@@ -173,7 +175,7 @@ void BendersMpi::step_2(mpi::environment & env, mpi::communicator & world) {
 		AllCutPackage all_package;
 		Timer timer_slaves;
 		gather(world, slave_cut_package, all_package, 0);
-		_data.timer_slaves = timer_slaves.elapsed();
+		_data.time_slaves = timer_slaves.elapsed();
 		all_package.erase(all_package.begin());
 		build_cut_full(_master, all_package, _problem_to_id, _slave_cut_id, _all_cuts_storage, _data, _options);
 	}
@@ -249,7 +251,7 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 				update_best_ub(_data.best_ub, _data.ub, _data.bestx, _data.x_cut);
 			}
 			
-			_data.timer_master = timer_master.elapsed();
+			_data.time_master = timer_master.elapsed();
 			print_log(stream, _data, _options.LOG_LEVEL, _options);
 			_data.stop = stopping_criterion(_data,_options);
 		}
@@ -259,6 +261,6 @@ void BendersMpi::run(mpi::environment & env, mpi::communicator & world, std::ost
 	}
 
 	if (world.rank() == 0) {
-		print_solution(stream, _data.bestx, true, _data.global_prb_status, _options.PRINT_SOLUTION);
+		print_solution(stream, _data.bestx, false, _data.global_prb_status, _options.PRINT_SOLUTION);
 	}
 }

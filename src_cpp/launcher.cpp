@@ -14,7 +14,13 @@
 */
 BendersOptions build_benders_options(int argc, char** argv) {
 	BendersOptions result;
-	result.read(argv[1]);
+	if (argc > 2) {
+		result.read(argv[2]);	
+	}
+	else {
+		result.write_default();
+		result.read(DEFAULT_OPTIONS_TXT);
+	}
 	return result;
 }
 

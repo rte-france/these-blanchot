@@ -206,24 +206,30 @@ void SolverXPRESS::solve(int& lp_status, std::string const& path_to_mps) {
 }
 
 void SolverXPRESS::solve_integer(int& lp_status, std::string const& path_to_mps) {
-	int status(0);
-	status = XPRSmipoptimize(_xprs, "");
 
-	int xprs_status(0);
-	XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &xprs_status);
+	if (get_n_integer_vars() == 0) {
+		solve(lp_status, path_to_mps);
+	}
+		else {
+		int status(0);
+		status = XPRSmipoptimize(_xprs, "");
 
-	if (xprs_status == XPRS_MIP_OPTIMAL) {
-		lp_status = OPTIMAL;
-	}
-	else if (xprs_status == XPRS_MIP_INFEAS) {
-		lp_status = INFEASIBLE;
-	}
-	else if (xprs_status == XPRS_MIP_UNBOUNDED) {
-		lp_status = UNBOUNDED;
-	}
-	else {
-		lp_status = UNKNOWN;
-		std::cout << "XPRESS STATUS IS : " << xprs_status << std::endl;
+		int xprs_status(0);
+		XPRSgetintattrib(_xprs, XPRS_MIPSTATUS, &xprs_status);
+
+		if (xprs_status == XPRS_MIP_OPTIMAL) {
+			lp_status = OPTIMAL;
+		}
+		else if (xprs_status == XPRS_MIP_INFEAS) {
+			lp_status = INFEASIBLE;
+		}
+		else if (xprs_status == XPRS_MIP_UNBOUNDED) {
+			lp_status = UNBOUNDED;
+		}
+		else {
+			lp_status = UNKNOWN;
+			std::cout << "XPRESS STATUS IS : " << xprs_status << std::endl;
+		}
 	}
 }
 

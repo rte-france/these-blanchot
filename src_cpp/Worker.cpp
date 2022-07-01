@@ -60,7 +60,7 @@ void Worker::free() {
 *  \param lb : double which receives the optimal value
 */
 void Worker::get_value(double & lb) {
-	if (_is_master) {
+	if (_is_master && get_n_integer_vars() > 0) {
 		_solver->get_mip_value(lb);
 	}
 	else {

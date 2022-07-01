@@ -731,7 +731,7 @@ void sort_cut_slave(AllCutPackage const & all_package, WorkerMasterPtr & master,
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
 			handler->get_dbl(ALPHA_I) = data.alpha_i[problem_to_id[itmap.first]];
-			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
+			data.ub += data.slave_weight * handler->get_dbl(SLAVE_COST);
 			SlaveCutTrimmer cut(handler, data.x_cut);
 
 			if (options.DELETE_CUT && !(all_cuts_storage[itmap.first].find(cut) == 
@@ -787,7 +787,7 @@ void sort_cut_slave_aggregate(AllCutPackage const & all_package, WorkerMasterPtr
 		for (auto const & itmap : all_package[i]) {
 			SlaveCutDataPtr slave_cut_data(new SlaveCutData(itmap.second));
 			SlaveCutDataHandlerPtr handler(new SlaveCutDataHandler(slave_cut_data));
-			data.ub += (1.0/data.nslaves) * handler->get_dbl(SLAVE_COST);
+			data.ub += data.slave_weight * handler->get_dbl(SLAVE_COST);
 			rhs += handler->get_dbl(SLAVE_COST);
 			for (auto const & var : data.x_cut) {
 				s[var.first] += handler->get_subgradient()[var.first];
