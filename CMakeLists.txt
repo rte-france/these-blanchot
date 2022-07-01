@@ -4,9 +4,9 @@ PROJECT(ANTARESXPANSION_V2)
 SET(EXECUTABLE_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 SET(   LIBRARY_OUTPUT_PATH	${CMAKE_BINARY_DIR})
 
-SET(USE_MPI FALSE)
+SET(USE_MPI TRUE)
 SET(XPRESS	TRUE)
-SET(CPLEX	TRUE)
+SET(CPLEX	FALSE)
 
 IF( USE_MPI )
 	SET(CMAKE_CXX_COMPILER mpicxx)
@@ -49,17 +49,32 @@ IF(CPLEX)
 	INCLUDE_DIRECTORIES( $ENV{CPLEX_STUDIO_DIR129}/cplex/include/ilcplex ) 
 ENDIF(CPLEX)
 
-
-IF( USE_MPI )
-	INCLUDE_DIRECTORIES( $ENV{BOOSTDIR} ./src_mpi )
-	LINK_DIRECTORIES( $ENV{BOOSTDIR}/stage/lib )
+find_package (Boost REQUIRED COMPONENTS program_options)
 	
-	IF(WIN32)
-		INCLUDE_DIRECTORIES(	$ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64 )
-		LINK_DIRECTORIES(		$ENV{MSMPI_LIB64} )
-	ENDIF(WIN32)
+if (USE_MPI)
+	# ugly fix required due to conan packages and policies vs. boost brainfucking name rules
+	if (MSVC)
+		list (APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
+	endif ()
+	find_package(MPI REQUIRED)
+	find_package (Boost REQUIRED COMPONENTS mpi serialization)
+	include_directories (${Boost_INCLUDE_DIRS})
 
-ENDIF( USE_MPI )
+	message (STATUS "BOOST_MPI_LIBRARY : " ${Boost_MPI_LIBRARY})
+	message (STATUS "Boost_SERIALIZATION_LIBRARY : " ${Boost_SERIALIZATION_LIBRARY})
+	message (STATUS "BOOST_LIBRARIES : " ${Boost_INCLUDE_DIRS})
+endif ()
+
+# IF( USE_MPI )
+# 	INCLUDE_DIRECTORIES( $ENV{BOOSTDIR} ./src_mpi )
+# 	LINK_DIRECTORIES( $ENV{BOOSTDIR}/stage/lib )
+	
+# 	IF(WIN32)
+# 		INCLUDE_DIRECTORIES(	$ENV{MSMPI_INC} $ENV{MSMPI_INC}/x64 )
+# 		LINK_DIRECTORIES(		$ENV{MSMPI_LIB64} )
+# 	ENDIF(WIN32)
+
+# ENDIF( USE_MPI )
 
 # Ajout du dossier de XPRESS mais pas cplex
 # Pour CPLEX, chemin complet donne a l'executable car dependant de la machine
@@ -90,6 +105,9 @@ IF( USE_MPI )
 		./src_mpi/*.hxx
 	)
 	ADD_LIBRARY(mpicore STATIC ${MPI_FILES} )
+	target_include_directories (mpicore
+		PUBLIC
+		${MPI_FILES})
 ENDIF( USE_MPI )
 
 ####################################################################
@@ -131,33 +149,34 @@ IF( USE_MPI )
 		ENDIF(CPLEX)
 
 	ELSE(WIN32)
-		TARGET_LINK_LIBRARIES(bendersmpi boost_serialization boost_mpi-mt.so)
+		TARGET_LINK_LIBRARIES(bendersmpi boost_serialization Boost::mpi
+		MPI::MPI_C)
 		# /!\ CPLEX pas ajoute pour linux
 
 	ENDIF(WIN32)
+ENDIF( USE_MPI )
 
 ####################################################################
 # EXECUTABLE : benderssequential
 ####################################################################
-ELSE( USE_MPI )
-	ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
-	TARGET_LINK_LIBRARIES(benderssequential sequentialcore )
-	IF(XPRESS)
-		TARGET_LINK_LIBRARIES(benderssequential xprs)
-	ENDIF(XPRESS)
-	
-	IF(CPLEX)
-		IF(WIN32)
-			TARGET_LINK_LIBRARIES(benderssequential
-				debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
-				optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
-			)
-		ELSE(WIN32)
-			# /!\ CPLEX pas ajoute pour linux
 
-		ENDIF(WIN32)
-	ENDIF(CPLEX)
-ENDIF( USE_MPI )
+ADD_EXECUTABLE(benderssequential exe_cpp/main.cpp)
+TARGET_LINK_LIBRARIES(benderssequential sequentialcore )
+IF(XPRESS)
+	TARGET_LINK_LIBRARIES(benderssequential xprs)
+ENDIF(XPRESS)
+
+IF(CPLEX)
+	IF(WIN32)
+		TARGET_LINK_LIBRARIES(benderssequential
+			debug		$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mdd/cplex1290.lib
+			optimized	$ENV{CPLEX_STUDIO_DIR129}/cplex/lib/x64_windows_vs2017/stat_mda/cplex1290.lib
+		)
+	ELSE(WIN32)
+		# /!\ CPLEX pas ajoute pour linux
+
+	ENDIF(WIN32)
+ENDIF(CPLEX)
 
 ####################################################################
 # EXECUTABLE : test_benders

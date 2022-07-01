@@ -10,7 +10,7 @@
 #endif 
 
 #define XPRESS
-#define CPLEX
+// #define CPLEX
 
 #include <tuple>
 #include <sstream>
@@ -163,6 +163,7 @@ struct BendersData {
 	Point bestx;					/*!< Best point observed (lowest upper bound) */
 	Point x0;						/*!< Current solution of master problem */
 	int nslaves;					/*!< Number of subproblems */
+	double slave_weight;			/*!< Weight of the subproblems */
 
 	int master_status;				/*!< Solver status after master resolution */
 	int slave_status;				/*!< Worst solver status after resolution of the subproblems */

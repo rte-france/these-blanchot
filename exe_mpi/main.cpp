@@ -1,9 +1,9 @@
-// projet_benders.cpp : définit le point d'entrée pour l'application console.
+// projet_benders.cppï¿½: dï¿½finit le point d'entrï¿½e pour l'application console.
 //
 #include "Worker.h"
 #include "Timer.h"
 #include "Benders.h"
-#include "BendersMPI.h"
+#include "../src_mpi/BendersMPI.h"
 #include "launcher.h"
 
 int main(int argc, char** argv)
