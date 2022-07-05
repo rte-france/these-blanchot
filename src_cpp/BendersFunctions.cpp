@@ -82,11 +82,12 @@ void init_log(std::ostream&stream, int const log_level, BendersOptions const& op
 * \param log_level : level of log precision (from 1 to 3)
 */
 void init_log_base(std::ostream& stream, int const log_level) {
-	stream << std::setw(10) << "ITE";
+	stream << std::setw(10) << "ITERATIONS";
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "UB";
 	stream << std::setw(20) << "BESTUB";
 	stream << std::setw(15) << "GAP";
+	stream << std::setw(15) << "REL_GAP";
 
 	if (log_level > 1) {
 		stream << std::setw(15) << "MINSIMPLEX";
@@ -95,8 +96,8 @@ void init_log_base(std::ostream& stream, int const log_level) {
 
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
-		stream << std::setw(15) << "TIMEMASTER";
-		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "TIMEMASTER (s)";
+		stream << std::setw(15) << "TIMESLAVES (s)";
 	}
 	stream << std::endl;
 }
@@ -111,12 +112,13 @@ void init_log_base(std::ostream& stream, int const log_level) {
 * \param log_level : level of log precision (from 1 to 3)
 */
 void init_log_level(std::ostream& stream, int const log_level) {
-	stream << std::setw(10) << "ITE";
+	stream << std::setw(10) << "ITERATIONS";
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "LEV";
 	stream << std::setw(20) << "UB";
 	stream << std::setw(20) << "BESTUB";
 	stream << std::setw(15) << "GAP";
+	stream << std::setw(15) << "REL_GAP";
 
 	if (log_level > 1) {
 		stream << std::setw(15) << "MINSIMPLEX";
@@ -125,8 +127,8 @@ void init_log_level(std::ostream& stream, int const log_level) {
 
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
-		stream << std::setw(15) << "TIMEMASTER";
-		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "TIMEMASTER (s)";
+		stream << std::setw(15) << "TIMESLAVES (s)";
 	}
 	stream << std::endl;
 }
@@ -141,11 +143,12 @@ void init_log_level(std::ostream& stream, int const log_level) {
 * \param log_level : level of log precision (from 1 to 3)
 */
 void init_log_inout(std::ostream& stream, int const log_level) {
-	stream << std::setw(10) << "ITE";
+	stream << std::setw(10) << "ITERATIONS";
 	stream << std::setw(20) << "LB";
 	stream << std::setw(20) << "UB";
 	stream << std::setw(20) << "BESTUB";
 	stream << std::setw(15) << "GAP";
+	stream << std::setw(15) << "REL_GAP";
 
 	if (log_level > 1) {
 		stream << std::setw(15) << "MINSIMPLEX";
@@ -154,9 +157,10 @@ void init_log_inout(std::ostream& stream, int const log_level) {
 
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
-		stream << std::setw(15) << "TIMEMASTER";
-		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "TIMEMASTER (s)";
+		stream << std::setw(15) << "TIMESLAVES (s)";
 		stream << std::setw(15) << "ALPHA";
+		stream << std::setw(15) << "NOCUTMASTER";
 	}
 	stream << std::endl;
 }
@@ -171,7 +175,7 @@ void init_log_inout(std::ostream& stream, int const log_level) {
 * \param log_level : level of log precision (from 1 to 3)
 */
 void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
-	stream << std::setw(10) << "ITE";
+	stream << std::setw(10) << "ITERATIONS";
 	stream << std::setw(20) << "LB";
 
 	if (log_level > 1) {
@@ -182,8 +186,8 @@ void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
 	if (log_level > 2) {
 		stream << std::setw(15) << "DELETEDCUT";
 		stream << std::setw(15) << "TOTALTIME";
-		stream << std::setw(15) << "TIMEMASTER";
-		stream << std::setw(15) << "TIMESLAVES";
+		stream << std::setw(15) << "TIMEMASTER (s)";
+		stream << std::setw(15) << "TIMESLAVES (s)";
 		stream << std::setw(15) << "TIMEOTHER";
 		stream << std::setw(15) << "NBR_NOCUT";
 		stream << std::setw(15) << "STEP_SIZE";
