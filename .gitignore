@@ -5,3 +5,4 @@ cas1*
 *.orig
 global_grid
 test_case_expansion
+.vscode
