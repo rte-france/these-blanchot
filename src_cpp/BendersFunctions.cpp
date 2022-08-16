@@ -191,6 +191,7 @@ void init_log_enhanced_multicut(std::ostream& stream, int const log_level) {
 		stream << std::setw(15) << "TIMEOTHER";
 		stream << std::setw(15) << "NBR_NOCUT";
 		stream << std::setw(15) << "STEP_SIZE";
+		stream << std::setw(15) << "BATCH_SIZE";
 	}
 	stream << std::endl;
 }
@@ -551,6 +552,7 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 		}
 		else {
 			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.best_ub);
+			std::cout << options.GAP << ((data.best_ub - data.lb) <= options.GAP * data.best_ub) << std::endl;
 		}
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
