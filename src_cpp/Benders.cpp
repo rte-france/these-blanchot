@@ -184,7 +184,7 @@ void Benders::build_cut() {
 		_data.slave_status = get_slave_cut(slave_cut_package, _map_slaves, _options, _data);
 	}
 	else {
-		std::cout << "ALGORHTME NON RECONNU" << std::endl;
+		std::cout << "ALGORIHTME NON RECONNU" << std::endl;
 		std::exit(0);
 	}
 	_data.time_slaves = _data.timer_slave.elapsed();

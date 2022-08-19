@@ -552,7 +552,6 @@ bool stopping_criterion(BendersData & data, BendersOptions const & options) {
 		}
 		else {
 			gap_ok = ( (data.best_ub - data.lb) <= options.GAP * data.best_ub);
-			std::cout << options.GAP << ((data.best_ub - data.lb) <= options.GAP * data.best_ub) << std::endl;
 		}
 		return(
 			((options.MAX_ITERATIONS != -1) && (data.it > options.MAX_ITERATIONS)) ||
